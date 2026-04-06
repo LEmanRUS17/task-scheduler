@@ -1,0 +1,37 @@
+services:
+  php:
+    build: ./docker/php
+  nginx:
+    image: nginx:alpine
+    volumes:
+      - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf
+  db:
+    image: postgres
+    restart: always
+    shm_size: 128mb
+    environment:
+        POSTGRES_DB: ${POSTGRES_DB}
+        POSTGRES_USER: ${POSTGRES_USER}
+        POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - ./volumes/postgres-data:/var/lib/postgresql/data
+  rabbitmq:
+    image: rabbitmq:3-management
+    ports:
+      - "${RABBITMQ_PORT}"
+      - "${RABBITMQ_PORT_MANAGEMENT}"
+  mercure:
+    image: dunglas/mercure
+    environment:
+      SERVER_NAME: '${SERVER_NAME}'
+      MERCURE_PUBLISHER_JWT_KEY: '${MERCURE_PUBLISHER_JWT_KEY}'
+      MERCURE_SUBSCRIBER_JWT_KEY: '${MERCURE_SUBSCRIBER_JWT_KEY}'
+  clickhouse:
+    image: clickhouse/clickhouse-server
+    ports:
+      - "${CLICKHOUSE_PORT}"
+      - "${CLICKHOUSE_NATIVE_PORT}"
+  manticore:
+    image: manticoresearch/manticore
+    volumes:
+      - ./volumes/manticore-data:/var/lib/manticore
