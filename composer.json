@@ -29,6 +29,7 @@
     "config": {
         "allow-plugins": {
             "php-http/discovery": true,
+            "phpstan/extension-installer": true,
             "symfony/flex": true,
             "symfony/runtime": true
         },
@@ -67,6 +68,15 @@
         ],
         "post-update-cmd": [
             "@auto-scripts"
+        ],
+        "phpstan": "phpstan analyse --configuration=phpstan.dist.neon",
+        "phpcs": "phpcs --standard=phpcs.xml.dist",
+        "phpcbf": "phpcbf --standard=phpcs.xml.dist",
+        "phpunit": "phpunit --configuration=phpunit.dist.xml",
+        "check": [
+            "@phpcs",
+            "@phpstan",
+            "@phpunit"
         ]
     },
     "conflict": {
@@ -77,5 +87,12 @@
             "allow-contrib": false,
             "require": "8.0.*"
         }
+    },
+    "require-dev": {
+        "phpstan/extension-installer": "^1.4",
+        "phpstan/phpstan": "^2.1",
+        "phpstan/phpstan-symfony": "^2.0",
+        "phpunit/phpunit": "^13.1",
+        "squizlabs/php_codesniffer": "^4.0"
     }
 }
