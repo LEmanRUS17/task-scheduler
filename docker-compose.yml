@@ -1,11 +1,13 @@
 services:
   php:
     build: ./docker/php
+    volumes:
+      - .:/var/www/html
   nginx:
     image: nginx:alpine
     volumes:
       - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf
-  db:
+  postgres:
     image: postgres
     restart: always
     shm_size: 128mb

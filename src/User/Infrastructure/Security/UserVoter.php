@@ -8,6 +8,7 @@ use App\User\Domain\Entity\User;
 use App\User\Domain\Security\UserPermission;
 use App\User\Domain\ValueObject\Role;
 use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
+use Symfony\Component\Security\Core\Authorization\Voter\Vote;
 use Symfony\Component\Security\Core\Authorization\Voter\Voter;
 
 final class UserVoter extends Voter
@@ -24,8 +25,12 @@ final class UserVoter extends Voter
             && $subject instanceof User;
     }
 
-    protected function voteOnAttribute(string $attribute, mixed $subject, TokenInterface $token): bool
-    {
+    protected function voteOnAttribute(
+        string $attribute,
+        mixed $subject,
+        TokenInterface $token,
+        ?Vote $vote = null
+    ): bool {
         $securityUser = $token->getUser();
 
         if (!$securityUser instanceof SecurityUser) {
@@ -36,10 +41,10 @@ final class UserVoter extends Voter
 
         /** @var User $subject */
         return match ($attribute) {
-            UserPermission::VIEW   => $this->canView($currentUser, $subject),
-            UserPermission::EDIT   => $this->canEdit($currentUser, $subject),
+            UserPermission::VIEW => $this->canView($currentUser, $subject),
+            UserPermission::EDIT => $this->canEdit($currentUser, $subject),
             UserPermission::DELETE => $this->canDelete($currentUser),
-            default                => false,
+            default => false,
         };
     }
 
