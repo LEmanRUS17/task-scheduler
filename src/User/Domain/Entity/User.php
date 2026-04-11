@@ -11,7 +11,7 @@ use App\User\Domain\ValueObject\Role;
 use App\User\Domain\ValueObject\UserId;
 use App\User\Domain\ValueObject\UserStatus;
 
-class User
+final class User
 {
     private string $id;
     private string $email;
