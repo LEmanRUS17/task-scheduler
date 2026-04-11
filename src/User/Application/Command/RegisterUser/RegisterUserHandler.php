@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\User\Application\Command\RegisterUser;
 
+use App\User\Application\Port\DomainEventDispatcherInterface;
 use App\User\Application\Port\PasswordHasherInterface;
 use App\User\Domain\Repository\UserRepositoryInterface;
 use App\User\Domain\ValueObject\Email;
@@ -16,6 +17,7 @@ final class RegisterUserHandler
     public function __construct(
         private readonly UserRepositoryInterface $users,
         private readonly PasswordHasherInterface $passwordHasher,
+        private readonly DomainEventDispatcherInterface $eventDispatcher,
     ) {}
 
     public function __invoke(RegisterUserCommand $command): void
@@ -31,5 +33,7 @@ final class RegisterUserHandler
         $user = User::register($id, $email, $hashedPassword);
 
         $this->users->save($user);
+
+        $this->eventDispatcher->dispatch(...$user->pullDomainEvents());
     }
 }
