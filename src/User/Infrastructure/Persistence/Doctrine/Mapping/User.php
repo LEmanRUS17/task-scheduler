@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+namespace App\User\Infrastructure\Persistence\Doctrine\Mapping;
+
 use App\User\Domain\ValueObject\UserStatus;
 use Doctrine\ORM\Mapping\Builder\ClassMetadataBuilder;
 
