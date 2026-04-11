@@ -13,23 +13,23 @@ use Doctrine\ORM\EntityManagerInterface;
 final class DoctrineUserRepository implements UserRepositoryInterface
 {
     public function __construct(
-        private readonly EntityManagerInterface $entity_manager,
+        private readonly EntityManagerInterface $entityManager,
     ) {}
 
     public function save(User $user): void
     {
-        $this->entity_manager->persist($user);
-        $this->entity_manager->flush();
+        $this->entityManager->persist($user);
+        $this->entityManager->flush();
     }
 
     public function findById(UserId $id): ?User
     {
-        return $this->entity_manager->find(User::class, $id->value());
+        return $this->entityManager->find(User::class, $id->value());
     }
 
     public function findByEmail(Email $email): ?User
     {
-        return $this->entity_manager->getRepository(User::class)
+        return $this->entityManager->getRepository(User::class)
             ->findOneBy(['email' => $email->value()]);
     }
 }
