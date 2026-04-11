@@ -7,5 +7,5 @@ namespace App\User\Domain\ValueObject;
 enum UserStatus: string
 {
     case ACTIVE = 'active';
-    case DELETE = 'delete';
+    case DELETED = 'deleted';
 }
