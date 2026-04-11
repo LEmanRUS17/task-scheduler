@@ -10,37 +10,20 @@ use App\User\Domain\ValueObject\HashedPassword;
 use App\User\Domain\ValueObject\Role;
 use App\User\Domain\ValueObject\UserId;
 use App\User\Domain\ValueObject\UserStatus;
-use Doctrine\ORM\Mapping as ORM;
 
-#[ORM\Entity]
 class User
 {
-    #[ORM\Id]
-    #[ORM\Column(type: 'string', length: 36)]
     private string $id;
-
-    #[ORM\Column(type: 'string', length: 180, unique: true)]
     private string $email;
-
-    #[ORM\Column(type: 'string')]
     private string $password;
-
-    #[ORM\Column(type: 'string', enumType: UserStatus::class)]
     private UserStatus $status;
-
-    #[ORM\Column(name: 'created_at', type: 'datetime_immutable')]
     private \DateTimeImmutable $createdAt;
-
-    #[ORM\Column(name: 'deleted_at', type: 'datetime_immutable', nullable: true)]
     private ?\DateTimeImmutable $deletedAt = null;
-
-    #[ORM\Column(name: 'password_updated_at', type: 'datetime_immutable', nullable: true)]
     private ?\DateTimeImmutable $passwordUpdatedAt = null;
 
     /**
      * @var string[]
      */
-    #[ORM\Column(type: 'json')]
     private array $roles = [];
 
     private array $domainEvents = [];

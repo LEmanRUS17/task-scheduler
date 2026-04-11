@@ -15,9 +15,9 @@ doctrine:
         auto_mapping: true
         mappings:
             AppUser:
-                type: attribute
+                type: php
                 is_bundle: false
-                dir: '%kernel.project_dir%/src/User/Domain/Entity'
+                dir: '%kernel.project_dir%/src/User/Infrastructure/Persistence/Doctrine/Mapping'
                 prefix: 'App\User\Domain\Entity'
                 alias: AppUser
 
