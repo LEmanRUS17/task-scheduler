@@ -10,19 +10,26 @@ final class UserId
 
     private function __construct(string $value) {}
 
+    /**
+     * Generates a random UUID v4 compliant with RFC 4122, section 4.4.
+     *
+     * Steps:
+     *   1. random_bytes(16) — generates 128 random bits using the OS CSPRNG (/dev/urandom).
+     *   2. $bytes[6] & 0x0f | 0x40 — clears the high nibble and sets bits 12–15 to 0100.
+     *      This encodes version 4 (random) in the time_hi_and_version field.
+     *   3. $bytes[8] & 0x3f | 0x80 — clears bits 6–7 and sets them to 10.
+     *      This encodes the RFC 4122 variant in the clock_seq_hi_and_reserved field.
+     *   4. bin2hex() + vsprintf() — formats the 32 hex characters into the canonical form:
+     *      xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx, where y ∈ {8, 9, a, b}.
+     */
     public static function generate(): self
     {
-        return new self(sprintf(
-            '%04x%04x-%04x-%04x-%04x-%04x%04x%04x',
-            mt_rand(0, 0xffff),
-            mt_rand(0, 0xffff),
-            mt_rand(0, 0xffff),
-            mt_rand(0, 0x0fff) | 0x4000,
-            mt_rand(0, 0x3fff) | 0x8000,
-            mt_rand(0, 0xffff),
-            mt_rand(0, 0xffff),
-            mt_rand(0, 0xffff)
-        ));
+        $bytes = random_bytes(16);
+
+        $bytes[6] = chr(ord($bytes[6]) & 0x0f | 0x40);
+        $bytes[8] = chr(ord($bytes[8]) & 0x3f | 0x80);
+
+        return new self(vsprintf('%s%s-%s-%s-%s-%s%s%s', str_split(bin2hex($bytes), 4)));
     }
 
     public static function fromString(string $value): self
