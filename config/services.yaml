@@ -24,3 +24,11 @@ services:
 
     App\User\Application\Port\ClockInterface:
         class: App\User\Infrastructure\Clock\SystemClock
+
+    App\User\Infrastructure\Messenger\MessengerDomainEventDispatcher:
+        arguments:
+            $eventBus: '@event.bus'
+
+    App\User\Infrastructure\Persistence\Doctrine\UserDoctrineMapping:
+        tags:
+            - { name: doctrine.event_listener, event: loadClassMetadata }
