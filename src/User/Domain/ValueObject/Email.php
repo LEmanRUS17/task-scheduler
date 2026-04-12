@@ -8,7 +8,10 @@ final class Email
 {
     use StringValueObject;
 
-    private function __construct(string $value) {}
+    private function __construct(string $value)
+    {
+        $this->value = $value;
+    }
 
     public static function fromString(string $email): self
     {

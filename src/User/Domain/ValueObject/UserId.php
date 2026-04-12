@@ -8,7 +8,10 @@ final class UserId
 {
     use StringValueObject;
 
-    private function __construct(string $value) {}
+    private function __construct(string $value)
+    {
+        $this->value = $value;
+    }
 
     /**
      * Generates a random UUID v4 compliant with RFC 4122, section 4.4.
