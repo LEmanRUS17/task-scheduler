@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\User\Domain\Security;
+namespace App\User\Domain\ValueObject;
 
 final class UserPermission
 {

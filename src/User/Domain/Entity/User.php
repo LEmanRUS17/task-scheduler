@@ -32,6 +32,7 @@ final class User
         UserId $id,
         Email $email,
         HashedPassword $password,
+        \DateTimeImmutable $createdAt,
         Role ...$roles,
     ) {
         $this->id = $id->value();
@@ -39,15 +40,16 @@ final class User
         $this->password = $password->value();
         $this->roles = array_map(fn(Role $r) => $r->value, $roles);
         $this->status = UserStatus::ACTIVE;
-        $this->createdAt = new \DateTimeImmutable();
+        $this->createdAt = $createdAt;
     }
 
     public static function register(
         UserId $id,
         Email $email,
         HashedPassword $password,
+        \DateTimeImmutable $createdAt,
     ): self {
-        $user = new self($id, $email, $password, Role::User);
+        $user = new self($id, $email, $password, $createdAt, Role::User);
         $user->recordEvent(new UserRegistered($id, $email));
 
         return $user;
