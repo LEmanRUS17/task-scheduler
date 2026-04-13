@@ -10,13 +10,13 @@ use Doctrine\ORM\Mapping\Builder\ClassMetadataBuilder;
 $builder = new ClassMetadataBuilder($metadata);
 $builder->setTable('profile');
 
-$builder->createField('id', 'string')
+$builder->createField('userId', 'string')
+    ->columnName('user_id')
     ->length(36)
     ->makePrimaryKey()
     ->generatedValue('NONE')
     ->build();
 
-$builder->addField('userId', 'string', ['columnName' => 'user_id', 'length' => 36, 'unique' => true]);
 $builder->addField('username', 'string', ['nullable' => true]);
 $builder->addField('firstname', 'string', ['nullable' => true]);
 $builder->addField('lastname', 'string', ['nullable' => true]);
