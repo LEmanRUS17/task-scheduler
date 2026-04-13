@@ -35,3 +35,9 @@ services:
     App\UserFeature\Infrastructure\Persistence\Doctrine\UserDoctrineMapping:
         tags:
             - { name: doctrine.event_listener, event: loadClassMetadata }
+
+    App\ProfileFeatureApi\Service\ProfileServiceInterface:
+        class: App\ProfileFeature\Application\ApiService\ProfileApiService
+
+    App\ProfileFeature\Domain\Port\ClockInterface:
+        class: App\ProfileFeature\Infrastructure\Clock\SystemClock
