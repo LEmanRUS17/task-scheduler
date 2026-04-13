@@ -22,13 +22,16 @@ services:
     # add more service definitions when explicit configuration is needed
     # please note that last definitions always *replace* previous ones
 
-    App\User\Application\Port\ClockInterface:
-        class: App\User\Infrastructure\Clock\SystemClock
+    App\UserFeatureApi\Service\UserServiceInterface:
+        class: App\UserFeature\Application\ApiService\UserApiService
 
-    App\User\Infrastructure\Messenger\MessengerDomainEventDispatcher:
+    App\UserFeature\Domain\Port\ClockInterface:
+        class: App\UserFeature\Infrastructure\Clock\SystemClock
+
+    App\UserFeature\Infrastructure\Messenger\MessengerDomainEventDispatcher:
         arguments:
             $eventBus: '@event.bus'
 
-    App\User\Infrastructure\Persistence\Doctrine\UserDoctrineMapping:
+    App\UserFeature\Infrastructure\Persistence\Doctrine\UserDoctrineMapping:
         tags:
             - { name: doctrine.event_listener, event: loadClassMetadata }

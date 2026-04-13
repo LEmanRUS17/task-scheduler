@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App;
 
-use App\User\Infrastructure\Persistence\Doctrine\UserMappingCompilerPass;
+use App\UserFeature\Infrastructure\Persistence\Doctrine\UserMappingCompilerPass;
 use Symfony\Bundle\FrameworkBundle\Kernel\MicroKernelTrait;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\HttpKernel\Kernel as BaseKernel;

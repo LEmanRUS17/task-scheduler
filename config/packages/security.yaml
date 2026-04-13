@@ -1,11 +1,11 @@
 security:
     # https://symfony.com/doc/current/security.html#registering-the-user-hashing-passwords
     password_hashers:
-        App\User\Infrastructure\Security\SecurityUser: 'auto'
+        App\UserFeature\Infrastructure\Security\SecurityUser: 'auto'
 
     providers:
         app_users:
-            id: App\User\Infrastructure\Security\UserProvider
+            id: App\UserFeature\Infrastructure\Security\UserProvider
 
     firewalls:
         dev:

@@ -12,8 +12,7 @@ framework:
         transports:
             sync: 'sync://'
 
-        routing:
-            App\User\Application\Command\RegisterUser\RegisterUserCommand: sync
+        routing: []
 
 # when@test:
 #    framework:
