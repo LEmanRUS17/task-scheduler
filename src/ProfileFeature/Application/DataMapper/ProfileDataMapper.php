@@ -11,7 +11,6 @@ final class ProfileDataMapper
     public function toResponse(Profile $profile): ProfileDataResponse
     {
         return new ProfileDataResponse(
-            id: $profile->id()->value(),
             userId: $profile->userId(),
             username: $profile->username()?->value(),
             firstname: $profile->firstname(),

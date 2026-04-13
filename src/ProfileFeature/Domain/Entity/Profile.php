@@ -5,13 +5,11 @@ declare(strict_types=1);
 namespace App\ProfileFeature\Domain\Entity;
 
 use App\ProfileFeature\Domain\Event\ProfileCreated;
-use App\ProfileFeature\Domain\ValueObject\ProfileId;
 use App\ProfileFeature\Domain\ValueObject\ProfileStatus;
 use App\ProfileFeature\Domain\ValueObject\Username;
 
 final class Profile
 {
-    private string $id;
     private string $userId;
     private ?string $username = null;
     private ?string $firstname = null;
@@ -24,22 +22,21 @@ final class Profile
     private array $domainEvents = [];
 
     private function __construct(
-        ProfileId $id,
         string $userId,
         \DateTimeImmutable $createdAt,
     ) {
-        $this->id = $id->value();
         $this->userId = $userId;
         $this->createdAt = $createdAt;
     }
 
     public static function create(
-        ProfileId $id,
         string $userId,
+        Username $username,
         \DateTimeImmutable $createdAt,
     ): self {
-        $profile = new self($id, $userId, $createdAt);
-        $profile->recordEvent(new ProfileCreated($id, $userId));
+        $profile = new self($userId, $createdAt);
+        $profile->username = $username->value();
+        $profile->recordEvent(new ProfileCreated($userId));
 
         return $profile;
     }
@@ -75,11 +72,6 @@ final class Profile
     public function recordLastLogin(\DateTimeImmutable $at): void
     {
         $this->lastLogin = $at;
-    }
-
-    public function id(): ProfileId
-    {
-        return ProfileId::fromString($this->id);
     }
 
     public function userId(): string

@@ -7,7 +7,7 @@ namespace App\ProfileFeature\Domain\Interactor;
 use App\ProfileFeature\Domain\Entity\Profile;
 use App\ProfileFeature\Domain\Port\ClockInterface;
 use App\ProfileFeature\Domain\Repository\ProfileRepositoryInterface;
-use App\ProfileFeature\Domain\ValueObject\ProfileId;
+use App\ProfileFeature\Domain\ValueObject\Username;
 
 final class CreateProfileInteractor
 {
@@ -23,8 +23,8 @@ final class CreateProfileInteractor
         }
 
         $profile = Profile::create(
-            ProfileId::generate(),
             $userId,
+            Username::fromString('user_' . substr(str_shuffle('abcdefghijklmnopqrstuvwxyz0123456789'), 0, 8)),
             $this->clock->now(),
         );
 

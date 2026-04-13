@@ -9,7 +9,6 @@ use App\ProfileFeatureApi\DTOResponse\ProfileDataResponseInterface;
 final class ProfileDataResponse implements ProfileDataResponseInterface
 {
     public function __construct(
-        private readonly string $id,
         private readonly string $userId,
         private readonly ?string $username,
         private readonly ?string $firstname,
@@ -18,11 +17,6 @@ final class ProfileDataResponse implements ProfileDataResponseInterface
         private readonly ?string $status,
         private readonly ?\DateTimeImmutable $lastLogin,
     ) {}
-
-    public function getId(): string
-    {
-        return $this->id;
-    }
 
     public function getUserId(): string
     {
