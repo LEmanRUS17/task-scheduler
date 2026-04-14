@@ -12,6 +12,20 @@ use Symfony\Component\HttpKernel\Attribute\AsController;
 use Symfony\Component\HttpKernel\Attribute\MapRequestPayload;
 use Symfony\Component\Routing\Attribute\Route;
 
+/**
+ * Handles new user registration via POST /auth/register.
+ *
+ * Accepts a JSON payload with email and plainPassword fields.
+ * The request is deserialized into RegisterUserRequestDTO and passed
+ * to UserServiceInterface, which performs the following steps:
+ *   1. Validates the request format (email format, password length).
+ *      Returns 422 with a field-level error map on failure.
+ *   2. Checks that the email is not already taken.
+ *      Returns 409 with an error message on conflict.
+ *   3. Hashes the password, creates the User aggregate,
+ *      persists it, and dispatches the UserRegistered domain event.
+ *      Returns 201 on success.
+ */
 #[AsController]
 final class RegisterUserController
 {
@@ -26,19 +40,34 @@ final class RegisterUserController
         try {
             $this->userService->register($request);
         } catch (\InvalidArgumentException $e) {
+
             return new JsonResponse(
-                ['errors' => json_decode($e->getMessage(), true)],
+                [
+                    'success' => false,
+                    'variant' => 'danger',
+                    'message' => 'Validation failed',
+                    'errors' => json_decode($e->getMessage(), true)
+                ],
                 Response::HTTP_UNPROCESSABLE_ENTITY,
             );
         } catch (\DomainException $e) {
+
             return new JsonResponse(
-                ['error' => $e->getMessage()],
+                [
+                    'success' => false,
+                    'variant' => 'danger',
+                    'message' => $e->getMessage()
+                ],
                 Response::HTTP_CONFLICT,
             );
         }
 
         return new JsonResponse(
-            ['success' => true],
+            [
+                'success' => true,
+                'variant' => 'success',
+                'message' => 'Registration successful'
+            ],
             Response::HTTP_CREATED,
         );
     }
