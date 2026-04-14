@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\UserFeature\Infrastructure\Http\Controller;
+namespace App\UserFeature\Presentation\Controller;
 
 use App\UserFeature\Application\DTORequest\RegisterUserRequestDTO;
 use App\UserFeatureApi\Service\UserServiceInterface;

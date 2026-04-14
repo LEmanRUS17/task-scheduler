@@ -9,6 +9,6 @@
 
 user_controllers:
     resource:
-        path: ../src/UserFeature/Infrastructure/Http/Controller/
-        namespace: App\UserFeature\Infrastructure\Http\Controller
+        path: ../src/UserFeature/Presentation/Controller/
+        namespace: App\UserFeature\Presentation\Controller
     type: attribute
