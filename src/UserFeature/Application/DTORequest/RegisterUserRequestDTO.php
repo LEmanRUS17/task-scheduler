@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace App\UserFeature\Infrastructure\Http\Request;
+namespace App\UserFeature\Application\DTORequest;
 
 use App\UserFeatureApi\DTORequest\RegisterUserRequestInterface;
 use Symfony\Component\Validator\Constraints as Assert;
 
-final class RegisterUserRequest implements RegisterUserRequestInterface
+final class RegisterUserRequestDTO implements RegisterUserRequestInterface
 {
     public function __construct(
         #[Assert\NotBlank(message: 'Email is required')]

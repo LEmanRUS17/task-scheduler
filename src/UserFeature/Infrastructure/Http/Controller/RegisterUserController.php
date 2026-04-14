@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\UserFeature\Infrastructure\Http\Controller;
 
-use App\UserFeature\Infrastructure\Http\Request\RegisterUserRequest;
+use App\UserFeature\Application\DTORequest\RegisterUserRequestDTO;
 use App\UserFeatureApi\Service\UserServiceInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Response;
@@ -21,10 +21,15 @@ final class RegisterUserController
 
     #[Route('/auth/register', name: 'user_register', methods: ['POST'])]
     public function __invoke(
-        #[MapRequestPayload] RegisterUserRequest $request,
+        #[MapRequestPayload] RegisterUserRequestDTO $request,
     ): JsonResponse {
         try {
             $this->userService->register($request);
+        } catch (\InvalidArgumentException $e) {
+            return new JsonResponse(
+                ['errors' => json_decode($e->getMessage(), true)],
+                Response::HTTP_UNPROCESSABLE_ENTITY,
+            );
         } catch (\DomainException $e) {
             return new JsonResponse(
                 ['error' => $e->getMessage()],
