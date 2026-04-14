@@ -12,3 +12,9 @@ user_controllers:
         path: ../src/UserFeature/Presentation/Controller/
         namespace: App\UserFeature\Presentation\Controller
     type: attribute
+
+profile_controllers:
+    resource:
+        path: ../src/ProfileFeature/Presentation/Controller/
+        namespace: App\ProfileFeature\Presentation\Controller
+    type: attribute
