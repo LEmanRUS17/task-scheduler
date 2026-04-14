@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\ProfileFeature\Application\ApiService;
 
 use App\ProfileFeature\Application\DataMapper\ProfileDataMapper;
+use App\ProfileFeature\Application\DTORequestValidator\ProfileValidatorInterface;
 use App\ProfileFeature\Domain\Interactor\CreateProfileInteractor;
 use App\ProfileFeature\Domain\Interactor\UpdateProfileInteractor;
 use App\ProfileFeature\Domain\Repository\ProfileRepositoryInterface;
@@ -19,6 +20,7 @@ final class ProfileApiService implements ProfileServiceInterface
         private readonly UpdateProfileInteractor $updateProfileInteractor,
         private readonly ProfileRepositoryInterface $profiles,
         private readonly ProfileDataMapper $dataMapper,
+        private readonly ProfileValidatorInterface $validator,
     ) {}
 
     public function createForUser(string $userId): void
@@ -39,6 +41,12 @@ final class ProfileApiService implements ProfileServiceInterface
 
     public function update(string $userId, UpdateProfileRequestInterface $request): void
     {
+        $violations = $this->validator->validate($request);
+
+        if (!empty($violations)) {
+            throw new \InvalidArgumentException(json_encode($violations));
+        }
+
         $this->updateProfileInteractor->update(
             $userId,
             $request->getUsername(),
