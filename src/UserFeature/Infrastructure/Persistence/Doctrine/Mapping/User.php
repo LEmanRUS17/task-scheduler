@@ -8,6 +8,10 @@ use App\UserFeature\Domain\ValueObject\UserStatus;
 use Doctrine\ORM\Mapping\Builder\ClassMetadataBuilder;
 
 /** @var \Doctrine\ORM\Mapping\ClassMetadata $metadata */
+if (!isset($metadata)) {
+    return;
+}
+
 $builder = new ClassMetadataBuilder($metadata);
 $builder->setTable('user');
 

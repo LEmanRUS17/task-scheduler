@@ -7,6 +7,10 @@ namespace App\ProfileFeature\Infrastructure\Persistence\Doctrine\Mapping;
 use Doctrine\ORM\Mapping\Builder\ClassMetadataBuilder;
 
 /** @var \Doctrine\ORM\Mapping\ClassMetadata $metadata */
+if (!isset($metadata)) {
+    return;
+}
+
 $builder = new ClassMetadataBuilder($metadata);
 $builder->setTable('profile');
 
