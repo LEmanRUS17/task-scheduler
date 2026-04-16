@@ -60,3 +60,6 @@ services:
 
     App\TeamFeature\Application\DTORequestValidator\TeamValidatorInterface:
         class: App\TeamFeature\Application\DTORequestValidator\TeamValidator
+
+    App\TeamFeature\Domain\Repository\TeamMemberRepositoryInterface:
+        class: App\TeamFeature\Infrastructure\Persistence\DoctrineTeamMemberRepository

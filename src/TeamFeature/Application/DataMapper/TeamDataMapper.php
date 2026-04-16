@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace App\TeamFeature\Application\DataMapper;
 
+use App\TeamFeature\Application\DTOResponse\TeamMemberResponseDTO;
 use App\TeamFeature\Application\DTOResponse\TeamResponseDTO;
 use App\TeamFeature\Domain\Entity\Team;
+use App\TeamFeature\Domain\Entity\TeamMember;
 use App\TeamFeature\Domain\ValueObject\Title;
 use App\TeamFeatureApi\DTORequest\TeamCreateRequestInterface;
 
@@ -23,6 +25,16 @@ final class TeamDataMapper
             $team->title()->value(),
             $team->status()->value,
             $team->createdAt(),
+        );
+    }
+
+    public function memberToResponse(TeamMember $member): TeamMemberResponseDTO
+    {
+        return new TeamMemberResponseDTO(
+            $member->teamId()->value(),
+            $member->userId(),
+            $member->role()->value,
+            $member->joinedAt(),
         );
     }
 }
