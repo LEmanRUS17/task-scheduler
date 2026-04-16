@@ -10,7 +10,7 @@ use Symfony\Component\HttpFoundation\Response;
 
 final class RegisterUserControllerTest extends WebTestCase
 {
-    public function testRegisterReturns201OnSuccess(): void
+    public function testRegisterReturnSuccess(): void
     {
         $client = static::createClient();
 
@@ -30,7 +30,7 @@ final class RegisterUserControllerTest extends WebTestCase
         $this->assertSame('success', $body['variant']);
     }
 
-    public function testRegisterReturns422WhenEmailIsInvalid(): void
+    public function testRegisterReturnWhenEmailIsInvalid(): void
     {
         $client = static::createClient();
 
@@ -42,7 +42,7 @@ final class RegisterUserControllerTest extends WebTestCase
         $this->assertResponseStatusCodeSame(Response::HTTP_UNPROCESSABLE_ENTITY);
     }
 
-    public function testRegisterReturns422WhenPasswordIsTooShort(): void
+    public function testRegisterReturnWhenPasswordIsTooShort(): void
     {
         $client = static::createClient();
 
@@ -54,15 +54,15 @@ final class RegisterUserControllerTest extends WebTestCase
         $this->assertResponseStatusCodeSame(Response::HTTP_UNPROCESSABLE_ENTITY);
     }
 
-    public function testRegisterReturns409WhenEmailAlreadyExists(): void
+    public function testRegisterReturnWhenEmailAlreadyExists(): void
     {
         $client = static::createClient();
 
-        $mock = $this->createMock(UserServiceInterface::class);
-        $mock->method('register')->willThrowException(
+        $stub = $this->createStub(UserServiceInterface::class);
+        $stub->method('register')->willThrowException(
             new \DomainException('User user@example.com already exists'),
         );
-        static::getContainer()->set(UserServiceInterface::class, $mock);
+        static::getContainer()->set(UserServiceInterface::class, $stub);
 
         $client->request('POST', '/auth/register', content: json_encode([
             'email' => 'user@example.com',

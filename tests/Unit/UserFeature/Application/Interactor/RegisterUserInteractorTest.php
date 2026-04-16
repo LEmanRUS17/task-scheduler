@@ -17,60 +17,63 @@ use PHPUnit\Framework\TestCase;
 
 final class RegisterUserInteractorTest extends TestCase
 {
-    private UserRepositoryInterface $repository;
     private PasswordHasherInterface $hasher;
-    private DomainEventDispatcherInterface $dispatcher;
     private ClockInterface $clock;
-    private RegisterUserInteractor $interactor;
 
     protected function setUp(): void
     {
-        $this->repository = $this->createMock(UserRepositoryInterface::class);
-        $this->hasher = $this->createMock(PasswordHasherInterface::class);
-        $this->dispatcher = $this->createMock(DomainEventDispatcherInterface::class);
-        $this->clock = $this->createMock(ClockInterface::class);
-
+        $this->clock = $this->createStub(ClockInterface::class);
         $this->clock->method('now')->willReturn(new \DateTimeImmutable('2024-01-01 12:00:00'));
-        $this->hasher->method('hash')->willReturn(HashedPassword::fromHash('$2y$13$hashed'));
 
-        $this->interactor = new RegisterUserInteractor(
-            $this->repository,
-            $this->hasher,
-            $this->dispatcher,
+        $this->hasher = $this->createStub(PasswordHasherInterface::class);
+        $this->hasher->method('hash')->willReturn(HashedPassword::fromHash('$2y$13$hashed'));
+    }
+
+    private function buildInteractor(
+        UserRepositoryInterface $repository,
+        ?PasswordHasherInterface $hasher = null,
+        ?DomainEventDispatcherInterface $dispatcher = null,
+    ): RegisterUserInteractor {
+        return new RegisterUserInteractor(
+            $repository,
+            $hasher ?? $this->hasher,
+            $dispatcher ?? $this->createStub(DomainEventDispatcherInterface::class),
             $this->clock,
         );
     }
 
     public function testRegisterSavesUser(): void
     {
-        $this->repository->expects($this->once())->method('findByEmail')->willReturn(null);
-        $this->repository->expects($this->once())->method('save');
+        $repository = $this->createMock(UserRepositoryInterface::class);
+        $repository->expects($this->once())->method('findByEmail')->willReturn(null);
+        $repository->expects($this->once())->method('save');
 
-        $this->interactor->register(Email::fromString('user@example.com'), 'Password1');
+        $this->buildInteractor($repository)->register(Email::fromString('user@example.com'), 'Password1');
     }
 
     public function testRegisterHashesPassword(): void
     {
-        $this->repository->method('findByEmail')->willReturn(null);
-        $this->repository->method('save');
+        $repository = $this->createStub(UserRepositoryInterface::class);
+        $repository->method('findByEmail')->willReturn(null);
 
-        $this->hasher
-            ->expects($this->once())
+        $hasher = $this->createMock(PasswordHasherInterface::class);
+        $hasher->expects($this->once())
             ->method('hash')
             ->with('Password1')
             ->willReturn(HashedPassword::fromHash('$2y$13$hashed'));
 
-        $this->interactor->register(Email::fromString('user@example.com'), 'Password1');
+        $this->buildInteractor($repository, $hasher)->register(Email::fromString('user@example.com'), 'Password1');
     }
 
     public function testRegisterDispatchesUserRegisteredEvent(): void
     {
-        $this->repository->method('findByEmail')->willReturn(null);
-        $this->repository->method('save');
+        $repository = $this->createStub(UserRepositoryInterface::class);
+        $repository->method('findByEmail')->willReturn(null);
 
-        $this->dispatcher->expects($this->once())->method('dispatch');
+        $dispatcher = $this->createMock(DomainEventDispatcherInterface::class);
+        $dispatcher->expects($this->once())->method('dispatch');
 
-        $this->interactor->register(Email::fromString('user@example.com'), 'Password1');
+        $this->buildInteractor($repository, null, $dispatcher)->register(Email::fromString('user@example.com'), 'Password1');
     }
 
     public function testRegisterThrowsWhenEmailAlreadyExists(): void
@@ -82,11 +85,12 @@ final class RegisterUserInteractorTest extends TestCase
             new \DateTimeImmutable(),
         );
 
-        $this->repository->method('findByEmail')->willReturn($existingUser);
-        $this->repository->expects($this->never())->method('save');
+        $repository = $this->createMock(UserRepositoryInterface::class);
+        $repository->method('findByEmail')->willReturn($existingUser);
+        $repository->expects($this->never())->method('save');
 
         $this->expectException(\DomainException::class);
 
-        $this->interactor->register(Email::fromString('user@example.com'), 'Password1');
+        $this->buildInteractor($repository)->register(Email::fromString('user@example.com'), 'Password1');
     }
 }
