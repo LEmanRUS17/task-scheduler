@@ -18,3 +18,9 @@ profile_controllers:
         path: ../src/ProfileFeature/Presentation/Controller/
         namespace: App\ProfileFeature\Presentation\Controller
     type: attribute
+
+team_controllers:
+    resource:
+        path: ../src/TeamFeature/Presentation/Controller/
+        namespace: App\TeamFeature\Presentation\Controller
+    type: attribute

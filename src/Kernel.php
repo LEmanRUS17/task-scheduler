@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App;
 
 use App\ProfileFeature\Infrastructure\Persistence\Doctrine\ProfileMappingCompilerPass;
+use App\TeamFeature\Infrastructure\Persistence\Doctrine\TeamMappingCompilerPass;
 use App\UserFeature\Infrastructure\Persistence\Doctrine\UserMappingCompilerPass;
 use Symfony\Bundle\FrameworkBundle\Kernel\MicroKernelTrait;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
@@ -18,5 +19,6 @@ class Kernel extends BaseKernel
     {
         $container->addCompilerPass(new UserMappingCompilerPass());
         $container->addCompilerPass(new ProfileMappingCompilerPass());
+        $container->addCompilerPass(new TeamMappingCompilerPass());
     }
 }

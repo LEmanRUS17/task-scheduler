@@ -43,3 +43,20 @@ services:
 
     App\ProfileFeature\Domain\Port\ClockInterface:
         class: App\ProfileFeature\Infrastructure\Clock\SystemClock
+
+    App\TeamFeatureApi\Service\TeamServiceInterface:
+        class: App\TeamFeature\Application\ApiService\TeamApiService
+
+    App\TeamFeature\Domain\Port\ClockInterface:
+        class: App\TeamFeature\Infrastructure\Clock\SystemClock
+
+    App\TeamFeature\Domain\Port\DomainEventDispatcherInterface:
+        class: App\TeamFeature\Infrastructure\Messenger\MessengerDomainEventDispatcher
+        arguments:
+            $eventBus: '@event.bus'
+
+    App\TeamFeature\Domain\Repository\TeamRepositoryInterface:
+        class: App\TeamFeature\Infrastructure\Persistence\DoctrineTeamRepository
+
+    App\TeamFeature\Application\DTORequestValidator\TeamValidatorInterface:
+        class: App\TeamFeature\Application\DTORequestValidator\TeamValidator
