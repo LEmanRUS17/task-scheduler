@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\TeamFeature\Presentation\Controller;
+namespace App\TeamFeature\Presentation\Controller\Team;
 
 use App\TeamFeature\Application\DTORequest\TeamCreateRequestDTO;
 use App\TeamFeatureApi\Service\TeamServiceInterface;

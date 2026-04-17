@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\TeamFeature\Presentation\Controller;
+namespace App\TeamFeature\Presentation\Controller\TeamMember;
 
 use App\TeamFeatureApi\Service\TeamServiceInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -24,11 +24,19 @@ final class RemoveTeamMemberController
             $this->teamService->removeMember($teamId, $userId);
         } catch (\DomainException $e) {
             return new JsonResponse(
-                ['success' => false, 'message' => $e->getMessage()],
+                [
+                    'success' => false,
+                    'variant' => 'danger',
+                    'message' => $e->getMessage()
+                ],
                 Response::HTTP_NOT_FOUND,
             );
         }
 
-        return new JsonResponse(null, Response::HTTP_NO_CONTENT);
+        return new JsonResponse([
+            'success' => true,
+            'variant' => 'success',
+            'message' => 'The user has been removed from the group'
+        ], Response::HTTP_NO_CONTENT);
     }
 }

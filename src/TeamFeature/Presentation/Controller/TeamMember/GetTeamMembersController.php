@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\TeamFeature\Presentation\Controller;
+namespace App\TeamFeature\Presentation\Controller\TeamMember;
 
 use App\TeamFeatureApi\Service\TeamServiceInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -24,14 +24,16 @@ final class GetTeamMembersController
             $members = $this->teamService->getMembers($teamId);
         } catch (\DomainException $e) {
             return new JsonResponse(
-                ['success' => false, 'message' => $e->getMessage()],
+                [
+                    'success' => false,
+                    'message' => $e->getMessage()
+                ],
                 Response::HTTP_NOT_FOUND,
             );
         }
 
         return new JsonResponse([
-            'success' => true,
-            'data' => array_map(
+            'members' => array_map(
                 fn($m) => [
                     'teamId' => $m->getTeamId(),
                     'userId' => $m->getUserId(),

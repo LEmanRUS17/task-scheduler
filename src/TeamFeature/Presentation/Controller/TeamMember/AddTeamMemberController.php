@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\TeamFeature\Presentation\Controller;
+namespace App\TeamFeature\Presentation\Controller\TeamMember;
 
 use App\TeamFeature\Application\DTORequest\TeamAddMemberRequestDTO;
 use App\TeamFeatureApi\Service\TeamServiceInterface;
@@ -28,7 +28,10 @@ final class AddTeamMemberController
             $member = $this->teamService->addMember($teamId, $request);
         } catch (\DomainException $e) {
             return new JsonResponse(
-                ['success' => false, 'message' => $e->getMessage()],
+                [
+                    'success' => false,
+                    'message' => $e->getMessage()
+                ],
                 Response::HTTP_CONFLICT,
             );
         }
