@@ -63,3 +63,28 @@ services:
 
     App\TeamFeature\Domain\Repository\TeamMemberRepositoryInterface:
         class: App\TeamFeature\Infrastructure\Persistence\DoctrineTeamMemberRepository
+
+    Symfony\Component\Workflow\Registry: ~
+
+    App\WorkflowFeatureApi\Service\WorkflowServiceInterface:
+        class: App\WorkflowFeature\Application\ApiService\WorkflowApiService
+
+    App\WorkflowFeature\Domain\Port\ClockInterface:
+        class: App\WorkflowFeature\Infrastructure\Clock\SystemClock
+
+    App\WorkflowFeature\Domain\Port\DomainEventDispatcherInterface:
+        class: App\WorkflowFeature\Infrastructure\Messenger\MessengerDomainEventDispatcher
+        arguments:
+            $eventBus: '@event.bus'
+
+    App\WorkflowFeature\Domain\Repository\WorkflowRepositoryInterface:
+        class: App\WorkflowFeature\Infrastructure\Persistence\DoctrineWorkflowRepository
+
+    App\WorkflowFeature\Domain\Repository\WorkflowStatusRepositoryInterface:
+        class: App\WorkflowFeature\Infrastructure\Persistence\DoctrineWorkflowStatusRepository
+
+    App\WorkflowFeature\Domain\Repository\WorkflowTransitionRepositoryInterface:
+        class: App\WorkflowFeature\Infrastructure\Persistence\DoctrineWorkflowTransitionRepository
+
+    App\WorkflowFeature\Application\DTORequestValidator\WorkflowValidatorInterface:
+        class: App\WorkflowFeature\Application\DTORequestValidator\WorkflowValidator

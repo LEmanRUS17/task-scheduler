@@ -24,3 +24,9 @@ team_controllers:
         path: ../src/TeamFeature/Presentation/Controller/
         namespace: App\TeamFeature\Presentation\Controller
     type: attribute
+
+workflow_controllers:
+    resource:
+        path: ../src/WorkflowFeature/Presentation/Controller/
+        namespace: App\WorkflowFeature\Presentation\Controller
+    type: attribute
