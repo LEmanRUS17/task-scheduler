@@ -11,6 +11,9 @@ interface TaskRepositoryInterface
 {
     public function save(Task $task): void;
 
+    /** @return Task[] */
+    public function findAll(): array;
+
     public function findById(TaskId $id): ?Task;
 
     public function delete(TaskId $id): void;
