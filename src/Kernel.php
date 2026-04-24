@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App;
 
 use App\ProfileFeature\Infrastructure\Persistence\Doctrine\ProfileMappingCompilerPass;
+use App\TaskFeature\Infrastructure\Persistence\Doctrine\TaskMappingCompilerPass;
 use App\TeamFeature\Infrastructure\Persistence\Doctrine\TeamMappingCompilerPass;
 use App\WorkflowFeature\Infrastructure\Persistence\Doctrine\WorkflowMappingCompilerPass;
 use App\UserFeature\Infrastructure\Persistence\Doctrine\UserMappingCompilerPass;
@@ -22,5 +23,6 @@ class Kernel extends BaseKernel
         $container->addCompilerPass(new ProfileMappingCompilerPass());
         $container->addCompilerPass(new TeamMappingCompilerPass());
         $container->addCompilerPass(new WorkflowMappingCompilerPass());
+        $container->addCompilerPass(new TaskMappingCompilerPass());
     }
 }
