@@ -30,3 +30,9 @@ workflow_controllers:
         path: ../src/WorkflowFeature/Presentation/Controller/
         namespace: App\WorkflowFeature\Presentation\Controller
     type: attribute
+
+task_controllers:
+    resource:
+        path: ../src/TaskFeature/Presentation/Controller/
+        namespace: App\TaskFeature\Presentation\Controller
+    type: attribute
