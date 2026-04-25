@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\TaskFeatureApi\Service;
 
 use App\TaskFeatureApi\DTORequest\TaskCreateRequestInterface;
+use App\TaskFeatureApi\DTORequest\TaskUpdateRequestInterface;
 use App\TaskFeatureApi\DTOResponse\TaskDataResponseInterface as ResponseDTO;
 
 interface TaskServiceInterface
@@ -18,6 +19,8 @@ interface TaskServiceInterface
         TaskCreateRequestInterface $dtoRequest,
         string $creatorUserId
     ): ResponseDTO;
+
+    public function update(string $id, TaskUpdateRequestInterface $dtoRequest): ResponseDTO;
 
     public function deleteById(string $id): void;
 }

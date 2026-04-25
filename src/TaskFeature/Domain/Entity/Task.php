@@ -123,6 +123,30 @@ final class Task implements WorkflowSubjectInterface
         return $this->actualTime;
     }
 
+    public function update(
+        ?TaskTitle $title,
+        ?TaskPriority $priority,
+        ?\DateTimeImmutable $scheduledStart,
+        ?\DateTimeImmutable $scheduledEnd,
+        ?int $estimatedTime,
+    ): void {
+        if ($title !== null) {
+            $this->title = $title->value();
+        }
+        if ($priority !== null) {
+            $this->priority = $priority;
+        }
+        if ($scheduledStart !== null) {
+            $this->scheduledStart = $scheduledStart;
+        }
+        if ($scheduledEnd !== null) {
+            $this->scheduledEnd = $scheduledEnd;
+        }
+        if ($estimatedTime !== null) {
+            $this->estimatedTime = $estimatedTime;
+        }
+    }
+
     public function logActualTime(int $minutes): void
     {
         $this->actualTime = $minutes;
