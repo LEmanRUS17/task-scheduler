@@ -30,7 +30,13 @@ final class TaskDataMapper
             $task->id()->value(),
             $task->title()->value(),
             $task->getWorkflowStatus(),
+            $task->priority()->value,
+            $task->createdBy(),
             $task->createdAt(),
+            $task->scheduledStart(),
+            $task->scheduledEnd(),
+            $task->estimatedTime(),
+            $task->actualTime(),
         );
     }
 }
