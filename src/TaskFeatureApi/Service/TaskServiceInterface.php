@@ -22,5 +22,7 @@ interface TaskServiceInterface
 
     public function update(string $id, TaskUpdateRequestInterface $dtoRequest): ResponseDTO;
 
+    public function applyTransition(string $id, string $transition): ResponseDTO;
+
     public function deleteById(string $id): void;
 }

@@ -37,11 +37,16 @@ final class DoctrineWorkflowStatusRepository implements WorkflowStatusRepository
         ]);
     }
 
-    public function hasInitial(WorkflowId $workflowId): bool
+    public function findInitial(WorkflowId $workflowId): ?WorkflowStatus
     {
         return $this->entityManager->getRepository(WorkflowStatus::class)->findOneBy([
             'workflowId' => $workflowId->value(),
             'isInitial' => true,
-        ]) !== null;
+        ]);
+    }
+
+    public function hasInitial(WorkflowId $workflowId): bool
+    {
+        return $this->findInitial($workflowId) !== null;
     }
 }

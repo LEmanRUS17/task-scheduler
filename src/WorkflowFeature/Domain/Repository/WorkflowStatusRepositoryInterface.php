@@ -16,5 +16,7 @@ interface WorkflowStatusRepositoryInterface
 
     public function findByLabel(WorkflowId $workflowId, string $label): ?WorkflowStatus;
 
+    public function findInitial(WorkflowId $workflowId): ?WorkflowStatus;
+
     public function hasInitial(WorkflowId $workflowId): bool;
 }

@@ -6,6 +6,7 @@ namespace App\TaskFeature\Application\ApiService;
 
 use App\TaskFeature\Application\DataMapper\TaskDataMapper;
 use App\TaskFeature\Application\DTORequestValidator\TaskValidatorInterface;
+use App\TaskFeature\Domain\Interactor\ApplyTaskTransitionInteractor;
 use App\TaskFeature\Domain\Interactor\CreateTaskInteractor;
 use App\TaskFeature\Domain\Interactor\UpdateTaskInteractor;
 use App\TaskFeature\Domain\Repository\TaskRepositoryInterface;
@@ -22,6 +23,7 @@ final class TaskApiService implements TaskServiceInterface
     public function __construct(
         private readonly CreateTaskInteractor $createInteractor,
         private readonly UpdateTaskInteractor $updateInteractor,
+        private readonly ApplyTaskTransitionInteractor $transitionInteractor,
         private readonly TaskRepositoryInterface $tasks,
         private readonly TaskDataMapper $dataMapper,
         private readonly TaskValidatorInterface $validator,
@@ -79,6 +81,13 @@ final class TaskApiService implements TaskServiceInterface
             $dtoRequest->getScheduledEnd(),
             $dtoRequest->getEstimatedTime(),
         );
+
+        return $this->dataMapper->taskToResponse($task);
+    }
+
+    public function applyTransition(string $id, string $transition): TaskDataResponseInterface
+    {
+        $task = $this->transitionInteractor->apply($id, $transition);
 
         return $this->dataMapper->taskToResponse($task);
     }

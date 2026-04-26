@@ -7,6 +7,7 @@ namespace App\WorkflowFeature\Infrastructure\Persistence;
 use App\WorkflowFeature\Domain\Entity\WorkflowTransition;
 use App\WorkflowFeature\Domain\Repository\WorkflowTransitionRepositoryInterface;
 use App\WorkflowFeature\Domain\ValueObject\WorkflowId;
+use App\WorkflowFeature\Domain\ValueObject\WorkflowTransitionId;
 use Doctrine\ORM\EntityManagerInterface;
 
 final class DoctrineWorkflowTransitionRepository implements WorkflowTransitionRepositoryInterface
@@ -20,6 +21,11 @@ final class DoctrineWorkflowTransitionRepository implements WorkflowTransitionRe
     {
         $this->entityManager->persist($transition);
         $this->entityManager->flush();
+    }
+
+    public function findById(WorkflowTransitionId $id): ?WorkflowTransition
+    {
+        return $this->entityManager->find(WorkflowTransition::class, $id->value());
     }
 
     public function findByWorkflowId(WorkflowId $workflowId): array

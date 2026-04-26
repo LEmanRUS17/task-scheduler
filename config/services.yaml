@@ -64,6 +64,26 @@ services:
     App\TeamFeature\Domain\Repository\TeamMemberRepositoryInterface:
         class: App\TeamFeature\Infrastructure\Persistence\DoctrineTeamMemberRepository
 
+    App\TaskFeatureApi\Service\TaskServiceInterface:
+        class: App\TaskFeature\Application\ApiService\TaskApiService
+
+    App\TaskFeature\Domain\Port\ClockInterface:
+        class: App\TaskFeature\Infrastructure\Clock\SystemClock
+
+    App\TaskFeature\Domain\Port\DomainEventDispatcherInterface:
+        class: App\TaskFeature\Infrastructure\Messenger\MessengerDomainEventDispatcher
+        arguments:
+            $eventBus: '@event.bus'
+
+    App\TaskFeature\Domain\Repository\TaskRepositoryInterface:
+        class: App\TaskFeature\Infrastructure\Persistence\DoctrineTaskRepository
+
+    App\TaskFeature\Application\DTORequestValidator\TaskValidatorInterface:
+        class: App\TaskFeature\Application\DTORequestValidator\TaskValidator
+
+    App\TaskFeature\Domain\Port\TaskWorkflowInterface:
+        class: App\TaskFeature\Infrastructure\Workflow\SymfonyTaskWorkflow
+
     Symfony\Component\Workflow\Registry: ~
 
     App\WorkflowFeatureApi\Service\WorkflowServiceInterface:
