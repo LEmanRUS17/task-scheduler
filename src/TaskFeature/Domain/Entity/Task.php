@@ -17,6 +17,7 @@ final class Task implements WorkflowSubjectInterface
     private TaskPriority $priority;
     private string $workflowStatus = '';
     private string $workflowDefinitionTitle;
+    private ?string $teamId;
     private string $createdBy;
     private \DateTimeImmutable $createdAt;
     private ?\DateTimeImmutable $scheduledStart;
@@ -32,6 +33,7 @@ final class Task implements WorkflowSubjectInterface
         TaskTitle $title,
         TaskPriority $priority,
         string $workflowDefinitionTitle,
+        ?string $teamId,
         string $createdBy,
         \DateTimeImmutable $createdAt,
         ?\DateTimeImmutable $scheduledStart,
@@ -42,6 +44,7 @@ final class Task implements WorkflowSubjectInterface
         $this->title = $title->value();
         $this->priority = $priority;
         $this->workflowDefinitionTitle = $workflowDefinitionTitle;
+        $this->teamId = $teamId;
         $this->createdBy = $createdBy;
         $this->createdAt = $createdAt;
         $this->scheduledStart = $scheduledStart;
@@ -55,6 +58,7 @@ final class Task implements WorkflowSubjectInterface
         TaskTitle $title,
         TaskPriority $priority,
         string $workflowDefinitionTitle,
+        ?string $teamId,
         string $createdBy,
         \DateTimeImmutable $createdAt,
         ?\DateTimeImmutable $scheduledStart = null,
@@ -66,6 +70,7 @@ final class Task implements WorkflowSubjectInterface
             $title,
             $priority,
             $workflowDefinitionTitle,
+            $teamId,
             $createdBy,
             $createdAt,
             $scheduledStart,
@@ -91,6 +96,11 @@ final class Task implements WorkflowSubjectInterface
     public function priority(): TaskPriority
     {
         return $this->priority;
+    }
+
+    public function teamId(): ?string
+    {
+        return $this->teamId;
     }
 
     public function createdBy(): string

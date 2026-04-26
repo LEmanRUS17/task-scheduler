@@ -13,6 +13,7 @@ final class TaskResponseDTO implements TaskDataResponseInterface
         private readonly string $title,
         private readonly string $status,
         private readonly string $priority,
+        private readonly ?string $teamId,
         private readonly string $createdBy,
         private readonly \DateTimeImmutable $createdAt,
         private readonly ?\DateTimeImmutable $scheduledStart,
@@ -39,6 +40,11 @@ final class TaskResponseDTO implements TaskDataResponseInterface
     public function getPriority(): string
     {
         return $this->priority;
+    }
+
+    public function getTeamId(): ?string
+    {
+        return $this->teamId;
     }
 
     public function getCreatedBy(): string

@@ -31,6 +31,7 @@ final class TaskDataMapper
             $task->title()->value(),
             $task->getWorkflowStatus(),
             $task->priority()->value,
+            $task->teamId(),
             $task->createdBy(),
             $task->createdAt(),
             $task->scheduledStart(),

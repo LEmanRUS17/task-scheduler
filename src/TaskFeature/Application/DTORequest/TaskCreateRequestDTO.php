@@ -23,6 +23,8 @@ final class TaskCreateRequestDTO implements TaskCreateRequestInterface
         )]
         private readonly ?string $priority = null,
 
+        private readonly ?string $teamId = null,
+
         private readonly ?string $assigneeId = null,
 
         private readonly ?\DateTimeImmutable $scheduledStart = null,
@@ -46,6 +48,11 @@ final class TaskCreateRequestDTO implements TaskCreateRequestInterface
     public function getPriority(): ?string
     {
         return $this->priority;
+    }
+
+    public function getTeamId(): ?string
+    {
+        return $this->teamId;
     }
 
     public function getAssigneeId(): ?string

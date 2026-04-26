@@ -56,6 +56,7 @@ final class TaskApiService implements TaskServiceInterface
             $this->dataMapper->requestToTitle($dtoRequest),
             $this->dataMapper->requestToPriority($dtoRequest),
             $dtoRequest->getWorkflow(),
+            $dtoRequest->getTeamId(),
             $creatorUserId,
             $dtoRequest->getScheduledStart(),
             $dtoRequest->getScheduledEnd(),

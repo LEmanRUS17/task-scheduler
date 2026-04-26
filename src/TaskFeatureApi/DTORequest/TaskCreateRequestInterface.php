@@ -12,6 +12,8 @@ interface TaskCreateRequestInterface
 
     public function getWorkflow(): string;
 
+    public function getTeamId(): ?string;
+
     public function getAssigneeId(): ?string;
 
     public function getScheduledStart(): ?\DateTimeImmutable;

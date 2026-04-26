@@ -10,6 +10,7 @@ interface TaskDataResponseInterface
     public function getTitle(): string;
     public function getStatus(): string;
     public function getPriority(): string;
+    public function getTeamId(): ?string;
     public function getCreatedBy(): string;
     public function getCreatedAt(): \DateTimeImmutable;
     public function getScheduledStart(): ?\DateTimeImmutable;
