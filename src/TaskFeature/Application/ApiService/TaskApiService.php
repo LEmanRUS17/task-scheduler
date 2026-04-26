@@ -46,7 +46,7 @@ final class TaskApiService implements TaskServiceInterface
 
     public function create(TaskCreateRequestInterface $dtoRequest, string $creatorUserId): TaskDataResponseInterface
     {
-        $violations = $this->validator->validate($dtoRequest);
+        $violations = $this->validator->validate($dtoRequest, $creatorUserId);
 
         if (!empty($violations)) {
             throw new \InvalidArgumentException(json_encode($violations));

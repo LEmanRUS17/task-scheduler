@@ -84,6 +84,9 @@ services:
     App\TaskFeature\Domain\Port\TaskWorkflowInterface:
         class: App\TaskFeature\Infrastructure\Workflow\SymfonyTaskWorkflow
 
+    App\TaskFeature\Domain\Port\TeamMembershipInterface:
+        class: App\TaskFeature\Infrastructure\Team\TeamMembershipChecker
+
     Symfony\Component\Workflow\Registry: ~
 
     App\WorkflowFeatureApi\Service\WorkflowServiceInterface:

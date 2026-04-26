@@ -10,7 +10,7 @@ use App\TaskFeatureApi\DTORequest\TaskUpdateRequestInterface;
 interface TaskValidatorInterface
 {
     /** @return array<string, string[]> */
-    public function validate(TaskCreateRequestInterface $dto): array;
+    public function validate(TaskCreateRequestInterface $dto, string $userId): array;
 
     /** @return array<string, string[]> */
     public function validateUpdate(TaskUpdateRequestInterface $dto): array;

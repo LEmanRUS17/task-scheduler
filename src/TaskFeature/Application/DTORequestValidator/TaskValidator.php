@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\TaskFeature\Application\DTORequestValidator;
 
+use App\TaskFeature\Domain\Port\TeamMembershipInterface;
 use App\TaskFeatureApi\DTORequest\TaskCreateRequestInterface;
 use App\TaskFeatureApi\DTORequest\TaskUpdateRequestInterface;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
@@ -12,13 +13,20 @@ final class TaskValidator implements TaskValidatorInterface
 {
     public function __construct(
         private readonly ValidatorInterface $validator,
+        private readonly TeamMembershipInterface $teamMembership,
     ) {
     }
 
     /** @return array<string, string[]> */
-    public function validate(TaskCreateRequestInterface $dto): array
+    public function validate(TaskCreateRequestInterface $dto, string $userId): array
     {
-        return $this->collectViolations($dto);
+        $violations = $this->collectViolations($dto);
+
+        if ($dto->getTeamId() !== null && !$this->teamMembership->isMember($dto->getTeamId(), $userId)) {
+            $violations['teamId'][] = 'User is not a member of the specified team';
+        }
+
+        return $violations;
     }
 
     /** @return array<string, string[]> */
