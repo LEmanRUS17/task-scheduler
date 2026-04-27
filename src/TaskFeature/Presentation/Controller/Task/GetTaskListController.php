@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace App\TaskFeature\Presentation\Controller\Task;
 
 use App\TaskFeatureApi\Service\TaskServiceInterface;
+use App\UserFeature\Infrastructure\Security\SecurityUser;
+use Symfony\Bundle\SecurityBundle\Security;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Attribute\AsController;
@@ -15,12 +17,17 @@ final class GetTaskListController
 {
     public function __construct(
         private readonly TaskServiceInterface $taskService,
+        private readonly Security $security,
     ) {}
 
     #[Route('/task', name: 'task_list', methods: ['GET'])]
     public function __invoke(): JsonResponse
     {
-        $tasks = $this->taskService->getList();
+        /** @var SecurityUser $securityUser */
+        $securityUser = $this->security->getUser();
+        $userId = $securityUser->getDomainUser()->id()->value();
+
+        $tasks = $this->taskService->getList($userId);
 
         return new JsonResponse(
             [

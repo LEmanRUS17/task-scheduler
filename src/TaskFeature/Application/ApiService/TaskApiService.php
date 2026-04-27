@@ -31,14 +31,11 @@ final class TaskApiService implements TaskServiceInterface
         private readonly TaskValidatorInterface $validator,
     ) {}
 
-    public function getList(): array
+    public function getList(string $userId): array
     {
         return array_map(
-            fn($task) => $this->dataMapper->taskToResponse(
-                $task,
-                $this->loadAssigneeIds($task->id())
-            ),
-            $this->tasks->findAll(),
+            fn($task) => $this->dataMapper->taskToResponse($task, $this->loadAssigneeIds($task->id())),
+            $this->tasks->findByAssigneeUserId($userId),
         );
     }
 

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\TaskFeature\Infrastructure\Persistence;
 
 use App\TaskFeature\Domain\Entity\Task;
+use App\TaskFeature\Domain\Entity\TaskAssignee;
 use App\TaskFeature\Domain\Repository\TaskRepositoryInterface;
 use App\TaskFeature\Domain\ValueObject\TaskId;
 use Doctrine\ORM\EntityManagerInterface;
@@ -25,6 +26,17 @@ final class DoctrineTaskRepository implements TaskRepositoryInterface
     public function findAll(): array
     {
         return $this->entityManager->getRepository(Task::class)->findAll();
+    }
+
+    public function findByAssigneeUserId(string $userId): array
+    {
+        return $this->entityManager->createQuery(
+            'SELECT t FROM ' . Task::class . ' t
+             JOIN ' . TaskAssignee::class . ' ta WITH ta.taskId = t.id
+             WHERE ta.userId = :userId',
+        )
+            ->setParameter('userId', $userId)
+            ->getResult();
     }
 
     public function findById(TaskId $id): ?Task

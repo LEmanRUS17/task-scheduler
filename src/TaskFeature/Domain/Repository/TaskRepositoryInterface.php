@@ -14,6 +14,9 @@ interface TaskRepositoryInterface
     /** @return Task[] */
     public function findAll(): array;
 
+    /** @return Task[] */
+    public function findByAssigneeUserId(string $userId): array;
+
     public function findById(TaskId $id): ?Task;
 
     public function delete(TaskId $id): void;
