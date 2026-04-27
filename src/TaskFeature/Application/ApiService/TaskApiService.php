@@ -121,7 +121,9 @@ final class TaskApiService implements TaskServiceInterface
             throw new \DomainException("Task {$id} not found");
         }
 
-        $this->tasks->delete(TaskId::fromString($id));
+        $taskId = TaskId::fromString($id);
+        $this->assignees->deleteByTaskId($taskId);
+        $this->tasks->delete($taskId);
     }
 
     /** @return string[] */
