@@ -5,9 +5,11 @@ declare(strict_types=1);
 namespace App\TaskFeature\Domain\Interactor;
 
 use App\TaskFeature\Domain\Entity\Task;
+use App\TaskFeature\Domain\Entity\TaskAssignee;
 use App\TaskFeature\Domain\Port\ClockInterface;
 use App\TaskFeature\Domain\Port\DomainEventDispatcherInterface;
 use App\TaskFeature\Domain\Port\TaskWorkflowInterface;
+use App\TaskFeature\Domain\Repository\TaskAssigneeRepositoryInterface;
 use App\TaskFeature\Domain\Repository\TaskRepositoryInterface;
 use App\TaskFeature\Domain\ValueObject\TaskId;
 use App\TaskFeature\Domain\ValueObject\TaskPriority;
@@ -17,17 +19,22 @@ final class CreateTaskInteractor
 {
     public function __construct(
         private readonly TaskRepositoryInterface $tasks,
+        private readonly TaskAssigneeRepositoryInterface $assignees,
         private readonly DomainEventDispatcherInterface $eventDispatcher,
         private readonly ClockInterface $clock,
         private readonly TaskWorkflowInterface $workflow,
     ) {}
 
+    /**
+     * @param string[] $assigneeIds
+     */
     public function create(
         TaskTitle $title,
         TaskPriority $priority,
         string $workflowDefinitionTitle,
         ?string $teamId,
         string $createdBy,
+        array $assigneeIds = [],
         ?\DateTimeImmutable $scheduledStart = null,
         ?\DateTimeImmutable $scheduledEnd = null,
         ?int $estimatedTime = null,
@@ -48,6 +55,12 @@ final class CreateTaskInteractor
         $this->workflow->initialize($task);
         $this->tasks->save($task);
         $this->eventDispatcher->dispatch(...$task->pullDomainEvents());
+
+        $effectiveAssignees = ($teamId !== null && $assigneeIds !== []) ? $assigneeIds : [$createdBy];
+        $now = $this->clock->now();
+        foreach ($effectiveAssignees as $userId) {
+            $this->assignees->save(TaskAssignee::assign($task->id(), $userId, $now));
+        }
 
         return $task;
     }

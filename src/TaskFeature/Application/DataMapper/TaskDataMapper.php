@@ -24,7 +24,10 @@ final class TaskDataMapper
             : TaskPriority::NO_PRIORITY;
     }
 
-    public function taskToResponse(Task $task): TaskResponseDTO
+    /**
+     * @param string[] $assigneeIds
+     */
+    public function taskToResponse(Task $task, array $assigneeIds): TaskResponseDTO
     {
         return new TaskResponseDTO(
             $task->id()->value(),
@@ -33,6 +36,7 @@ final class TaskDataMapper
             $task->priority()->value,
             $task->teamId(),
             $task->createdBy(),
+            $assigneeIds,
             $task->createdAt(),
             $task->scheduledStart(),
             $task->scheduledEnd(),

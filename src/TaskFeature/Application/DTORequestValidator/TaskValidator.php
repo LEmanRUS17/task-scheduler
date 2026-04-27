@@ -26,6 +26,14 @@ final class TaskValidator implements TaskValidatorInterface
             $violations['teamId'][] = 'User is not a member of the specified team';
         }
 
+        if ($dto->getTeamId() !== null) {
+            foreach ($dto->getAssigneeIds() as $assigneeId) {
+                if (!$this->teamMembership->isMember($dto->getTeamId(), $assigneeId)) {
+                    $violations['assigneeIds'][] = sprintf('User "%s" is not a member of the specified team', $assigneeId);
+                }
+            }
+        }
+
         return $violations;
     }
 

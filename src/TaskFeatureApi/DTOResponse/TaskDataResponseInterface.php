@@ -12,6 +12,8 @@ interface TaskDataResponseInterface
     public function getPriority(): string;
     public function getTeamId(): ?string;
     public function getCreatedBy(): string;
+    /** @return string[] */
+    public function getAssigneeIds(): array;
     public function getCreatedAt(): \DateTimeImmutable;
     public function getScheduledStart(): ?\DateTimeImmutable;
     public function getScheduledEnd(): ?\DateTimeImmutable;

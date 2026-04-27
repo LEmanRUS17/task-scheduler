@@ -15,6 +15,8 @@ final class TaskResponseDTO implements TaskDataResponseInterface
         private readonly string $priority,
         private readonly ?string $teamId,
         private readonly string $createdBy,
+        /** @var string[] */
+        private readonly array $assigneeIds,
         private readonly \DateTimeImmutable $createdAt,
         private readonly ?\DateTimeImmutable $scheduledStart,
         private readonly ?\DateTimeImmutable $scheduledEnd,
@@ -50,6 +52,11 @@ final class TaskResponseDTO implements TaskDataResponseInterface
     public function getCreatedBy(): string
     {
         return $this->createdBy;
+    }
+
+    public function getAssigneeIds(): array
+    {
+        return $this->assigneeIds;
     }
 
     public function getCreatedAt(): \DateTimeImmutable

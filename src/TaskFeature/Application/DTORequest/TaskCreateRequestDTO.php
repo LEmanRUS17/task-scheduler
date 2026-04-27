@@ -25,7 +25,8 @@ final class TaskCreateRequestDTO implements TaskCreateRequestInterface
 
         private readonly ?string $teamId = null,
 
-        private readonly ?string $assigneeId = null,
+        /** @var string[] */
+        private readonly array $assigneeIds = [],
 
         private readonly ?\DateTimeImmutable $scheduledStart = null,
 
@@ -55,9 +56,9 @@ final class TaskCreateRequestDTO implements TaskCreateRequestInterface
         return $this->teamId;
     }
 
-    public function getAssigneeId(): ?string
+    public function getAssigneeIds(): array
     {
-        return $this->assigneeId;
+        return $this->assigneeIds;
     }
 
     public function getScheduledStart(): ?\DateTimeImmutable
