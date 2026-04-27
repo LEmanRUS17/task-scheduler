@@ -6,8 +6,10 @@ namespace App\TaskFeature\Application\ApiService;
 
 use App\TaskFeature\Application\DataMapper\TaskDataMapper;
 use App\TaskFeature\Application\DTORequestValidator\TaskValidatorInterface;
+use App\TaskFeature\Domain\Interactor\AddTaskAssigneeInteractor;
 use App\TaskFeature\Domain\Interactor\ApplyTaskTransitionInteractor;
 use App\TaskFeature\Domain\Interactor\CreateTaskInteractor;
+use App\TaskFeature\Domain\Interactor\RemoveTaskAssigneeInteractor;
 use App\TaskFeature\Domain\Interactor\UpdateTaskInteractor;
 use App\TaskFeature\Domain\Repository\TaskAssigneeRepositoryInterface;
 use App\TaskFeature\Domain\Repository\TaskRepositoryInterface;
@@ -25,6 +27,8 @@ final class TaskApiService implements TaskServiceInterface
         private readonly CreateTaskInteractor $createInteractor,
         private readonly UpdateTaskInteractor $updateInteractor,
         private readonly ApplyTaskTransitionInteractor $transitionInteractor,
+        private readonly AddTaskAssigneeInteractor $addAssigneeInteractor,
+        private readonly RemoveTaskAssigneeInteractor $removeAssigneeInteractor,
         private readonly TaskRepositoryInterface $tasks,
         private readonly TaskAssigneeRepositoryInterface $assignees,
         private readonly TaskDataMapper $dataMapper,
@@ -97,6 +101,16 @@ final class TaskApiService implements TaskServiceInterface
         $task = $this->transitionInteractor->apply($id, $transition);
 
         return $this->dataMapper->taskToResponse($task, $this->loadAssigneeIds($task->id()));
+    }
+
+    public function addAssignee(string $taskId, string $userId): void
+    {
+        $this->addAssigneeInteractor->add(TaskId::fromString($taskId), $userId);
+    }
+
+    public function removeAssignee(string $taskId, string $userId): void
+    {
+        $this->removeAssigneeInteractor->remove(TaskId::fromString($taskId), $userId);
     }
 
     public function deleteById(string $id): void

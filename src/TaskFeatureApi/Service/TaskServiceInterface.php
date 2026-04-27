@@ -24,5 +24,9 @@ interface TaskServiceInterface
 
     public function applyTransition(string $id, string $transition): ResponseDTO;
 
+    public function addAssignee(string $taskId, string $userId): void;
+
+    public function removeAssignee(string $taskId, string $userId): void;
+
     public function deleteById(string $id): void;
 }

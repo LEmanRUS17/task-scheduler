@@ -28,6 +28,20 @@ final class DoctrineTaskAssigneeRepository implements TaskAssigneeRepositoryInte
         ]);
     }
 
+    public function findByTaskAndUser(TaskId $taskId, string $userId): ?TaskAssignee
+    {
+        return $this->entityManager->getRepository(TaskAssignee::class)->findOneBy([
+            'taskId' => $taskId->value(),
+            'userId' => $userId,
+        ]);
+    }
+
+    public function delete(TaskAssignee $assignee): void
+    {
+        $this->entityManager->remove($assignee);
+        $this->entityManager->flush();
+    }
+
     public function deleteByTaskId(TaskId $taskId): void
     {
         $this->entityManager->createQueryBuilder()
