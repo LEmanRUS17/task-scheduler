@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace App\TaskFeature\Domain\Interactor;
 
 use App\TaskFeature\Domain\Entity\TaskAssignee;
+use App\TaskFeature\Domain\Event\TaskAssigneeAdded;
 use App\TaskFeature\Domain\Port\ClockInterface;
+use App\TaskFeature\Domain\Port\DomainEventDispatcherInterface;
 use App\TaskFeature\Domain\Port\TeamMembershipInterface;
 use App\TaskFeature\Domain\Repository\TaskAssigneeRepositoryInterface;
 use App\TaskFeature\Domain\Repository\TaskRepositoryInterface;
@@ -17,6 +19,7 @@ final class AddTaskAssigneeInteractor
         private readonly TaskRepositoryInterface $tasks,
         private readonly TaskAssigneeRepositoryInterface $assignees,
         private readonly TeamMembershipInterface $teamMembership,
+        private readonly DomainEventDispatcherInterface $eventDispatcher,
         private readonly ClockInterface $clock,
     ) {}
 
@@ -42,6 +45,7 @@ final class AddTaskAssigneeInteractor
 
         $assignee = TaskAssignee::assign($taskId, $userId, $this->clock->now());
         $this->assignees->save($assignee);
+        $this->eventDispatcher->dispatch(new TaskAssigneeAdded($taskId, $userId));
 
         return $assignee;
     }
