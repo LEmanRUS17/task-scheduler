@@ -35,10 +35,18 @@ final class GetTaskController
 
         return new JsonResponse(
             [
-                'id' => $task->getId(),
-                'title' => $task->getTitle(),
-                'status' => $task->getStatus(),
-                'createdAt' => $task->getCreatedAt()->format(\DateTimeInterface::ATOM),
+                'id'            => $task->getId(),
+                'title'         => $task->getTitle(),
+                'status'        => $task->getStatus(),
+                'priority'      => $task->getPriority(),
+                'teamId'        => $task->getTeamId(),
+                'createdBy'     => $task->getCreatedBy(),
+                'assigneeIds'   => $task->getAssigneeIds(),
+                'scheduledStart' => $task->getScheduledStart()?->format(\DateTimeInterface::ATOM),
+                'scheduledEnd'  => $task->getScheduledEnd()?->format(\DateTimeInterface::ATOM),
+                'estimatedTime' => $task->getEstimatedTime(),
+                'actualTime'    => $task->getActualTime(),
+                'createdAt'     => $task->getCreatedAt()->format(\DateTimeInterface::ATOM),
             ],
             Response::HTTP_OK,
         );
