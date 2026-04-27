@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace App\TaskFeature\Presentation\Controller\Task;
 
+use App\TaskFeature\Domain\ValueObject\TaskPermission;
 use App\TaskFeatureApi\Service\TaskServiceInterface;
+use Symfony\Bundle\SecurityBundle\Security;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -16,11 +18,22 @@ final class ApplyTaskTransitionController
 {
     public function __construct(
         private readonly TaskServiceInterface $taskService,
+        private readonly Security $security,
     ) {}
 
     #[Route('/task/{id}/transition', name: 'task_transition', methods: ['POST'])]
     public function __invoke(string $id, Request $request): JsonResponse
     {
+        $task = $this->taskService->getById($id);
+
+        if ($task === null) {
+            return new JsonResponse(['success' => false, 'message' => 'Task not found'], Response::HTTP_NOT_FOUND);
+        }
+
+        if (!$this->security->isGranted(TaskPermission::EDIT, $task)) {
+            return new JsonResponse(['success' => false, 'message' => 'Access denied'], Response::HTTP_FORBIDDEN);
+        }
+
         $body = json_decode($request->getContent(), true);
         $transitionId = $body['transitionId'] ?? null;
 
