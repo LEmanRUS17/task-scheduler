@@ -1,0 +1,3 @@
+services:
+    App\WorkflowFeature\Domain\Repository\WorkflowRepositoryInterface:
+        class: App\Tests\Stub\NullWorkflowRepository
