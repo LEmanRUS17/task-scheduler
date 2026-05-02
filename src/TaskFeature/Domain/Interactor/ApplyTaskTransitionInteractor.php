@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace App\TaskFeature\Domain\Interactor;
 
 use App\TaskFeature\Domain\Entity\Task;
+use App\TaskFeature\Domain\Event\TaskStatusChanged;
+use App\TaskFeature\Domain\Port\DomainEventDispatcherInterface;
 use App\TaskFeature\Domain\Port\TaskWorkflowInterface;
 use App\TaskFeature\Domain\Repository\TaskRepositoryInterface;
 use App\TaskFeature\Domain\ValueObject\TaskId;
@@ -17,6 +19,7 @@ final class ApplyTaskTransitionInteractor
         private readonly TaskRepositoryInterface $tasks,
         private readonly TaskWorkflowInterface $workflow,
         private readonly WorkflowTransitionRepositoryInterface $transitions,
+        private readonly DomainEventDispatcherInterface $eventDispatcher,
     ) {}
 
     public function apply(string $taskId, string $transitionId): Task
@@ -33,9 +36,19 @@ final class ApplyTaskTransitionInteractor
             throw new \DomainException("Transition {$transitionId} not found");
         }
 
+        $fromStatus = $task->getWorkflowStatus();
+
         $this->workflow->applyTransition($task, $transition->name()->value());
 
         $this->tasks->save($task);
+
+        $this->eventDispatcher->dispatch(new TaskStatusChanged(
+            taskId: $task->id()->value(),
+            fromStatus: $fromStatus,
+            toStatus: $task->getWorkflowStatus(),
+            workflowDefinitionTitle: $task->getWorkflowDefinitionTitle(),
+            teamId: $task->teamId(),
+        ));
 
         return $task;
     }
