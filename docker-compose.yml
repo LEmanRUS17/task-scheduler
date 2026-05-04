@@ -27,6 +27,9 @@ services:
       - ./volumes/postgres-data/data:/var/lib/postgresql/data
   rabbitmq:
     image: rabbitmq:3-management
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD}
     ports:
       - "${RABBITMQ_PORT}"
       - "${RABBITMQ_PORT_MANAGEMENT}"
