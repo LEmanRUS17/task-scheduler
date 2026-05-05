@@ -7,7 +7,10 @@ namespace App\UserFeature\Application\ApiService;
 use App\UserFeature\Application\DataMapper\UserDataMapper;
 use App\UserFeature\Application\DTORequestValidator\UserValidatorInterface;
 use App\UserFeature\Domain\Interactor\RegisterUserInteractor;
+use App\UserFeature\Domain\Repository\UserRepositoryInterface;
+use App\UserFeature\Domain\ValueObject\UserId;
 use App\UserFeatureApi\DTORequest\RegisterUserRequestInterface;
+use App\UserFeatureApi\DTOResponse\UserDataResponseInterface;
 use App\UserFeatureApi\Service\UserServiceInterface;
 
 final class UserApiService implements UserServiceInterface
@@ -16,6 +19,7 @@ final class UserApiService implements UserServiceInterface
         private readonly RegisterUserInteractor $registerUserInteractor,
         private readonly UserDataMapper $dataMapper,
         private readonly UserValidatorInterface $validator,
+        private readonly UserRepositoryInterface $userRepository,
     ) {}
 
     public function register(RegisterUserRequestInterface $request): void
@@ -29,5 +33,12 @@ final class UserApiService implements UserServiceInterface
         $email = $this->dataMapper->requestToEmail($request);
 
         $this->registerUserInteractor->register($email, $request->getPlainPassword());
+    }
+
+    public function findById(string $id): ?UserDataResponseInterface
+    {
+        $user = $this->userRepository->findById(UserId::fromString($id));
+
+        return $user !== null ? $this->dataMapper->userToResponse($user) : null;
     }
 }
