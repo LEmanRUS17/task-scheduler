@@ -13,7 +13,10 @@ framework:
             sync: 'sync://'
             async: '%env(MESSENGER_TRANSPORT_DSN)%'
 
-        routing: []
+        routing:
+            App\TaskFeature\Infrastructure\Messenger\Message\TaskStatusChangedMessage: async
+            App\TaskFeature\Infrastructure\Messenger\Message\TaskCreatedMessage: async
+            App\TaskFeature\Infrastructure\Messenger\Message\TaskAssigneeAddedMessage: async
 
 when@test:
     framework:
