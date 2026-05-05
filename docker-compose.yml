@@ -49,3 +49,11 @@ services:
     image: manticoresearch/manticore
     volumes:
       - ./volumes/manticore-data:/var/lib/manticore
+  consumer:
+    build: ./docker/php
+    command: php bin/console messenger:consume async --time-limit=3600
+    volumes:
+      - .:/var/www/html
+    depends_on:
+      - rabbitmq
+    restart: unless-stopped
