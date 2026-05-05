@@ -111,3 +111,7 @@ services:
 
     App\WorkflowFeature\Application\DTORequestValidator\WorkflowValidatorInterface:
         class: App\WorkflowFeature\Application\DTORequestValidator\WorkflowValidator
+
+    App\NotificationFeature\Infrastructure\Messenger\EventSubscriber\TaskNotificationSubscriber:
+        arguments:
+            $defaultBus: '@messenger.bus.default'
