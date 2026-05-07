@@ -24,6 +24,7 @@ final class TaskNotificationSubscriber
     {
         $this->defaultBus->dispatch(new TaskStatusChangedMessage(
             taskId: $event->taskId,
+            transitionId: $event->transitionId,
             fromStatus: $event->fromStatus,
             toStatus: $event->toStatus,
             workflowDefinitionTitle: $event->workflowDefinitionTitle,

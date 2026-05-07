@@ -17,6 +17,9 @@ interface SubscriptionRepositoryInterface
     /** @return list<Subscription> */
     public function findByUserId(string $userId): array;
 
+    /** @return list<Subscription> */
+    public function findBySubjectAndTransition(SubjectType $subjectType, string $subjectId, string $transitionId): array;
+
     public function save(Subscription $subscription): void;
 
     public function delete(Subscription $subscription): void;

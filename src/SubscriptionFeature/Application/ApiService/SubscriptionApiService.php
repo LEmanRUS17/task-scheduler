@@ -13,6 +13,7 @@ use App\SubscriptionFeature\Domain\Interactor\UpdateSubscriptionInteractor;
 use App\SubscriptionFeature\Domain\Repository\SubscriptionChannelRepositoryInterface;
 use App\SubscriptionFeature\Domain\Repository\SubscriptionRepositoryInterface;
 use App\SubscriptionFeature\Domain\Repository\SubscriptionTransitionRepositoryInterface;
+use App\SubscriptionFeature\Domain\ValueObject\SubjectType;
 use App\SubscriptionFeature\Domain\ValueObject\SubscriptionId;
 use App\SubscriptionFeatureApi\DTORequest\SubscribeRequestInterface;
 use App\SubscriptionFeatureApi\DTORequest\UpdateSubscriptionRequestInterface;
@@ -100,6 +101,35 @@ final class SubscriptionApiService implements SubscriptionServiceInterface
     public function getUserSubscriptions(string $userId): array
     {
         $subscriptions = $this->subscriptions->findByUserId($userId);
+
+        if (empty($subscriptions)) {
+            return [];
+        }
+
+        $ids = array_map(fn($s) => $s->id()->value(), $subscriptions);
+        $channelsBySubscription = $this->channelRepository->findBySubscriptionIds($ids);
+        $transitionsBySubscription = $this->transitions->findBySubscriptionIds($ids);
+
+        return array_map(
+            fn($subscription) => $this->dataMapper->subscriptionToResponse(
+                $subscription,
+                $channelsBySubscription[$subscription->id()->value()] ?? [],
+                $transitionsBySubscription[$subscription->id()->value()] ?? [],
+            ),
+            $subscriptions,
+        );
+    }
+
+    public function getSubscriptionsForSubjectTransition(
+        string $subjectType,
+        string $subjectId,
+        string $transitionId,
+    ): array {
+        $subscriptions = $this->subscriptions->findBySubjectAndTransition(
+            SubjectType::from($subjectType),
+            $subjectId,
+            $transitionId,
+        );
 
         if (empty($subscriptions)) {
             return [];

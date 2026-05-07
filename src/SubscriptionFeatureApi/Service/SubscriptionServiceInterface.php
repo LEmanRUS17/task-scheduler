@@ -20,4 +20,13 @@ interface SubscriptionServiceInterface
 
     /** @return list<SubscriptionDataResponseInterface> */
     public function getUserSubscriptions(string $userId): array;
+
+    /**
+     * @return list<SubscriptionDataResponseInterface>
+     */
+    public function getSubscriptionsForSubjectTransition(
+        string $subjectType,
+        string $subjectId,
+        string $transitionId,
+    ): array;
 }

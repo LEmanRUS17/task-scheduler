@@ -44,6 +44,7 @@ final class ApplyTaskTransitionInteractor
 
         $this->eventDispatcher->dispatch(new TaskStatusChanged(
             taskId: $task->id()->value(),
+            transitionId: $transition->id()->value(),
             fromStatus: $fromStatus,
             toStatus: $task->getWorkflowStatus(),
             workflowDefinitionTitle: $task->getWorkflowDefinitionTitle(),

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\SubscriptionFeature\Infrastructure\Persistence;
 
 use App\SubscriptionFeature\Domain\Entity\Subscription;
+use App\SubscriptionFeature\Domain\Entity\SubscriptionTransition;
 use App\SubscriptionFeature\Domain\Repository\SubscriptionRepositoryInterface;
 use App\SubscriptionFeature\Domain\ValueObject\SubjectType;
 use App\SubscriptionFeature\Domain\ValueObject\SubscriptionId;
@@ -35,6 +36,22 @@ final class DoctrineSubscriptionRepository implements SubscriptionRepositoryInte
         return $this->entityManager->getRepository(Subscription::class)->findBy([
             'userId' => $userId,
         ]);
+    }
+
+    public function findBySubjectAndTransition(SubjectType $subjectType, string $subjectId, string $transitionId): array
+    {
+        return $this->entityManager->createQueryBuilder()
+            ->select('s')
+            ->from(Subscription::class, 's')
+            ->join(SubscriptionTransition::class, 'st', 'WITH', 'st.subscriptionId = s.id')
+            ->where('s.subjectType = :subjectType')
+            ->andWhere('s.subjectId = :subjectId')
+            ->andWhere('st.workflowTransitionId = :transitionId')
+            ->setParameter('subjectType', $subjectType->value)
+            ->setParameter('subjectId', $subjectId)
+            ->setParameter('transitionId', $transitionId)
+            ->getQuery()
+            ->getResult();
     }
 
     public function save(Subscription $subscription): void
