@@ -9,9 +9,9 @@ use App\SubscriptionFeature\Domain\ValueObject\NotificationChannel;
 final class SubscriptionChannel
 {
     private string $subscriptionId;
-    private string $channel;
+    private int $channel;
 
-    private function __construct(string $subscriptionId, string $channel)
+    private function __construct(string $subscriptionId, int $channel)
     {
         $this->subscriptionId = $subscriptionId;
         $this->channel = $channel;
