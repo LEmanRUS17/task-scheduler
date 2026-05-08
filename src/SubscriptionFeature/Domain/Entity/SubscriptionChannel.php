@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\SubscriptionFeature\Domain\Entity;
 
-use App\SubscriptionFeature\Domain\ValueObject\NotificationChannel;
+use App\SubscriptionFeatureApi\ValueObject\NotificationChannel;
 
 final class SubscriptionChannel
 {

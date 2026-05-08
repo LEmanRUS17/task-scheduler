@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\SubscriptionFeature\Domain\ValueObject;
 
+use App\SubscriptionFeatureApi\ValueObject\NotificationChannel;
+
 final class NotificationChannelMask
 {
     public const int MAX = NotificationChannel::EMAIL->value | NotificationChannel::IN_APP->value;

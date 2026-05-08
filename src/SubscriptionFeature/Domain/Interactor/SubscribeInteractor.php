@@ -13,7 +13,7 @@ use App\SubscriptionFeature\Domain\Port\UnitOfWorkInterface;
 use App\SubscriptionFeature\Domain\Repository\SubscriptionChannelRepositoryInterface;
 use App\SubscriptionFeature\Domain\Repository\SubscriptionRepositoryInterface;
 use App\SubscriptionFeature\Domain\Repository\SubscriptionTransitionRepositoryInterface;
-use App\SubscriptionFeature\Domain\ValueObject\NotificationChannel;
+use App\SubscriptionFeatureApi\ValueObject\NotificationChannel;
 use App\SubscriptionFeature\Domain\ValueObject\NotificationChannelMask;
 use App\SubscriptionFeature\Domain\ValueObject\SubjectType;
 use App\SubscriptionFeature\Domain\ValueObject\SubscriptionId;

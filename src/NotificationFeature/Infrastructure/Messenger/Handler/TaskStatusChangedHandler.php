@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\NotificationFeature\Infrastructure\Messenger\Handler;
 
-use App\SubscriptionFeature\Domain\ValueObject\NotificationChannel;
+use App\SubscriptionFeatureApi\ValueObject\NotificationChannel;
 use App\SubscriptionFeatureApi\Service\SubscriptionServiceInterface;
 use App\TaskFeature\Infrastructure\Messenger\Message\TaskStatusChangedMessage;
 use App\TaskFeatureApi\Service\TaskServiceInterface;
