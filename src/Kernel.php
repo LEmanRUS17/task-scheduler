@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App;
 
+use App\AuditLogFeature\Infrastructure\Persistence\Doctrine\AuditLogMappingCompilerPass;
 use App\ProfileFeature\Infrastructure\Persistence\Doctrine\ProfileMappingCompilerPass;
 use App\SubscriptionFeature\Infrastructure\Persistence\Doctrine\SubscriptionMappingCompilerPass;
 use App\TaskFeature\Infrastructure\Persistence\Doctrine\TaskMappingCompilerPass;
@@ -20,6 +21,7 @@ class Kernel extends BaseKernel
 
     protected function build(ContainerBuilder $container): void
     {
+        $container->addCompilerPass(new AuditLogMappingCompilerPass());
         $container->addCompilerPass(new UserMappingCompilerPass());
         $container->addCompilerPass(new ProfileMappingCompilerPass());
         $container->addCompilerPass(new TeamMappingCompilerPass());
