@@ -12,14 +12,24 @@ framework:
         transports:
             sync: 'sync://'
             async: '%env(MESSENGER_TRANSPORT_DSN)%'
+            notifications:
+                dsn: '%env(MESSENGER_TRANSPORT_DSN)%'
+                options:
+                    exchange:
+                        name: notifications
+                        type: direct
+                        default_publish_routing_key: notification
+                serializer: App\NotificationFeature\Infrastructure\Messenger\Serializer\NotificationDispatchMessageSerializer
 
         routing:
             App\TaskFeature\Infrastructure\Messenger\Message\TaskStatusChangedMessage: async
             App\TaskFeature\Infrastructure\Messenger\Message\TaskCreatedMessage: async
             App\TaskFeature\Infrastructure\Messenger\Message\TaskAssigneeAddedMessage: async
+            App\NotificationFeature\Infrastructure\Messenger\Message\NotificationDispatchMessage: notifications
 
 when@test:
     framework:
         messenger:
             transports:
                 async: 'in-memory://'
+                notifications: 'in-memory://'

@@ -6,6 +6,7 @@ namespace App\Tests\Unit\TaskFeature\Domain\Interactor;
 
 use App\TaskFeature\Domain\Entity\Task;
 use App\TaskFeature\Domain\Interactor\ApplyTaskTransitionInteractor;
+use App\TaskFeature\Domain\Port\DomainEventDispatcherInterface;
 use App\TaskFeature\Domain\Port\TaskWorkflowInterface;
 use App\TaskFeature\Domain\Repository\TaskRepositoryInterface;
 use App\TaskFeature\Domain\ValueObject\TaskId;
@@ -55,7 +56,12 @@ final class ApplyTaskTransitionInteractorTest extends TestCase
         TaskWorkflowInterface $workflow,
         WorkflowTransitionRepositoryInterface $transitions,
     ): ApplyTaskTransitionInteractor {
-        return new ApplyTaskTransitionInteractor($tasks, $workflow, $transitions);
+        return new ApplyTaskTransitionInteractor(
+            $tasks,
+            $workflow,
+            $transitions,
+            $this->createStub(DomainEventDispatcherInterface::class),
+        );
     }
 
     public function testApplyCallsWorkflowTransition(): void
