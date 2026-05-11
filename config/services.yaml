@@ -115,6 +115,10 @@ services:
     App\AuditLogFeature\Domain\Repository\AuditEntryRepositoryInterface:
         class: App\AuditLogFeature\Infrastructure\Persistence\DoctrineAuditEntryRepository
 
+    App\AuditLogFeature\Infrastructure\Doctrine\Subscriber\AuditDoctrineSubscriber:
+        tags:
+            - { name: doctrine.event_listener, event: onFlush }
+
 
     App\NotificationFeature\Infrastructure\Messenger\EventSubscriber\TaskNotificationSubscriber:
         arguments:
