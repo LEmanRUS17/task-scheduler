@@ -9,9 +9,10 @@ use App\UserFeature\Domain\ValueObject\Email;
 use App\UserFeature\Domain\ValueObject\HashedPassword;
 use App\UserFeature\Domain\ValueObject\Role;
 use App\UserFeature\Domain\ValueObject\UserId;
+use App\AuditLogFeatureApi\Contract\AuditableInterface;
 use App\UserFeature\Domain\ValueObject\UserStatus;
 
-final class User
+final class User implements AuditableInterface
 {
     private string $id;
     private string $email;

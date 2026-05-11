@@ -6,9 +6,10 @@ namespace App\TeamFeature\Domain\Entity;
 
 use App\TeamFeature\Domain\Event\TeamMemberAdded;
 use App\TeamFeature\Domain\ValueObject\TeamId;
+use App\AuditLogFeatureApi\Contract\AuditableInterface;
 use App\TeamFeature\Domain\ValueObject\TeamMemberRole;
 
-final class TeamMember
+final class TeamMember implements AuditableInterface
 {
     private string $teamId;
     private string $userId;

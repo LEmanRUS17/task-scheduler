@@ -7,9 +7,10 @@ namespace App\TeamFeature\Domain\Entity;
 use App\TeamFeature\Domain\Event\TeamCreated;
 use App\TeamFeature\Domain\ValueObject\TeamId;
 use App\TeamFeature\Domain\ValueObject\TeamStatus;
+use App\AuditLogFeatureApi\Contract\AuditableInterface;
 use App\TeamFeature\Domain\ValueObject\Title;
 
-final class Team
+final class Team implements AuditableInterface
 {
     private string $id;
     private string $title;

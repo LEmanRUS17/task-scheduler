@@ -8,9 +8,10 @@ use App\TaskFeature\Domain\Event\TaskCreated;
 use App\TaskFeature\Domain\ValueObject\TaskId;
 use App\TaskFeature\Domain\ValueObject\TaskPriority;
 use App\TaskFeature\Domain\ValueObject\TaskTitle;
+use App\AuditLogFeatureApi\Contract\AuditableInterface;
 use App\WorkflowFeatureApi\Contract\WorkflowSubjectInterface;
 
-final class Task implements WorkflowSubjectInterface
+final class Task implements WorkflowSubjectInterface, AuditableInterface
 {
     private string $id;
     private string $title;
