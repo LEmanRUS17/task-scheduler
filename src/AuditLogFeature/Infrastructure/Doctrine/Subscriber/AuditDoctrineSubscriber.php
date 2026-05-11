@@ -23,7 +23,7 @@ final class AuditDoctrineSubscriber
         $actorId = $this->resolveActorId();
 
         foreach ($uow->getScheduledEntityInsertions() as $entity) {
-            $this->audit($em, $uow, $entity, 'insert', [], $actorId);
+            $this->audit($em, $uow, $entity, 'create', [], $actorId);
         }
 
         foreach ($uow->getScheduledEntityUpdates() as $entity) {
@@ -99,7 +99,13 @@ final class AuditDoctrineSubscriber
 
     private function resolveActorId(): ?string
     {
-        $user = $this->security->getUser();
+        $token = $this->security->getToken();
+
+        if ($token === null) {
+            return null;
+        }
+
+        $user = $token->getUser();
 
         if (!$user instanceof SecurityUser) {
             return null;
