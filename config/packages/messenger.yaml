@@ -27,6 +27,9 @@ framework:
             App\TaskFeature\Infrastructure\Messenger\Message\TaskAssigneeAddedMessage: async
             App\NotificationFeature\Infrastructure\Messenger\Message\NotificationDispatchMessage: notifications
 
+        routing:
+            App\SearchFeature\Infrastructure\Messenger\Message\IndexTaskMessage: async
+
 when@test:
     framework:
         messenger:
