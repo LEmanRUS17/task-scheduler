@@ -12,8 +12,7 @@ final class ManticoreTaskSearchIndex implements TaskSearchIndexInterface
 
     public function index(string $taskId, string $title, string $priority, string $status, ?string $teamId, string $createdBy): void
     {
-        $this->client->replace('tasks', [
-            'id' => $this->numericId($taskId),
+        $this->client->replace('tasks', $this->numericId($taskId), [
             'task_id' => $taskId,
             'title' => $title,
             'priority' => $priority,

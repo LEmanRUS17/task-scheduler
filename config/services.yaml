@@ -133,3 +133,9 @@ services:
     App\SearchFeature\Infrastructure\Messenger\EventSubscriber\TaskSearchIndexSubscriber:
         arguments:
             $defaultBus: '@messenger.bus.default'
+
+    App\SearchFeatureApi\Contract\SearchServiceInterface:
+        class: App\SearchFeature\Application\ApiService\SearchApiService
+
+    App\SearchFeature\Domain\Port\TaskSearchRepositoryInterface:
+        class: App\SearchFeature\Infrastructure\Manticore\ManticoreTaskSearchRepository

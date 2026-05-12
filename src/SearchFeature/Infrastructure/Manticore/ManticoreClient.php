@@ -13,9 +13,9 @@ final class ManticoreClient
         private readonly string $baseUrl,
     ) {}
 
-    public function replace(string $table, array $document): void
+    public function replace(string $table, int $id, array $document): void
     {
-        $this->request('POST', '/replace', ['index' => $table, 'doc' => $document]);
+        $this->request('POST', '/replace', ['index' => $table, 'id' => $id, 'doc' => $document]);
     }
 
     public function delete(string $table, int $id): void
@@ -30,7 +30,7 @@ final class ManticoreClient
 
     public function sql(string $query): void
     {
-        $response = $this->httpClient->request('POST', $this->baseUrl . '/sql', [
+        $response = $this->httpClient->request('POST', $this->baseUrl . '/sql?mode=raw', [
             'body' => 'query=' . urlencode($query),
             'headers' => ['Content-Type' => 'application/x-www-form-urlencoded'],
         ]);
