@@ -42,6 +42,10 @@ services:
       MERCURE_EXTRA_DIRECTIVES: anonymous
   clickhouse:
     image: clickhouse/clickhouse-server
+    environment:
+      CLICKHOUSE_USER: ${CLICKHOUSE_USER}
+      CLICKHOUSE_PASSWORD: ${CLICKHOUSE_PASSWORD}
+      CLICKHOUSE_DEFAULT_ACCESS_MANAGEMENT: 1
     ports:
       - "${CLICKHOUSE_PORT}"
       - "${CLICKHOUSE_NATIVE_PORT}"

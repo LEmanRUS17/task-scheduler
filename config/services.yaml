@@ -139,3 +139,11 @@ services:
 
     App\SearchFeature\Domain\Port\TaskSearchRepositoryInterface:
         class: App\SearchFeature\Infrastructure\Manticore\ManticoreTaskSearchRepository
+    App\AnalyticsFeature\Infrastructure\ClickHouse\ClickHouseClient:
+        arguments:
+            $baseUrl: '%env(CLICKHOUSE_URL)%'
+            $user: '%env(CLICKHOUSE_USER)%'
+            $password: '%env(CLICKHOUSE_PASSWORD)%'
+
+    App\AnalyticsFeature\Domain\Port\TaskEventStorageInterface:
+        class: App\AnalyticsFeature\Infrastructure\ClickHouse\ClickHouseTaskEventStorage
