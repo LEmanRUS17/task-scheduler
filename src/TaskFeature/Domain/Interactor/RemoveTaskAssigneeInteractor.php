@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\TaskFeature\Domain\Interactor;
 
+use App\TaskFeature\Domain\Event\TaskAssigneeRemoved;
+use App\TaskFeature\Domain\Port\DomainEventDispatcherInterface;
 use App\TaskFeature\Domain\Repository\TaskAssigneeRepositoryInterface;
 use App\TaskFeature\Domain\Repository\TaskRepositoryInterface;
 use App\TaskFeature\Domain\ValueObject\TaskId;
@@ -13,6 +15,7 @@ final class RemoveTaskAssigneeInteractor
     public function __construct(
         private readonly TaskRepositoryInterface $tasks,
         private readonly TaskAssigneeRepositoryInterface $assignees,
+        private readonly DomainEventDispatcherInterface $eventDispatcher,
     ) {
     }
 
@@ -29,5 +32,7 @@ final class RemoveTaskAssigneeInteractor
         }
 
         $this->assignees->delete($assignee);
+
+        $this->eventDispatcher->dispatch(new TaskAssigneeRemoved($taskId, $userId));
     }
 }

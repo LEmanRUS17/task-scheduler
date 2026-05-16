@@ -147,3 +147,10 @@ services:
 
     App\AnalyticsFeature\Domain\Port\TaskEventStorageInterface:
         class: App\AnalyticsFeature\Infrastructure\ClickHouse\ClickHouseTaskEventStorage
+
+    App\AnalyticsFeature\Infrastructure\Messenger\EventSubscriber\TaskAnalyticsSubscriber:
+        arguments:
+            $defaultBus: '@messenger.bus.default'
+
+    App\AnalyticsFeature\Domain\Port\TaskActionStorageInterface:
+        class: App\AnalyticsFeature\Infrastructure\ClickHouse\ClickHouseTaskActionStorage

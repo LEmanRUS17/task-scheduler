@@ -10,7 +10,9 @@ use App\TaskFeature\Domain\Interactor\AddTaskAssigneeInteractor;
 use App\TaskFeature\Domain\Interactor\ApplyTaskTransitionInteractor;
 use App\TaskFeature\Domain\Interactor\CreateTaskInteractor;
 use App\TaskFeature\Domain\Interactor\RemoveTaskAssigneeInteractor;
+use App\TaskFeature\Domain\Event\TaskDeleted;
 use App\TaskFeature\Domain\Interactor\UpdateTaskInteractor;
+use App\TaskFeature\Domain\Port\DomainEventDispatcherInterface;
 use App\TaskFeature\Domain\Repository\TaskAssigneeRepositoryInterface;
 use App\TaskFeature\Domain\Repository\TaskRepositoryInterface;
 use App\TaskFeature\Domain\ValueObject\TaskId;
@@ -33,8 +35,7 @@ final class TaskApiService implements TaskServiceInterface
         private readonly TaskAssigneeRepositoryInterface $assignees,
         private readonly TaskDataMapper $dataMapper,
         private readonly TaskValidatorInterface $validator,
-    ) {
-    }
+    ) {}
 
     public function getList(string $userId): array
     {
@@ -125,6 +126,7 @@ final class TaskApiService implements TaskServiceInterface
         $taskId = TaskId::fromString($id);
         $this->assignees->deleteByTaskId($taskId);
         $this->tasks->delete($taskId);
+        $this->eventDispatcher->dispatch(new TaskDeleted($id));
     }
 
     /** @return string[] */

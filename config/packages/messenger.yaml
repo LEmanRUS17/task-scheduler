@@ -27,6 +27,8 @@ framework:
             App\TaskFeature\Infrastructure\Messenger\Message\TaskAssigneeAddedMessage: async
             App\NotificationFeature\Infrastructure\Messenger\Message\NotificationDispatchMessage: notifications
             App\SearchFeature\Infrastructure\Messenger\Message\IndexTaskMessage: async
+            App\AnalyticsFeature\Infrastructure\Messenger\Message\RecordTaskEventMessage: async
+            App\AnalyticsFeature\Infrastructure\Messenger\Message\RecordTaskActionMessage: async
 
 when@test:
     framework:
