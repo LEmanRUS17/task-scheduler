@@ -154,3 +154,9 @@ services:
 
     App\AnalyticsFeature\Domain\Port\TaskActionStorageInterface:
         class: App\AnalyticsFeature\Infrastructure\ClickHouse\ClickHouseTaskActionStorage
+
+    App\AnalyticsFeatureApi\Contract\AnalyticsServiceInterface:
+        class: App\AnalyticsFeature\Application\ApiService\AnalyticsApiService
+
+    App\AnalyticsFeature\Domain\Port\AnalyticsQueryInterface:
+        class: App\AnalyticsFeature\Infrastructure\ClickHouse\ClickHouseAnalyticsQuery
