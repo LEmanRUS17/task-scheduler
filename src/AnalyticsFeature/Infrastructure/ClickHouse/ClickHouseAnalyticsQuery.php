@@ -22,11 +22,10 @@ final class ClickHouseAnalyticsQuery implements AnalyticsQueryInterface
                         OVER (PARTITION BY task_id ORDER BY occurred_at
                               ROWS BETWEEN CURRENT ROW AND UNBOUNDED FOLLOWING) AS next_occurred_at
                 FROM task_events
-                WHERE team_id = '%s' AND occurred_at >= '%s' AND occurred_at <= '%s'
+                WHERE occurred_at >= '%s' AND occurred_at <= '%s'
             )
             WHERE next_occurred_at > occurred_at
             GROUP BY status",
-            $this->escape($teamId),
             $from->format('Y-m-d H:i:s'),
             $to->format('Y-m-d H:i:s'),
         );
@@ -47,8 +46,7 @@ final class ClickHouseAnalyticsQuery implements AnalyticsQueryInterface
         $sql = sprintf(
             "SELECT count() AS cnt
             FROM task_events
-            WHERE team_id = '%s' AND to_status = '%s' AND occurred_at >= '%s' AND occurred_at <= '%s'",
-            $this->escape($teamId),
+            WHERE to_status = '%s' AND occurred_at >= '%s' AND occurred_at <= '%s'",
             $this->escape($finalStatus),
             $from->format('Y-m-d H:i:s'),
             $to->format('Y-m-d H:i:s'),
@@ -64,10 +62,9 @@ final class ClickHouseAnalyticsQuery implements AnalyticsQueryInterface
         $sql = sprintf(
             "SELECT toString(toDate(occurred_at)) AS day, count() AS count
             FROM task_events
-            WHERE team_id = '%s' AND to_status = '%s' AND occurred_at >= '%s' AND occurred_at <= '%s'
+            WHERE to_status = '%s' AND occurred_at >= '%s' AND occurred_at <= '%s'
             GROUP BY day
             ORDER BY day",
-            $this->escape($teamId),
             $this->escape($finalStatus),
             $from->format('Y-m-d H:i:s'),
             $to->format('Y-m-d H:i:s'),
@@ -90,12 +87,11 @@ final class ClickHouseAnalyticsQuery implements AnalyticsQueryInterface
             "SELECT a.action AS action, count() AS count
             FROM task_actions AS a
             INNER JOIN (
-                SELECT DISTINCT task_id FROM task_events WHERE team_id = '%s'
+                SELECT DISTINCT task_id FROM task_events
             ) AS t ON a.task_id = t.task_id
             WHERE a.occurred_at >= '%s' AND a.occurred_at <= '%s'
             GROUP BY action
             ORDER BY action",
-            $this->escape($teamId),
             $from->format('Y-m-d H:i:s'),
             $to->format('Y-m-d H:i:s'),
         );
