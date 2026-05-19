@@ -16,8 +16,8 @@ final class TeamAnalyticsController
 {
     public function __construct(private readonly AnalyticsServiceInterface $analyticsService) {}
 
-    #[Route('/teams/{id}/analytics', name: 'team_analytics', methods: ['GET'])]
-    public function __invoke(string $id, Request $request): JsonResponse
+    #[Route('/analytics', name: 'analytics', methods: ['GET'])]
+    public function __invoke(Request $request): JsonResponse
     {
         $fromParam = $request->query->get('from');
         $toParam = $request->query->get('to');
@@ -46,11 +46,11 @@ final class TeamAnalyticsController
             ], Response::HTTP_BAD_REQUEST);
         }
 
-        $analytics = $this->analyticsService->getTeamAnalytics($id, $from, $to);
+        $analytics = $this->analyticsService->getAnalytics($from, $to);
 
         return new JsonResponse([
             'avg_time_per_status' => $analytics->getAvgTimePerStatus(),
-            'completed_count'  => $analytics->getCompletedCount(),
+            'completed_count' => $analytics->getCompletedCount(),
             'throughput_per_day' => $analytics->getThroughputPerDay(),
             'crud_actions_count' => $analytics->getCrudActionsCount(),
         ], Response::HTTP_OK);

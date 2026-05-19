@@ -10,7 +10,7 @@ final class ClickHouseAnalyticsQuery implements AnalyticsQueryInterface
 {
     public function __construct(private readonly ClickHouseClient $client) {}
 
-    public function avgTimePerStatus(string $teamId, \DateTimeImmutable $from, \DateTimeImmutable $to): array
+    public function avgTimePerStatus(\DateTimeImmutable $from, \DateTimeImmutable $to): array
     {
         $sql = sprintf(
             "SELECT from_status AS status, avg(dateDiff('second', occurred_at, next_occurred_at)) AS avg_seconds
@@ -41,7 +41,7 @@ final class ClickHouseAnalyticsQuery implements AnalyticsQueryInterface
         );
     }
 
-    public function completedCount(string $teamId, string $finalStatus, \DateTimeImmutable $from, \DateTimeImmutable $to): int
+    public function completedCount(string $finalStatus, \DateTimeImmutable $from, \DateTimeImmutable $to): int
     {
         $sql = sprintf(
             "SELECT count() AS cnt
@@ -57,7 +57,7 @@ final class ClickHouseAnalyticsQuery implements AnalyticsQueryInterface
         return (int) ($rows[0]['cnt'] ?? 0);
     }
 
-    public function throughputPerDay(string $teamId, string $finalStatus, \DateTimeImmutable $from, \DateTimeImmutable $to): array
+    public function throughputPerDay(string $finalStatus, \DateTimeImmutable $from, \DateTimeImmutable $to): array
     {
         $sql = sprintf(
             "SELECT toString(toDate(occurred_at)) AS day, count() AS count
@@ -81,7 +81,7 @@ final class ClickHouseAnalyticsQuery implements AnalyticsQueryInterface
         );
     }
 
-    public function crudActionsCount(string $teamId, \DateTimeImmutable $from, \DateTimeImmutable $to): array
+    public function crudActionsCount(\DateTimeImmutable $from, \DateTimeImmutable $to): array
     {
         $sql = sprintf(
             "SELECT a.action AS action, count() AS count

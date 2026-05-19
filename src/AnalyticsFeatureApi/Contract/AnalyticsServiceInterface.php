@@ -8,8 +8,7 @@ use App\AnalyticsFeatureApi\DTOResponse\TeamAnalyticsResponseInterface;
 
 interface AnalyticsServiceInterface
 {
-    public function getTeamAnalytics(
-        string $teamId,
+    public function getAnalytics(
         \DateTimeImmutable $from,
         \DateTimeImmutable $to,
     ): TeamAnalyticsResponseInterface;

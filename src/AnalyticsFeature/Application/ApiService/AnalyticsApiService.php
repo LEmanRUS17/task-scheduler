@@ -15,16 +15,15 @@ final class AnalyticsApiService implements AnalyticsServiceInterface
 
     public function __construct(private readonly AnalyticsQueryInterface $analyticsQuery) {}
 
-    public function getTeamAnalytics(
-        string $teamId,
+    public function getAnalytics(
         \DateTimeImmutable $from,
         \DateTimeImmutable $to,
     ): TeamAnalyticsResponseInterface {
         return new TeamAnalyticsResponse(
-            avgTimePerStatus: $this->analyticsQuery->avgTimePerStatus($teamId, $from, $to),
-            completedCount: $this->analyticsQuery->completedCount($teamId, self::FINAL_STATUS, $from, $to),
-            throughputPerDay: $this->analyticsQuery->throughputPerDay($teamId, self::FINAL_STATUS, $from, $to),
-            crudActionsCount: $this->analyticsQuery->crudActionsCount($teamId, $from, $to),
+            avgTimePerStatus: $this->analyticsQuery->avgTimePerStatus($from, $to),
+            completedCount: $this->analyticsQuery->completedCount(self::FINAL_STATUS, $from, $to),
+            throughputPerDay: $this->analyticsQuery->throughputPerDay(self::FINAL_STATUS, $from, $to),
+            crudActionsCount: $this->analyticsQuery->crudActionsCount($from, $to),
         );
     }
 }
