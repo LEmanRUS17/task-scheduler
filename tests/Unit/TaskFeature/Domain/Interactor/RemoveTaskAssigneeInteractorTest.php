@@ -7,6 +7,7 @@ namespace App\Tests\Unit\TaskFeature\Domain\Interactor;
 use App\TaskFeature\Domain\Entity\Task;
 use App\TaskFeature\Domain\Entity\TaskAssignee;
 use App\TaskFeature\Domain\Interactor\RemoveTaskAssigneeInteractor;
+use App\TaskFeature\Domain\Port\DomainEventDispatcherInterface;
 use App\TaskFeature\Domain\Repository\TaskAssigneeRepositoryInterface;
 use App\TaskFeature\Domain\Repository\TaskRepositoryInterface;
 use App\TaskFeature\Domain\ValueObject\TaskId;
@@ -44,7 +45,11 @@ final class RemoveTaskAssigneeInteractorTest extends TestCase
         $assignees->method('findByTaskAndUser')->willReturn($this->assignee);
         $assignees->expects($this->once())->method('delete')->with($this->assignee);
 
-        (new RemoveTaskAssigneeInteractor($tasks, $assignees))->remove($this->taskId, 'user-1');
+        (new RemoveTaskAssigneeInteractor(
+            $tasks,
+            $assignees,
+            $this->createStub(DomainEventDispatcherInterface::class),
+        ))->remove($this->taskId, 'user-1');
     }
 
     public function testRemoveThrowsWhenTaskNotFound(): void
@@ -54,8 +59,11 @@ final class RemoveTaskAssigneeInteractorTest extends TestCase
 
         $this->expectException(\DomainException::class);
 
-        (new RemoveTaskAssigneeInteractor($tasks, $this->createStub(TaskAssigneeRepositoryInterface::class)))
-            ->remove($this->taskId, 'user-1');
+        (new RemoveTaskAssigneeInteractor(
+            $tasks,
+            $this->createStub(TaskAssigneeRepositoryInterface::class),
+            $this->createStub(DomainEventDispatcherInterface::class),
+        ))->remove($this->taskId, 'user-1');
     }
 
     public function testRemoveThrowsWhenUserNotAssigned(): void
@@ -68,6 +76,10 @@ final class RemoveTaskAssigneeInteractorTest extends TestCase
 
         $this->expectException(\DomainException::class);
 
-        (new RemoveTaskAssigneeInteractor($tasks, $assignees))->remove($this->taskId, 'user-1');
+        (new RemoveTaskAssigneeInteractor(
+            $tasks,
+            $assignees,
+            $this->createStub(DomainEventDispatcherInterface::class),
+        ))->remove($this->taskId, 'user-1');
     }
 }

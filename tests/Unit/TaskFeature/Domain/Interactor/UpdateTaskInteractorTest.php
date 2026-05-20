@@ -6,6 +6,7 @@ namespace App\Tests\Unit\TaskFeature\Domain\Interactor;
 
 use App\TaskFeature\Domain\Entity\Task;
 use App\TaskFeature\Domain\Interactor\UpdateTaskInteractor;
+use App\TaskFeature\Domain\Port\DomainEventDispatcherInterface;
 use App\TaskFeature\Domain\Repository\TaskRepositoryInterface;
 use App\TaskFeature\Domain\ValueObject\TaskId;
 use App\TaskFeature\Domain\ValueObject\TaskPriority;
@@ -36,7 +37,10 @@ final class UpdateTaskInteractorTest extends TestCase
         $tasks = $this->createStub(TaskRepositoryInterface::class);
         $tasks->method('findById')->willReturn($this->task);
 
-        $result = (new UpdateTaskInteractor($tasks))->update(
+        $result = (new UpdateTaskInteractor(
+            $tasks,
+            $this->createStub(DomainEventDispatcherInterface::class),
+        ))->update(
             $this->taskId->value(),
             TaskTitle::fromString('Updated'),
             TaskPriority::HIGH,
@@ -55,7 +59,10 @@ final class UpdateTaskInteractorTest extends TestCase
         $tasks->method('findById')->willReturn($this->task);
         $tasks->expects($this->once())->method('save');
 
-        (new UpdateTaskInteractor($tasks))->update(
+        (new UpdateTaskInteractor(
+            $tasks,
+            $this->createStub(DomainEventDispatcherInterface::class),
+        ))->update(
             $this->taskId->value(),
             null,
             null,
@@ -72,7 +79,10 @@ final class UpdateTaskInteractorTest extends TestCase
 
         $this->expectException(\DomainException::class);
 
-        (new UpdateTaskInteractor($tasks))->update(
+        (new UpdateTaskInteractor(
+            $tasks,
+            $this->createStub(DomainEventDispatcherInterface::class),
+        ))->update(
             $this->taskId->value(),
             null,
             null,
@@ -90,7 +100,10 @@ final class UpdateTaskInteractorTest extends TestCase
         $start = new \DateTimeImmutable('2024-06-01');
         $end = new \DateTimeImmutable('2024-06-30');
 
-        $result = (new UpdateTaskInteractor($tasks))->update(
+        $result = (new UpdateTaskInteractor(
+            $tasks,
+            $this->createStub(DomainEventDispatcherInterface::class),
+        ))->update(
             $this->taskId->value(),
             null,
             null,
