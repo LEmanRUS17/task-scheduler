@@ -50,8 +50,8 @@ final class TeamAnalyticsController
 
         return new JsonResponse([
             'avg_time_per_status' => $analytics->getAvgTimePerStatus(),
-            'completed_count' => $analytics->getCompletedCount(),
-            'throughput_per_day' => $analytics->getThroughputPerDay(),
+            // 'completed_count' => $analytics->getCompletedCount(),
+            // 'throughput_per_day' => $analytics->getThroughputPerDay(),
             'crud_actions_count' => $analytics->getCrudActionsCount(),
         ], Response::HTTP_OK);
     }

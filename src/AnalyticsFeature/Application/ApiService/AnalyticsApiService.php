@@ -21,8 +21,10 @@ final class AnalyticsApiService implements AnalyticsServiceInterface
     ): TeamAnalyticsResponseInterface {
         return new TeamAnalyticsResponse(
             avgTimePerStatus: $this->analyticsQuery->avgTimePerStatus($from, $to),
-            completedCount: $this->analyticsQuery->completedCount(self::FINAL_STATUS, $from, $to),
-            throughputPerDay: $this->analyticsQuery->throughputPerDay(self::FINAL_STATUS, $from, $to),
+            // completedCount: $this->analyticsQuery->completedCount(self::FINAL_STATUS, $from, $to),
+            completedCount: 0,
+            // throughputPerDay: $this->analyticsQuery->throughputPerDay(self::FINAL_STATUS, $from, $to),
+            throughputPerDay: [],
             crudActionsCount: $this->analyticsQuery->crudActionsCount($from, $to),
         );
     }
