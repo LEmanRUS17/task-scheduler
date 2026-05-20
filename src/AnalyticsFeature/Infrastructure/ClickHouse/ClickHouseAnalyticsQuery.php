@@ -107,6 +107,30 @@ final class ClickHouseAnalyticsQuery implements AnalyticsQueryInterface
         );
     }
 
+    public function statusTransitionsPerDay(\DateTimeImmutable $from, \DateTimeImmutable $to): array
+    {
+        $sql = sprintf(
+            "SELECT toString(toDate(occurred_at)) AS day, to_status AS status, count() AS count
+            FROM task_events
+            WHERE occurred_at >= '%s' AND occurred_at <= '%s'
+            GROUP BY day, status
+            ORDER BY day, status",
+            $from->format('Y-m-d H:i:s'),
+            $to->format('Y-m-d H:i:s'),
+        );
+
+        $rows = $this->client->query($sql);
+
+        return array_map(
+            static fn(array $row): array => [
+                'day'    => (string) $row['day'],
+                'status' => (string) $row['status'],
+                'count'  => (int) $row['count'],
+            ],
+            $rows,
+        );
+    }
+
     private function escape(string $value): string
     {
         return str_replace("'", "\\'", $value);

@@ -53,6 +53,7 @@ final class TeamAnalyticsController
             // 'completed_count' => $analytics->getCompletedCount(),
             // 'throughput_per_day' => $analytics->getThroughputPerDay(),
             'crud_actions_count' => $analytics->getCrudActionsCount(),
+            'status_transitions_per_day' => $analytics->getStatusTransitionsPerDay(),
         ], Response::HTTP_OK);
     }
 }

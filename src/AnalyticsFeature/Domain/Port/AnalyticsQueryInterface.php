@@ -16,4 +16,7 @@ interface AnalyticsQueryInterface
 
     /** @return array<array{action: string, count: int}> */
     public function crudActionsCount(\DateTimeImmutable $from, \DateTimeImmutable $to): array;
+
+    /** @return array<array{day: string, status: string, count: int}> */
+    public function statusTransitionsPerDay(\DateTimeImmutable $from, \DateTimeImmutable $to): array;
 }

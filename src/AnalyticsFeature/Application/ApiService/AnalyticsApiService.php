@@ -26,6 +26,7 @@ final class AnalyticsApiService implements AnalyticsServiceInterface
             // throughputPerDay: $this->analyticsQuery->throughputPerDay(self::FINAL_STATUS, $from, $to),
             throughputPerDay: [],
             crudActionsCount: $this->analyticsQuery->crudActionsCount($from, $to),
+            statusTransitionsPerDay: $this->analyticsQuery->statusTransitionsPerDay($from, $to),
         );
     }
 }

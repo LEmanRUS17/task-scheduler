@@ -16,4 +16,7 @@ interface TeamAnalyticsResponseInterface
 
     /** @return array<array{action: string, count: int}> */
     public function getCrudActionsCount(): array;
+
+    /** @return array<array{day: string, status: string, count: int}> */
+    public function getStatusTransitionsPerDay(): array;
 }
