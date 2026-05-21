@@ -27,6 +27,9 @@ services:
       - ./volumes/postgres-data/data:/var/lib/postgresql/data
   rabbitmq:
     image: rabbitmq:3-management
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD}
     ports:
       - "${RABBITMQ_PORT}"
       - "${RABBITMQ_PORT_MANAGEMENT}"
@@ -46,3 +49,11 @@ services:
     image: manticoresearch/manticore
     volumes:
       - ./volumes/manticore-data:/var/lib/manticore
+  consumer:
+    build: ./docker/php
+    command: php bin/console messenger:consume async --time-limit=3600
+    volumes:
+      - .:/var/www/html
+    depends_on:
+      - rabbitmq
+    restart: unless-stopped

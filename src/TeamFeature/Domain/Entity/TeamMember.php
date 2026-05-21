@@ -6,15 +6,17 @@ namespace App\TeamFeature\Domain\Entity;
 
 use App\TeamFeature\Domain\Event\TeamMemberAdded;
 use App\TeamFeature\Domain\ValueObject\TeamId;
+use App\AuditLogFeatureApi\Contract\AuditableInterface;
 use App\TeamFeature\Domain\ValueObject\TeamMemberRole;
 
-final class TeamMember
+final class TeamMember implements AuditableInterface
 {
     private string $teamId;
     private string $userId;
     private TeamMemberRole $role;
     private \DateTimeImmutable $joinedAt;
 
+    /** @var list<object> */
     private array $domainEvents = [];
 
     private function __construct(
@@ -66,6 +68,7 @@ final class TeamMember
         $this->domainEvents[] = $event;
     }
 
+    /** @return list<object> */
     public function pullDomainEvents(): array
     {
         $events = $this->domainEvents;

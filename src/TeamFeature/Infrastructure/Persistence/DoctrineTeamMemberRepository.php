@@ -13,7 +13,8 @@ final class DoctrineTeamMemberRepository implements TeamMemberRepositoryInterfac
 {
     public function __construct(
         private readonly EntityManagerInterface $entityManager,
-    ) {}
+    ) {
+    }
 
     public function save(TeamMember $member): void
     {
@@ -21,6 +22,7 @@ final class DoctrineTeamMemberRepository implements TeamMemberRepositoryInterfac
         $this->entityManager->flush();
     }
 
+    /** @return list<TeamMember> */
     public function findByTeamId(TeamId $teamId): array
     {
         return $this->entityManager->getRepository(TeamMember::class)->findBy([

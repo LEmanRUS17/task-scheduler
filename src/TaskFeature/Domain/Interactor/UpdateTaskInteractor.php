@@ -14,7 +14,8 @@ final class UpdateTaskInteractor
 {
     public function __construct(
         private readonly TaskRepositoryInterface $tasks,
-    ) {}
+    ) {
+    }
 
     public function update(
         string $id,

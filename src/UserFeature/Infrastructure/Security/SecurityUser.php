@@ -10,7 +10,9 @@ use Symfony\Component\Security\Core\User\UserInterface;
 
 final class SecurityUser implements UserInterface, PasswordAuthenticatedUserInterface
 {
-    public function __construct(private readonly User $user) {}
+    public function __construct(private readonly User $user)
+    {
+    }
 
     public function getDomainUser(): User
     {
@@ -32,5 +34,7 @@ final class SecurityUser implements UserInterface, PasswordAuthenticatedUserInte
         return $this->user->password()->value();
     }
 
-    public function eraseCredentials(): void {}
+    public function eraseCredentials(): void
+    {
+    }
 }

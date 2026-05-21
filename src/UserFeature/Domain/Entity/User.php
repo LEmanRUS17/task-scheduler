@@ -9,16 +9,19 @@ use App\UserFeature\Domain\ValueObject\Email;
 use App\UserFeature\Domain\ValueObject\HashedPassword;
 use App\UserFeature\Domain\ValueObject\Role;
 use App\UserFeature\Domain\ValueObject\UserId;
+use App\AuditLogFeatureApi\Contract\AuditableInterface;
 use App\UserFeature\Domain\ValueObject\UserStatus;
 
-final class User
+final class User implements AuditableInterface
 {
     private string $id;
     private string $email;
     private string $password;
     private UserStatus $status;
     private \DateTimeImmutable $createdAt;
+    /** @phpstan-ignore property.unusedType */
     private ?\DateTimeImmutable $deletedAt = null;
+    /** @phpstan-ignore property.unusedType */
     private ?\DateTimeImmutable $passwordUpdatedAt = null;
 
     /**
@@ -26,6 +29,7 @@ final class User
      */
     private array $roles = [];
 
+    /** @var list<object> */
     private array $domainEvents = [];
 
     private function __construct(
@@ -103,6 +107,7 @@ final class User
         $this->domainEvents[] = $event;
     }
 
+    /** @return list<object> */
     public function pullDomainEvents(): array
     {
         $events = $this->domainEvents;

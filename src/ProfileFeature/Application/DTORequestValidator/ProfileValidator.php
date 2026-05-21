@@ -11,7 +11,8 @@ final class ProfileValidator implements ProfileValidatorInterface
 {
     public function __construct(
         private readonly ValidatorInterface $validator,
-    ) {}
+    ) {
+    }
 
     public function validate(UpdateProfileRequestInterface $dto): array
     {

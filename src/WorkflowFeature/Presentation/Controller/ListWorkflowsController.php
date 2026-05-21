@@ -14,7 +14,8 @@ final class ListWorkflowsController
 {
     public function __construct(
         private readonly WorkflowServiceInterface $workflowService,
-    ) {}
+    ) {
+    }
 
     #[Route('/workflows', name: 'workflow_list', methods: ['GET'])]
     public function __invoke(): JsonResponse

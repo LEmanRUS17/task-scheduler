@@ -13,7 +13,8 @@ final class TeamResponseDTO implements TeamDataResponseInterface
         private readonly string $title,
         private readonly string $status,
         private readonly \DateTimeImmutable $createdAt,
-    ) {}
+    ) {
+    }
 
     public function getId(): string
     {

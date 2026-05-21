@@ -21,7 +21,8 @@ final class TeamCreateInteractor
         private readonly TeamMemberRepositoryInterface $members,
         private readonly DomainEventDispatcherInterface $eventDispatcher,
         private readonly ClockInterface $clock,
-    ) {}
+    ) {
+    }
 
     public function create(Title $title, string $creatorUserId): Team
     {

@@ -12,5 +12,6 @@ final class UserRegistered
     public function __construct(
         public readonly UserId $userId,
         public readonly Email $email,
-    ) {}
+    ) {
+    }
 }

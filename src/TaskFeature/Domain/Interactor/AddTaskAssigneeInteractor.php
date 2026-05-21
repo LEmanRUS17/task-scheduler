@@ -21,7 +21,8 @@ final class AddTaskAssigneeInteractor
         private readonly TeamMembershipInterface $teamMembership,
         private readonly DomainEventDispatcherInterface $eventDispatcher,
         private readonly ClockInterface $clock,
-    ) {}
+    ) {
+    }
 
     public function add(TaskId $taskId, string $userId): TaskAssignee
     {

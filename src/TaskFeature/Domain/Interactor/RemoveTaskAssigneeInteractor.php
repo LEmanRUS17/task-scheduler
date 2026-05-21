@@ -13,7 +13,8 @@ final class RemoveTaskAssigneeInteractor
     public function __construct(
         private readonly TaskRepositoryInterface $tasks,
         private readonly TaskAssigneeRepositoryInterface $assignees,
-    ) {}
+    ) {
+    }
 
     public function remove(TaskId $taskId, string $userId): void
     {

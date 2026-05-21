@@ -20,7 +20,8 @@ final class CreateTeamController
     public function __construct(
         private readonly TeamServiceInterface $teamService,
         private readonly Security $security,
-    ) {}
+    ) {
+    }
 
     #[Route('/team/create', name: 'team_create', methods: ['POST'])]
     public function __invoke(

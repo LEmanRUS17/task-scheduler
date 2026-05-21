@@ -12,20 +12,17 @@ final class TaskUpdateRequestDTO implements TaskUpdateRequestInterface
     public function __construct(
         #[Assert\Length(max: 255, maxMessage: 'Title must not exceed 255 characters')]
         private readonly ?string $title = null,
-
         #[Assert\Choice(
             choices: ['no_priority', 'low', 'normal', 'high', 'critical'],
             message: 'Invalid priority value',
         )]
         private readonly ?string $priority = null,
-
         private readonly ?\DateTimeImmutable $scheduledStart = null,
-
         private readonly ?\DateTimeImmutable $scheduledEnd = null,
-
         #[Assert\PositiveOrZero(message: 'Estimated time must be a non-negative integer')]
         private readonly ?int $estimatedTime = null,
-    ) {}
+    ) {
+    }
 
     public function getTitle(): ?string
     {

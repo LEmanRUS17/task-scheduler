@@ -33,7 +33,8 @@ final class TaskApiService implements TaskServiceInterface
         private readonly TaskAssigneeRepositoryInterface $assignees,
         private readonly TaskDataMapper $dataMapper,
         private readonly TaskValidatorInterface $validator,
-    ) {}
+    ) {
+    }
 
     public function getList(string $userId): array
     {

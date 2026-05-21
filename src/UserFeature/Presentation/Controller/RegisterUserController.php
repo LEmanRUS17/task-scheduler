@@ -31,7 +31,8 @@ final class RegisterUserController
 {
     public function __construct(
         private readonly UserServiceInterface $userService,
-    ) {}
+    ) {
+    }
 
     #[Route('/auth/register', name: 'user_register', methods: ['POST'])]
     public function __invoke(
@@ -40,7 +41,6 @@ final class RegisterUserController
         try {
             $this->userService->register($request);
         } catch (\InvalidArgumentException $e) {
-
             return new JsonResponse(
                 [
                     'success' => false,
@@ -51,7 +51,6 @@ final class RegisterUserController
                 Response::HTTP_UNPROCESSABLE_ENTITY,
             );
         } catch (\DomainException $e) {
-
             return new JsonResponse(
                 [
                     'success' => false,

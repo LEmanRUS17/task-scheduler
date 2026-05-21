@@ -11,6 +11,7 @@ interface TeamMemberRepositoryInterface
 {
     public function save(TeamMember $member): void;
 
+    /** @return list<TeamMember> */
     public function findByTeamId(TeamId $teamId): array;
 
     public function findByTeamAndUser(TeamId $teamId, string $userId): ?TeamMember;

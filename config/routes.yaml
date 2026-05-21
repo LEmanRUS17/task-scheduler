@@ -36,3 +36,9 @@ task_controllers:
         path: ../src/TaskFeature/Presentation/Controller/
         namespace: App\TaskFeature\Presentation\Controller
     type: attribute
+
+subscription_controllers:
+    resource:
+        path: ../src/SubscriptionFeature/Presentation/Controller/
+        namespace: App\SubscriptionFeature\Presentation\Controller
+    type: attribute

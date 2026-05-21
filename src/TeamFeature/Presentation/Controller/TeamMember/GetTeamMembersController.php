@@ -15,7 +15,8 @@ final class GetTeamMembersController
 {
     public function __construct(
         private readonly TeamServiceInterface $teamService,
-    ) {}
+    ) {
+    }
 
     #[Route('/team/{teamId}/members', name: 'team_members_list', methods: ['GET'])]
     public function __invoke(string $teamId): JsonResponse

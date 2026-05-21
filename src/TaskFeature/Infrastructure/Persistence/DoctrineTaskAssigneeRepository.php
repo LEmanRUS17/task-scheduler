@@ -13,7 +13,8 @@ final class DoctrineTaskAssigneeRepository implements TaskAssigneeRepositoryInte
 {
     public function __construct(
         private readonly EntityManagerInterface $entityManager,
-    ) {}
+    ) {
+    }
 
     public function save(TaskAssignee $assignee): void
     {

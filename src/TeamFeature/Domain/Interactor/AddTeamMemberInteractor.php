@@ -19,7 +19,8 @@ final class AddTeamMemberInteractor
         private readonly TeamMemberRepositoryInterface $members,
         private readonly DomainEventDispatcherInterface $eventDispatcher,
         private readonly ClockInterface $clock,
-    ) {}
+    ) {
+    }
 
     public function add(TeamId $teamId, string $userId, TeamMemberRole $role): TeamMember
     {

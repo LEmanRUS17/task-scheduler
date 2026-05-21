@@ -25,7 +25,8 @@ final class GetProfileController
 {
     public function __construct(
         private readonly ProfileServiceInterface $profileService,
-    ) {}
+    ) {
+    }
 
     #[Route('/profile/user/{userId}', name: 'profile_user_id', methods: ['GET'])]
     public function __invoke(string $userId): JsonResponse
@@ -33,7 +34,6 @@ final class GetProfileController
         try {
             $profile = $this->profileService->getByUserId($userId);
         } catch (\DomainException $e) {
-
             return new JsonResponse(
                 [
                     'success' => false,

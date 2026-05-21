@@ -18,7 +18,8 @@ final class GetTaskListController
     public function __construct(
         private readonly TaskServiceInterface $taskService,
         private readonly Security $security,
-    ) {}
+    ) {
+    }
 
     #[Route('/task', name: 'task_list', methods: ['GET'])]
     public function __invoke(): JsonResponse

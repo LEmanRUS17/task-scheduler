@@ -17,7 +17,8 @@ final class AddWorkflowStatusController
 {
     public function __construct(
         private readonly WorkflowServiceInterface $workflowService,
-    ) {}
+    ) {
+    }
 
     #[Route('/workflows/{id}/statuses', name: 'workflow_add_status', methods: ['POST'])]
     public function __invoke(
@@ -27,7 +28,6 @@ final class AddWorkflowStatusController
         try {
             $status = $this->workflowService->addStatus($id, $request);
         } catch (\InvalidArgumentException $e) {
-
             return new JsonResponse(
                 [
                     'success' => false,
@@ -37,7 +37,6 @@ final class AddWorkflowStatusController
                 Response::HTTP_UNPROCESSABLE_ENTITY,
             );
         } catch (\DomainException $e) {
-
             return new JsonResponse(
                 [
                     'success' => false,

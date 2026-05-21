@@ -22,9 +22,9 @@ jobs:
           path: vendor
           key: ${{ runner.os }}-composer-${{ hashFiles('composer.lock') }}
 
-      - run: composer install --no-interaction --prefer-dist --no-progress
+      - run: composer install --no-interaction --prefer-dist --no-progress --no-scripts
 
-      - run: composer phpcs
+      - run: vendor/bin/phpcs --standard=phpcs.xml.dist --warning-severity=0
 
   phpstan:
     name: Static Analysis
@@ -42,7 +42,7 @@ jobs:
           path: vendor
           key: ${{ runner.os }}-composer-${{ hashFiles('composer.lock') }}
 
-      - run: composer install --no-interaction --prefer-dist --no-progress
+      - run: composer install --no-interaction --prefer-dist --no-progress --no-scripts
 
       - name: Generate JWT keys
         run: |
@@ -54,14 +54,17 @@ jobs:
         env:
           APP_ENV: dev
           APP_SECRET: ci-secret
-          DATABASE_URL: sqlite:///:memory:
+          DATABASE_URL: "sqlite:///:memory:"
           MERCURE_URL: http://localhost/.well-known/mercure
           MERCURE_PUBLIC_URL: http://localhost/.well-known/mercure
           MERCURE_JWT_SECRET: ci-secret
           JWT_PASSPHRASE: ""
-        run: php bin/console cache:warmup
+          DEFAULT_URI: http://localhost
+        run: |
+          echo "APP_ENV=dev" > .env
+          php bin/console cache:warmup
 
-      - run: composer phpstan
+      - run: vendor/bin/phpstan analyse --configuration=phpstan.dist.neon --memory-limit=512M
         env:
           APP_ENV: dev
 
@@ -80,6 +83,6 @@ jobs:
           path: vendor
           key: ${{ runner.os }}-composer-${{ hashFiles('composer.lock') }}
 
-      - run: composer install --no-interaction --prefer-dist --no-progress
+      - run: composer install --no-interaction --prefer-dist --no-progress --no-scripts
 
       - run: php vendor/bin/phpunit tests/Unit --no-coverage

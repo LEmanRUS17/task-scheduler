@@ -8,7 +8,9 @@ final class Username
 {
     private const MAX_LENGTH = 50;
 
-    private function __construct(private readonly string $value) {}
+    private function __construct(private readonly string $value)
+    {
+    }
 
     public static function fromString(string $value): self
     {

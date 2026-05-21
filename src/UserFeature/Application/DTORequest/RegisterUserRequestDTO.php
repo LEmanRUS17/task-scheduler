@@ -14,7 +14,6 @@ final class RegisterUserRequestDTO implements RegisterUserRequestInterface
         #[Assert\Email(message: 'Invalid email format')]
         #[Assert\Length(max: 180, maxMessage: 'Email must not exceed 180 characters')]
         private readonly string $email,
-
         #[Assert\NotBlank(message: 'Password is required')]
         #[Assert\Length(
             min: 8,
@@ -22,7 +21,8 @@ final class RegisterUserRequestDTO implements RegisterUserRequestInterface
             minMessage: 'Password must be at least 8 characters',
         )]
         private readonly string $plainPassword,
-    ) {}
+    ) {
+    }
 
     public function getEmail(): string
     {

@@ -12,7 +12,8 @@ final class UpdateProfileInteractor
 {
     public function __construct(
         private readonly ProfileRepositoryInterface $profiles,
-    ) {}
+    ) {
+    }
 
     public function update(
         string $userId,

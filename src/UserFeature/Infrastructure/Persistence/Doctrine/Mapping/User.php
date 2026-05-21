@@ -7,7 +7,8 @@ namespace App\UserFeature\Infrastructure\Persistence\Doctrine\Mapping;
 use App\UserFeature\Domain\ValueObject\UserStatus;
 use Doctrine\ORM\Mapping\Builder\ClassMetadataBuilder;
 
-/** @var \Doctrine\ORM\Mapping\ClassMetadata $metadata */
+/** @var \Doctrine\ORM\Mapping\ClassMetadata<\App\UserFeature\Domain\Entity\User> $metadata */
+// @phpstan-ignore-next-line isset.variable
 if (!isset($metadata)) {
     return;
 }

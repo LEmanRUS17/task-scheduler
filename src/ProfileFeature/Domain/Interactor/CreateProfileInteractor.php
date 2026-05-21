@@ -14,7 +14,8 @@ final class CreateProfileInteractor
     public function __construct(
         private readonly ProfileRepositoryInterface $profiles,
         private readonly ClockInterface $clock,
-    ) {}
+    ) {
+    }
 
     public function create(string $userId): void
     {

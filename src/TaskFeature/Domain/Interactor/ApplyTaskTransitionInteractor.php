@@ -20,7 +20,8 @@ final class ApplyTaskTransitionInteractor
         private readonly TaskWorkflowInterface $workflow,
         private readonly WorkflowTransitionRepositoryInterface $transitions,
         private readonly DomainEventDispatcherInterface $eventDispatcher,
-    ) {}
+    ) {
+    }
 
     public function apply(string $taskId, string $transitionId): Task
     {
@@ -44,6 +45,7 @@ final class ApplyTaskTransitionInteractor
 
         $this->eventDispatcher->dispatch(new TaskStatusChanged(
             taskId: $task->id()->value(),
+            transitionId: $transition->id()->value(),
             fromStatus: $fromStatus,
             toStatus: $task->getWorkflowStatus(),
             workflowDefinitionTitle: $task->getWorkflowDefinitionTitle(),

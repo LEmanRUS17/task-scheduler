@@ -13,7 +13,8 @@ final class UserRegisteredListener
 {
     public function __construct(
         private readonly ProfileServiceInterface $profileService,
-    ) {}
+    ) {
+    }
 
     public function __invoke(UserRegistered $event): void
     {

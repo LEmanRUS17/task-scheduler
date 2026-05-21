@@ -13,28 +13,22 @@ final class TaskCreateRequestDTO implements TaskCreateRequestInterface
         #[Assert\NotBlank(message: 'Title is required')]
         #[Assert\Length(max: 255, maxMessage: 'Title must not exceed 255 characters')]
         private readonly string $title,
-
         #[Assert\NotBlank(message: 'Workflow is required')]
         private readonly string $workflow,
-
         #[Assert\Choice(
             choices: ['no_priority', 'low', 'normal', 'high', 'critical'],
             message: 'Invalid priority value',
         )]
         private readonly ?string $priority = null,
-
         private readonly ?string $teamId = null,
-
         /** @var string[] */
         private readonly array $assigneeIds = [],
-
         private readonly ?\DateTimeImmutable $scheduledStart = null,
-
         private readonly ?\DateTimeImmutable $scheduledEnd = null,
-
         #[Assert\PositiveOrZero(message: 'Estimated time must be a non-negative integer')]
         private readonly ?int $estimatedTime = null,
-    ) {}
+    ) {
+    }
 
     public function getTitle(): string
     {

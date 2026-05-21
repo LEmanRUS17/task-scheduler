@@ -16,7 +16,8 @@ final class ProfileDataResponse implements ProfileDataResponseInterface
         private readonly ?string $midlname,
         private readonly ?string $status,
         private readonly ?\DateTimeImmutable $lastLogin,
-    ) {}
+    ) {
+    }
 
     public function getUserId(): string
     {

@@ -17,7 +17,8 @@ final class SymfonyTaskWorkflow implements TaskWorkflowInterface
         private readonly Registry $registry,
         private readonly WorkflowRepositoryInterface $workflows,
         private readonly WorkflowStatusRepositoryInterface $statuses,
-    ) {}
+    ) {
+    }
 
     public function initialize(Task $task): void
     {

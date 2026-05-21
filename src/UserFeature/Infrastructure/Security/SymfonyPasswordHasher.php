@@ -12,7 +12,8 @@ final class SymfonyPasswordHasher implements PasswordHasherInterface
 {
     public function __construct(
         private readonly PasswordHasherFactoryInterface $factory,
-    ) {}
+    ) {
+    }
 
     public function hash(string $plainPassword): HashedPassword
     {

@@ -19,7 +19,8 @@ final class RegisterUserInteractor
         private readonly PasswordHasherInterface $passwordHasher,
         private readonly DomainEventDispatcherInterface $eventDispatcher,
         private readonly ClockInterface $clock,
-    ) {}
+    ) {
+    }
 
     public function register(Email $email, string $plainPassword): void
     {

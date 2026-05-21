@@ -23,7 +23,8 @@ final class CreateTaskInteractor
         private readonly DomainEventDispatcherInterface $eventDispatcher,
         private readonly ClockInterface $clock,
         private readonly TaskWorkflowInterface $workflow,
-    ) {}
+    ) {
+    }
 
     /**
      * @param string[] $assigneeIds
