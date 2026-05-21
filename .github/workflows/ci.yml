@@ -54,7 +54,7 @@ jobs:
         env:
           APP_ENV: dev
           APP_SECRET: ci-secret
-          DATABASE_URL: sqlite:///:memory:
+          DATABASE_URL: "sqlite:///:memory:"
           MERCURE_URL: http://localhost/.well-known/mercure
           MERCURE_PUBLIC_URL: http://localhost/.well-known/mercure
           MERCURE_JWT_SECRET: ci-secret
