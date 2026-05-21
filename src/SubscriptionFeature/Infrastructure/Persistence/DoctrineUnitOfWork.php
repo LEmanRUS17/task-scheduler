@@ -11,7 +11,8 @@ final class DoctrineUnitOfWork implements UnitOfWorkInterface
 {
     public function __construct(
         private readonly EntityManagerInterface $entityManager,
-    ) {}
+    ) {
+    }
 
     public function flush(): void
     {

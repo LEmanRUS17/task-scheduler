@@ -9,13 +9,14 @@ final class ScriptAction implements NotificationActionInterface
     public const string TYPE = 'script';
 
     /**
-     * @param string $script 
-     * @param array $args 
+     * @param string $script
+     * @param array $args
      */
     public function __construct(
         public readonly string $script,
         public readonly array $args = [],
-    ) {}
+    ) {
+    }
 
     public function getType(): string
     {

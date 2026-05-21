@@ -13,5 +13,6 @@ final class TeamMemberAdded
         public readonly TeamId $teamId,
         public readonly string $userId,
         public readonly TeamMemberRole $role,
-    ) {}
+    ) {
+    }
 }

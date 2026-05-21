@@ -20,7 +20,8 @@ final class UpdateTaskController
     public function __construct(
         private readonly TaskServiceInterface $taskService,
         private readonly Security $security,
-    ) {}
+    ) {
+    }
 
     #[Route('/task/{id}', name: 'task_update', methods: ['PATCH'])]
     public function __invoke(
@@ -40,7 +41,6 @@ final class UpdateTaskController
         try {
             $task = $this->taskService->update($id, $request);
         } catch (\InvalidArgumentException $e) {
-
             return new JsonResponse(
                 [
                     'success' => false,
@@ -51,7 +51,6 @@ final class UpdateTaskController
                 Response::HTTP_UNPROCESSABLE_ENTITY,
             );
         } catch (\DomainException $e) {
-
             return new JsonResponse(
                 [
                     'success' => false,

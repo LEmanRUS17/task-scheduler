@@ -15,7 +15,8 @@ final class DoctrineSubscriptionRepository implements SubscriptionRepositoryInte
 {
     public function __construct(
         private readonly EntityManagerInterface $entityManager,
-    ) {}
+    ) {
+    }
 
     public function findById(SubscriptionId $id): ?Subscription
     {

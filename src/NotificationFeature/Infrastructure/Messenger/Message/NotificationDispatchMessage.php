@@ -13,7 +13,8 @@ final class NotificationDispatchMessage
         public readonly string $event,
         public readonly \DateTimeImmutable $occurredAt,
         public readonly NotificationActionInterface $action,
-    ) {}
+    ) {
+    }
 
     public static function create(string $event, NotificationActionInterface $action): self
     {

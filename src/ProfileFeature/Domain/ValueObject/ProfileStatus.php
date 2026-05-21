@@ -8,7 +8,9 @@ final class ProfileStatus
 {
     private const MAX_LENGTH = 160;
 
-    private function __construct(private readonly string $value) {}
+    private function __construct(private readonly string $value)
+    {
+    }
 
     public static function fromString(string $value): self
     {

@@ -13,5 +13,6 @@ final class TaskStatusChangedMessage
         public readonly string $toStatus,
         public readonly string $workflowDefinitionTitle,
         public readonly ?string $teamId,
-    ) {}
+    ) {
+    }
 }

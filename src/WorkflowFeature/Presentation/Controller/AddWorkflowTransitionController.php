@@ -17,7 +17,8 @@ final class AddWorkflowTransitionController
 {
     public function __construct(
         private readonly WorkflowServiceInterface $workflowService,
-    ) {}
+    ) {
+    }
 
     #[Route('/workflows/{id}/transitions', name: 'workflow_add_transition', methods: ['POST'])]
     public function __invoke(
@@ -27,7 +28,6 @@ final class AddWorkflowTransitionController
         try {
             $transition = $this->workflowService->addTransition($id, $request);
         } catch (\InvalidArgumentException $e) {
-
             return new JsonResponse(
                 [
                     'success' => false,
@@ -37,7 +37,6 @@ final class AddWorkflowTransitionController
                 Response::HTTP_UNPROCESSABLE_ENTITY,
             );
         } catch (\DomainException $e) {
-        
             return new JsonResponse(
                 [
                     'success' => false,

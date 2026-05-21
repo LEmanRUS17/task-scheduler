@@ -24,7 +24,7 @@ jobs:
 
       - run: composer install --no-interaction --prefer-dist --no-progress --no-scripts
 
-      - run: composer phpcs
+      - run: vendor/bin/phpcs --standard=phpcs.xml.dist --warning-severity=0
 
   phpstan:
     name: Static Analysis

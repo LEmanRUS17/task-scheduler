@@ -21,7 +21,8 @@ final class ProfileApiService implements ProfileServiceInterface
         private readonly ProfileRepositoryInterface $profiles,
         private readonly ProfileDataMapper $dataMapper,
         private readonly ProfileValidatorInterface $validator,
-    ) {}
+    ) {
+    }
 
     public function createForUser(string $userId): void
     {

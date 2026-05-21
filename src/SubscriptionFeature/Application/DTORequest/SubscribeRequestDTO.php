@@ -14,16 +14,13 @@ final class SubscribeRequestDTO implements SubscribeRequestInterface
         #[Assert\NotBlank(message: 'Subject type is required')]
         #[Assert\Choice(choices: ['task'], message: 'Invalid subject type')]
         private readonly string $subjectType,
-
         #[Assert\NotBlank(message: 'Subject ID is required')]
         #[Assert\Uuid(message: 'Subject ID must be a valid UUID')]
         private readonly string $subjectId,
-
         #[Assert\NotNull(message: 'Transition IDs is required')]
         #[Assert\Count(min: 1, minMessage: 'At least one transition must be specified')]
         #[Assert\All([new Assert\Uuid(message: 'Each transition ID must be a valid UUID')])]
         private readonly array $transitionIds,
-
         #[Assert\NotNull(message: 'Channels is required')]
         #[Assert\Range(
             min: 1,
@@ -31,7 +28,8 @@ final class SubscribeRequestDTO implements SubscribeRequestInterface
             notInRangeMessage: 'Channels mask must be between {{ min }} and {{ max }}',
         )]
         private readonly int $channels,
-    ) {}
+    ) {
+    }
 
     public function getSubjectType(): string
     {

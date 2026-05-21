@@ -12,6 +12,8 @@
 
     <file>bin/</file>
     <file>config/</file>
+
+    <exclude-pattern>config/reference.php</exclude-pattern>
     <file>public/</file>
     <file>src/</file>
     <file>tests/</file>

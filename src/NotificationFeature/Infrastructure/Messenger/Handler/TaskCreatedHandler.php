@@ -20,7 +20,8 @@ final class TaskCreatedHandler
         private readonly UserServiceInterface $userService,
         private readonly MailerInterface $mailer,
         private readonly MessageBusInterface $defaultBus,
-    ) {}
+    ) {
+    }
 
     public function __invoke(TaskCreatedMessage $message): void
     {

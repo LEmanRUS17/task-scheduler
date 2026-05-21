@@ -20,7 +20,8 @@ final class UnsubscribeController
     public function __construct(
         private readonly SubscriptionServiceInterface $subscriptionService,
         private readonly Security $security,
-    ) {}
+    ) {
+    }
 
     #[Route('/subscriptions/{subscriptionId}', name: 'subscription_delete', methods: ['DELETE'])]
     public function __invoke(string $subscriptionId): JsonResponse

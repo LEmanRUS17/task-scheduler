@@ -31,7 +31,8 @@ final class SubscriptionApiService implements SubscriptionServiceInterface
         private readonly SubscriptionTransitionRepositoryInterface $transitions,
         private readonly SubscriptionDataMapper $dataMapper,
         private readonly SubscriptionValidatorInterface $validator,
-    ) {}
+    ) {
+    }
 
     public function subscribe(SubscribeRequestInterface $request, string $userId): SubscriptionDataResponseInterface
     {

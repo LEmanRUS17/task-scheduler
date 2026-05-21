@@ -12,7 +12,8 @@ final class TeamMembershipChecker implements TeamMembershipInterface
 {
     public function __construct(
         private readonly TeamMemberRepositoryInterface $teamMembers,
-    ) {}
+    ) {
+    }
 
     public function isMember(string $teamId, string $userId): bool
     {

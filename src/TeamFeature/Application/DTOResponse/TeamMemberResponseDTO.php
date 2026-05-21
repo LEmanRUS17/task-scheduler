@@ -13,7 +13,8 @@ final class TeamMemberResponseDTO implements TeamMemberDataResponseInterface
         private readonly string $userId,
         private readonly string $role,
         private readonly \DateTimeImmutable $joinedAt,
-    ) {}
+    ) {
+    }
 
     public function getTeamId(): string
     {

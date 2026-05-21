@@ -11,7 +11,8 @@ final class UserResponseDTO implements UserDataResponseInterface
     public function __construct(
         private readonly string $id,
         private readonly string $email,
-    ) {}
+    ) {
+    }
 
     public function getId(): string
     {

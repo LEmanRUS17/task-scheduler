@@ -14,7 +14,9 @@ use Symfony\Bundle\SecurityBundle\Security;
 
 final class AuditDoctrineSubscriber
 {
-    public function __construct(private readonly Security $security) {}
+    public function __construct(private readonly Security $security)
+    {
+    }
 
     public function onFlush(OnFlushEventArgs $args): void
     {
@@ -71,7 +73,7 @@ final class AuditDoctrineSubscriber
     /**
      * Undocumented function
      *
-     * @param array $changeSet 
+     * @param array $changeSet
      *
      * @return array
      */

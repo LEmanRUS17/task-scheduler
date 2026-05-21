@@ -17,7 +17,8 @@ final class AddTeamMemberController
 {
     public function __construct(
         private readonly TeamServiceInterface $teamService,
-    ) {}
+    ) {
+    }
 
     #[Route('/team/{teamId}/member', name: 'team_member_add', methods: ['POST'])]
     public function __invoke(

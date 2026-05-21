@@ -20,7 +20,8 @@ final class SubscriptionDataResponse implements SubscriptionDataResponseInterfac
         private readonly array $channels,
         private readonly array $transitionIds,
         private readonly \DateTimeImmutable $createdAt,
-    ) {}
+    ) {
+    }
 
     public function getId(): string
     {

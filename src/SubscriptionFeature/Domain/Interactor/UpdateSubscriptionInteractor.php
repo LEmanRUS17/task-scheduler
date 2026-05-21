@@ -26,7 +26,8 @@ final class UpdateSubscriptionInteractor
         private readonly SubscriptionTransitionRepositoryInterface $transitions,
         private readonly DomainEventDispatcherInterface $eventDispatcher,
         private readonly UnitOfWorkInterface $unitOfWork,
-    ) {}
+    ) {
+    }
 
     /** @param list<string> $transitionIds */
     public function update(

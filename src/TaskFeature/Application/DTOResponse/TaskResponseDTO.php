@@ -22,7 +22,8 @@ final class TaskResponseDTO implements TaskDataResponseInterface
         private readonly ?\DateTimeImmutable $scheduledEnd,
         private readonly ?int $estimatedTime,
         private readonly ?int $actualTime,
-    ) {}
+    ) {
+    }
 
     public function getId(): string
     {

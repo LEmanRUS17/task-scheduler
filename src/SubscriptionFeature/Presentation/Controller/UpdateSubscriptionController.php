@@ -24,7 +24,8 @@ final class UpdateSubscriptionController
     public function __construct(
         private readonly SubscriptionServiceInterface $subscriptionService,
         private readonly Security $security,
-    ) {}
+    ) {
+    }
 
     #[Route('/subscriptions/{subscriptionId}', name: 'subscription_update', methods: ['PUT'])]
     public function __invoke(

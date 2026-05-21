@@ -18,7 +18,8 @@ final class RemoveTaskAssigneeController
     public function __construct(
         private readonly TaskServiceInterface $taskService,
         private readonly Security $security,
-    ) {}
+    ) {
+    }
 
     #[Route('/task/{taskId}/assignee/{userId}', name: 'task_assignee_remove', methods: ['DELETE'])]
     public function __invoke(string $taskId, string $userId): JsonResponse

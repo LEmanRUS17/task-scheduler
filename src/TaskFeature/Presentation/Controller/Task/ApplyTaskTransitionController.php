@@ -19,7 +19,8 @@ final class ApplyTaskTransitionController
     public function __construct(
         private readonly TaskServiceInterface $taskService,
         private readonly Security $security,
-    ) {}
+    ) {
+    }
 
     #[Route('/task/{id}/transition', name: 'task_transition', methods: ['POST'])]
     public function __invoke(string $id, Request $request): JsonResponse
@@ -38,7 +39,6 @@ final class ApplyTaskTransitionController
         $transitionId = $body['transitionId'] ?? null;
 
         if (empty($transitionId)) {
-
             return new JsonResponse(
                 [
                     'success' => false,
@@ -51,7 +51,6 @@ final class ApplyTaskTransitionController
         try {
             $task = $this->taskService->applyTransition($id, $transitionId);
         } catch (\DomainException $e) {
-
             return new JsonResponse(
                 [
                     'success' => false,

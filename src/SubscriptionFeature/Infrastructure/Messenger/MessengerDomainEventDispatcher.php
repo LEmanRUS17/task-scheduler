@@ -11,7 +11,8 @@ final class MessengerDomainEventDispatcher implements DomainEventDispatcherInter
 {
     public function __construct(
         private readonly MessageBusInterface $eventBus,
-    ) {}
+    ) {
+    }
 
     public function dispatch(object ...$events): void
     {

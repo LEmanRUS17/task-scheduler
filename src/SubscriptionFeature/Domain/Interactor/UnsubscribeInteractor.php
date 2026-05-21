@@ -19,7 +19,8 @@ final class UnsubscribeInteractor
         private readonly SubscriptionTransitionRepositoryInterface $transitions,
         private readonly DomainEventDispatcherInterface $eventDispatcher,
         private readonly UnitOfWorkInterface $unitOfWork,
-    ) {}
+    ) {
+    }
 
     public function unsubscribe(SubscriptionId $id, string $userId): void
     {

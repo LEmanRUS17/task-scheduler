@@ -11,5 +11,6 @@ final readonly class SubscriptionDeleted
     public function __construct(
         public SubscriptionId $id,
         public string $userId,
-    ) {}
+    ) {
+    }
 }

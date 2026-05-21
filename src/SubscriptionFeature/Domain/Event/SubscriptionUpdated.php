@@ -12,5 +12,6 @@ final readonly class SubscriptionUpdated
     public function __construct(
         public SubscriptionId $id,
         public NotificationChannelMask $channels,
-    ) {}
+    ) {
+    }
 }

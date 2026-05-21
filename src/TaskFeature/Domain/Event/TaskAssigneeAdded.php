@@ -11,5 +11,6 @@ final class TaskAssigneeAdded
     public function __construct(
         public readonly TaskId $taskId,
         public readonly string $userId,
-    ) {}
+    ) {
+    }
 }

@@ -20,7 +20,8 @@ final class UserApiService implements UserServiceInterface
         private readonly UserDataMapper $dataMapper,
         private readonly UserValidatorInterface $validator,
         private readonly UserRepositoryInterface $userRepository,
-    ) {}
+    ) {
+    }
 
     public function register(RegisterUserRequestInterface $request): void
     {

@@ -9,5 +9,6 @@ final class TaskAssigneeAddedMessage
     public function __construct(
         public readonly string $taskId,
         public readonly string $userId,
-    ) {}
+    ) {
+    }
 }

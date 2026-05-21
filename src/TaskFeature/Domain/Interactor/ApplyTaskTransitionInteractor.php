@@ -20,7 +20,8 @@ final class ApplyTaskTransitionInteractor
         private readonly TaskWorkflowInterface $workflow,
         private readonly WorkflowTransitionRepositoryInterface $transitions,
         private readonly DomainEventDispatcherInterface $eventDispatcher,
-    ) {}
+    ) {
+    }
 
     public function apply(string $taskId, string $transitionId): Task
     {

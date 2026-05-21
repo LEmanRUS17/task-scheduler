@@ -10,7 +10,9 @@ final class NotificationChannelMask
 {
     public const int MAX = NotificationChannel::EMAIL->value | NotificationChannel::IN_APP->value;
 
-    private function __construct(private readonly int $value) {}
+    private function __construct(private readonly int $value)
+    {
+    }
 
     public static function fromInt(int $value): self
     {

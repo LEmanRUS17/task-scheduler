@@ -22,7 +22,8 @@ final class SubscribeController
     public function __construct(
         private readonly SubscriptionServiceInterface $subscriptionService,
         private readonly Security $security,
-    ) {}
+    ) {
+    }
 
     #[Route('/subscriptions', name: 'subscription_create', methods: ['POST'])]
     public function __invoke(

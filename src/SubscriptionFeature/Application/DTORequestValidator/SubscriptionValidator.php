@@ -10,7 +10,8 @@ final class SubscriptionValidator implements SubscriptionValidatorInterface
 {
     public function __construct(
         private readonly ValidatorInterface $validator,
-    ) {}
+    ) {
+    }
 
     public function validate(object $request): array
     {

@@ -27,7 +27,8 @@ final class SubscribeInteractor
         private readonly DomainEventDispatcherInterface $eventDispatcher,
         private readonly ClockInterface $clock,
         private readonly UnitOfWorkInterface $unitOfWork,
-    ) {}
+    ) {
+    }
 
     /** @param list<string> $transitionIds */
     public function subscribe(

@@ -12,7 +12,8 @@ final class DoctrineAuditEntryRepository implements AuditEntryRepositoryInterfac
 {
     public function __construct(
         private readonly EntityManagerInterface $entityManager,
-    ) {}
+    ) {
+    }
 
     public function save(AuditEntry $entry): void
     {

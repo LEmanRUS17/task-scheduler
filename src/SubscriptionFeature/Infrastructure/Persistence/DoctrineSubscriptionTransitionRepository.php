@@ -12,7 +12,8 @@ final class DoctrineSubscriptionTransitionRepository implements SubscriptionTran
 {
     public function __construct(
         private readonly EntityManagerInterface $entityManager,
-    ) {}
+    ) {
+    }
 
     public function findBySubscriptionId(string $subscriptionId): array
     {

@@ -12,5 +12,6 @@ final class TeamCreated
     public function __construct(
         public readonly TeamId $id,
         public readonly Title $title,
-    ) {}
+    ) {
+    }
 }

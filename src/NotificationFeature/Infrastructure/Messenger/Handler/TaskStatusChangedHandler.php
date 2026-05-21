@@ -25,7 +25,8 @@ final class TaskStatusChangedHandler
         private readonly SubscriptionServiceInterface $subscriptionService,
         private readonly MailerInterface $mailer,
         private readonly MessageBusInterface $defaultBus,
-    ) {}
+    ) {
+    }
 
     public function __invoke(TaskStatusChangedMessage $message): void
     {

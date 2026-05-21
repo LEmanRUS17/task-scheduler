@@ -10,5 +10,6 @@ final class TaskCreatedMessage
         public readonly string $taskId,
         public readonly string $title,
         public readonly string $createdBy,
-    ) {}
+    ) {
+    }
 }

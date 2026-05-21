@@ -20,7 +20,8 @@ final class CreateWorkflowController
     public function __construct(
         private readonly WorkflowServiceInterface $workflowService,
         private readonly Security $security,
-    ) {}
+    ) {
+    }
 
     #[Route('/workflows', name: 'workflow_create', methods: ['POST'])]
     public function __invoke(
@@ -33,7 +34,6 @@ final class CreateWorkflowController
         try {
             $workflow = $this->workflowService->create($request, $createdBy);
         } catch (\InvalidArgumentException $e) {
-
             return new JsonResponse(
                 [
                     'success' => false,
@@ -43,7 +43,6 @@ final class CreateWorkflowController
                 Response::HTTP_UNPROCESSABLE_ENTITY,
             );
         } catch (\DomainException $e) {
-
             return new JsonResponse(
                 [
                     'success' => false,

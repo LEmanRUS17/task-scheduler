@@ -11,7 +11,9 @@ use Symfony\Component\Mercure\Update;
 
 final class MercureTaskNotifierAdapter implements TaskNotifierInterface
 {
-    public function __construct(private readonly HubInterface $hub) {}
+    public function __construct(private readonly HubInterface $hub)
+    {
+    }
 
     public function notifyStatusChanged(TaskStatusChanged $event): void
     {

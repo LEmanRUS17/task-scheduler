@@ -15,7 +15,8 @@ final class GetWorkflowController
 {
     public function __construct(
         private readonly WorkflowServiceInterface $workflowService,
-    ) {}
+    ) {
+    }
 
     #[Route('/workflows/{id}', name: 'workflow_get', methods: ['GET'])]
     public function __invoke(string $id): JsonResponse
@@ -23,7 +24,6 @@ final class GetWorkflowController
         try {
             $workflow = $this->workflowService->getById($id);
         } catch (\InvalidArgumentException $e) {
-
             return new JsonResponse([
                 'success' => false,
                 'message' => $e->getMessage()
@@ -31,7 +31,6 @@ final class GetWorkflowController
         }
 
         if ($workflow === null) {
-
             return new JsonResponse([
                 'success' => false,
                 'message' => 'Workflow not found'

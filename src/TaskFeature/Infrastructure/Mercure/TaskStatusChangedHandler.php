@@ -11,7 +11,9 @@ use Symfony\Component\Messenger\Attribute\AsMessageHandler;
 #[AsMessageHandler]
 final class TaskStatusChangedHandler
 {
-    public function __construct(private readonly TaskNotifierInterface $notifier) {}
+    public function __construct(private readonly TaskNotifierInterface $notifier)
+    {
+    }
 
     public function __invoke(TaskStatusChanged $event): void
     {

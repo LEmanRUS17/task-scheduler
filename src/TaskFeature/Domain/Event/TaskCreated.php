@@ -13,5 +13,6 @@ final class TaskCreated
         public readonly TaskId $id,
         public readonly TaskTitle $title,
         public readonly string $createdBy,
-    ) {}
+    ) {
+    }
 }

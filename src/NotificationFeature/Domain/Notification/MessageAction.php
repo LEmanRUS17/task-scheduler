@@ -13,7 +13,8 @@ final class MessageAction implements NotificationActionInterface
         public readonly string $recipient,
         public readonly string $subject,
         public readonly string $body,
-    ) {}
+    ) {
+    }
 
     public function getType(): string
     {

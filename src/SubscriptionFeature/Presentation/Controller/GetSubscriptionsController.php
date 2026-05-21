@@ -19,7 +19,8 @@ final class GetSubscriptionsController
     public function __construct(
         private readonly SubscriptionServiceInterface $subscriptionService,
         private readonly Security $security,
-    ) {}
+    ) {
+    }
 
     #[Route('/subscriptions', name: 'subscription_list', methods: ['GET'])]
     public function __invoke(): JsonResponse

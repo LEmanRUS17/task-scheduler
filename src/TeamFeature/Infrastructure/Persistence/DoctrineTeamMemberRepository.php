@@ -13,7 +13,8 @@ final class DoctrineTeamMemberRepository implements TeamMemberRepositoryInterfac
 {
     public function __construct(
         private readonly EntityManagerInterface $entityManager,
-    ) {}
+    ) {
+    }
 
     public function save(TeamMember $member): void
     {

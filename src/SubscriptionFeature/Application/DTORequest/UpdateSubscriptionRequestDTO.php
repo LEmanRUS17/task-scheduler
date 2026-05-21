@@ -15,7 +15,6 @@ final class UpdateSubscriptionRequestDTO implements UpdateSubscriptionRequestInt
         #[Assert\Count(min: 1, minMessage: 'At least one transition must be specified')]
         #[Assert\All([new Assert\Uuid(message: 'Each transition ID must be a valid UUID')])]
         private readonly array $transitionIds,
-
         #[Assert\NotNull(message: 'Channels is required')]
         #[Assert\Range(
             min: 1,
@@ -23,7 +22,8 @@ final class UpdateSubscriptionRequestDTO implements UpdateSubscriptionRequestInt
             notInRangeMessage: 'Channels mask must be between {{ min }} and {{ max }}',
         )]
         private readonly int $channels,
-    ) {}
+    ) {
+    }
 
     public function getTransitionIds(): array
     {

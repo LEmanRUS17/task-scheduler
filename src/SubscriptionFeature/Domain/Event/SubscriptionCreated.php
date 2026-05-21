@@ -14,5 +14,6 @@ final readonly class SubscriptionCreated
         public string $userId,
         public SubjectType $subjectType,
         public string $subjectId,
-    ) {}
+    ) {
+    }
 }

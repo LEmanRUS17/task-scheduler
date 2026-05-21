@@ -10,7 +10,9 @@ use App\WorkflowFeature\Domain\ValueObject\WorkflowId;
 
 final class NullWorkflowRepository implements WorkflowRepositoryInterface
 {
-    public function save(Workflow $workflow): void {}
+    public function save(Workflow $workflow): void
+    {
+    }
 
     public function findById(WorkflowId $id): ?Workflow
     {

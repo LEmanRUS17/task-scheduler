@@ -29,7 +29,8 @@ final class TeamApiService implements TeamServiceInterface
         private readonly TeamMemberRepositoryInterface $members,
         private readonly TeamDataMapper $dataMapper,
         private readonly TeamValidatorInterface $validator,
-    ) {}
+    ) {
+    }
 
     public function getList(): array
     {

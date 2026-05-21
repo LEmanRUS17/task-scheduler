@@ -13,11 +13,11 @@ final class TeamAddMemberRequestDTO implements TeamAddMemberRequestInterface
         #[Assert\NotBlank(message: 'User ID is required')]
         #[Assert\Uuid(message: 'Invalid user ID format')]
         private readonly string $userId,
-
         #[Assert\NotBlank(message: 'Role is required')]
         #[Assert\Choice(choices: ['member', 'owner'], message: 'Role must be "member" or "owner"')]
         private readonly string $role = 'member',
-    ) {}
+    ) {
+    }
 
     public function getUserId(): string
     {

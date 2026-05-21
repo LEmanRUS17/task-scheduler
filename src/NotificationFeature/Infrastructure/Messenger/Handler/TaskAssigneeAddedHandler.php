@@ -22,7 +22,8 @@ final class TaskAssigneeAddedHandler
         private readonly UserServiceInterface $userService,
         private readonly MailerInterface $mailer,
         private readonly MessageBusInterface $defaultBus,
-    ) {}
+    ) {
+    }
 
     public function __invoke(TaskAssigneeAddedMessage $message): void
     {

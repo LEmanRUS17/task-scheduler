@@ -17,7 +17,8 @@ final class TaskNotificationSubscriber
 {
     public function __construct(
         private readonly MessageBusInterface $defaultBus,
-    ) {}
+    ) {
+    }
 
     #[AsMessageHandler(bus: 'event.bus')]
     public function onTaskStatusChanged(TaskStatusChanged $event): void

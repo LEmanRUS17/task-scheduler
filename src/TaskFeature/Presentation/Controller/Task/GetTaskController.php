@@ -15,7 +15,8 @@ final class GetTaskController
 {
     public function __construct(
         private readonly TaskServiceInterface $taskService,
-    ) {}
+    ) {
+    }
 
     #[Route('/task/{id}', name: 'task_get', methods: ['GET'])]
     public function __invoke(string $id): JsonResponse
@@ -23,7 +24,6 @@ final class GetTaskController
         $task = $this->taskService->getById($id);
 
         if ($task === null) {
-
             return new JsonResponse(
                 [
                     'success' => false,
