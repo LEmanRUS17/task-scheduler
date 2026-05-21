@@ -22,7 +22,7 @@ jobs:
           path: vendor
           key: ${{ runner.os }}-composer-${{ hashFiles('composer.lock') }}
 
-      - run: composer install --no-interaction --prefer-dist --no-progress
+      - run: composer install --no-interaction --prefer-dist --no-progress --no-scripts
 
       - run: composer phpcs
 
@@ -42,7 +42,7 @@ jobs:
           path: vendor
           key: ${{ runner.os }}-composer-${{ hashFiles('composer.lock') }}
 
-      - run: composer install --no-interaction --prefer-dist --no-progress
+      - run: composer install --no-interaction --prefer-dist --no-progress --no-scripts
 
       - name: Generate JWT keys
         run: |
@@ -80,6 +80,6 @@ jobs:
           path: vendor
           key: ${{ runner.os }}-composer-${{ hashFiles('composer.lock') }}
 
-      - run: composer install --no-interaction --prefer-dist --no-progress
+      - run: composer install --no-interaction --prefer-dist --no-progress --no-scripts
 
       - run: php vendor/bin/phpunit tests/Unit --no-coverage
