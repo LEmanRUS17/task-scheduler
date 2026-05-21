@@ -59,6 +59,7 @@ jobs:
           MERCURE_PUBLIC_URL: http://localhost/.well-known/mercure
           MERCURE_JWT_SECRET: ci-secret
           JWT_PASSPHRASE: ""
+          DEFAULT_URI: http://localhost
         run: |
           echo "APP_ENV=dev" > .env
           php bin/console cache:warmup
