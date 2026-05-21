@@ -85,6 +85,4 @@ jobs:
 
       - run: composer install --no-interaction --prefer-dist --no-progress --no-scripts
 
-      - run: |
-          echo "APP_ENV=test" > .env
-          php vendor/bin/phpunit tests/Unit --no-coverage
+      - run: php vendor/bin/phpunit tests/Unit --no-coverage
