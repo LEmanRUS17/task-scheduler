@@ -8,6 +8,7 @@ use App\SubscriptionFeatureApi\DTOResponse\SubscriptionDataResponseInterface;
 
 final class SubscriptionResponseFormatter
 {
+    /** @return array<string, mixed> */
     public static function format(SubscriptionDataResponseInterface $s): array
     {
         return [

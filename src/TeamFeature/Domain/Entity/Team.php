@@ -17,6 +17,7 @@ final class Team implements AuditableInterface
     private \DateTimeImmutable $createdAt;
     private TeamStatus $status;
 
+    /** @var list<object> */
     private array $domainEvents = [];
 
     private function __construct(
@@ -66,6 +67,7 @@ final class Team implements AuditableInterface
         $this->domainEvents[] = $event;
     }
 
+    /** @return list<object> */
     public function pullDomainEvents(): array
     {
         $events = $this->domainEvents;

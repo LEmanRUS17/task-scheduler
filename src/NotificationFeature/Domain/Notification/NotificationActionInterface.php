@@ -9,7 +9,7 @@ interface NotificationActionInterface
     public function getType(): string;
 
     /**
-     * @return array
+     * @return array<string, mixed>
      */
     public function toArray(): array;
 }

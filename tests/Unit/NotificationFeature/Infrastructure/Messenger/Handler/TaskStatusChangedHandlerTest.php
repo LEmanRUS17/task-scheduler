@@ -49,6 +49,7 @@ final class TaskStatusChangedHandlerTest extends TestCase
         return $user;
     }
 
+    /** @param list<string> $channels */
     private function makeSubscription(array $channels, string $userId = 'user-uuid'): SubscriptionDataResponseInterface
     {
         $sub = $this->createStub(SubscriptionDataResponseInterface::class);
@@ -90,7 +91,7 @@ final class TaskStatusChangedHandlerTest extends TestCase
 
         $subscriptionService = $this->createStub(SubscriptionServiceInterface::class);
         $subscriptionService->method('getSubscriptionsForSubjectTransition')->willReturn([
-            $this->makeSubscription([NotificationChannel::EMAIL->value]),
+            $this->makeSubscription([(string) NotificationChannel::EMAIL->value]),
         ]);
 
         $mailer = $this->createMock(MailerInterface::class);
@@ -114,7 +115,7 @@ final class TaskStatusChangedHandlerTest extends TestCase
 
         $subscriptionService = $this->createStub(SubscriptionServiceInterface::class);
         $subscriptionService->method('getSubscriptionsForSubjectTransition')->willReturn([
-            $this->makeSubscription([NotificationChannel::EMAIL->value]),
+            $this->makeSubscription([(string) NotificationChannel::EMAIL->value]),
         ]);
 
         $bus = $this->createMock(MessageBusInterface::class);
@@ -153,8 +154,8 @@ final class TaskStatusChangedHandlerTest extends TestCase
 
         $subscriptionService = $this->createStub(SubscriptionServiceInterface::class);
         $subscriptionService->method('getSubscriptionsForSubjectTransition')->willReturn([
-            $this->makeSubscription([NotificationChannel::EMAIL->value], 'user-1'),
-            $this->makeSubscription([NotificationChannel::EMAIL->value], 'user-2'),
+            $this->makeSubscription([(string) NotificationChannel::EMAIL->value], 'user-1'),
+            $this->makeSubscription([(string) NotificationChannel::EMAIL->value], 'user-2'),
         ]);
 
         $bus = $this->createMock(MessageBusInterface::class);
@@ -189,7 +190,7 @@ final class TaskStatusChangedHandlerTest extends TestCase
 
         $subscriptionService = $this->createStub(SubscriptionServiceInterface::class);
         $subscriptionService->method('getSubscriptionsForSubjectTransition')->willReturn([
-            $this->makeSubscription([NotificationChannel::EMAIL->value]),
+            $this->makeSubscription([(string) NotificationChannel::EMAIL->value]),
         ]);
 
         $mailer = $this->createMock(MailerInterface::class);

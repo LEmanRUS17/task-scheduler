@@ -64,7 +64,7 @@ jobs:
           echo "APP_ENV=dev" > .env
           php bin/console cache:warmup
 
-      - run: composer phpstan
+      - run: vendor/bin/phpstan analyse --configuration=phpstan.dist.neon --memory-limit=512M
         env:
           APP_ENV: dev
 

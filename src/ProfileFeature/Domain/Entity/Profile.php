@@ -19,6 +19,7 @@ final class Profile
     private ?\DateTimeImmutable $lastLogin = null;
     private \DateTimeImmutable $createdAt;
 
+    /** @var list<object> */
     private array $domainEvents = [];
 
     private function __construct(
@@ -119,6 +120,7 @@ final class Profile
         $this->domainEvents[] = $event;
     }
 
+    /** @return list<object> */
     public function pullDomainEvents(): array
     {
         $events = $this->domainEvents;

@@ -37,6 +37,9 @@ final class AuditDoctrineSubscriber
         }
     }
 
+    /**
+     * @param array<string, array{0: mixed, 1: mixed}> $changedData
+     */
     private function audit(
         EntityManagerInterface $em,
         UnitOfWork $uow,
@@ -71,11 +74,8 @@ final class AuditDoctrineSubscriber
     }
 
     /**
-     * Undocumented function
-     *
-     * @param array $changeSet
-     *
-     * @return array
+     * @param array<string, array{0: mixed, 1: mixed}> $changeSet
+     * @return array<string, array{0: mixed, 1: mixed}>
      */
     private function normalizeChangeSet(array $changeSet): array
     {

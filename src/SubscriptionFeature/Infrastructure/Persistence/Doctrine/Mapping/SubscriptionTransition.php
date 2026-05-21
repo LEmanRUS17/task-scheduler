@@ -6,7 +6,8 @@ namespace App\SubscriptionFeature\Infrastructure\Persistence\Doctrine\Mapping;
 
 use Doctrine\ORM\Mapping\Builder\ClassMetadataBuilder;
 
-/** @var \Doctrine\ORM\Mapping\ClassMetadata $metadata */
+/** @var \Doctrine\ORM\Mapping\ClassMetadata<\App\SubscriptionFeature\Domain\Entity\SubscriptionTransition> $metadata */
+// @phpstan-ignore-next-line isset.variable
 if (!isset($metadata)) {
     return;
 }

@@ -7,7 +7,8 @@ namespace App\TeamFeature\Infrastructure\Persistence\Doctrine\Mapping;
 use App\TeamFeature\Domain\ValueObject\TeamStatus;
 use Doctrine\ORM\Mapping\Builder\ClassMetadataBuilder;
 
-/** @var \Doctrine\ORM\Mapping\ClassMetadata $metadata */
+/** @var \Doctrine\ORM\Mapping\ClassMetadata<\App\TeamFeature\Domain\Entity\Team> $metadata */
+// @phpstan-ignore-next-line isset.variable
 if (!isset($metadata)) {
     return;
 }

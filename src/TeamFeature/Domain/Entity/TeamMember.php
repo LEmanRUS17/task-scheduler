@@ -16,6 +16,7 @@ final class TeamMember implements AuditableInterface
     private TeamMemberRole $role;
     private \DateTimeImmutable $joinedAt;
 
+    /** @var list<object> */
     private array $domainEvents = [];
 
     private function __construct(
@@ -67,6 +68,7 @@ final class TeamMember implements AuditableInterface
         $this->domainEvents[] = $event;
     }
 
+    /** @return list<object> */
     public function pullDomainEvents(): array
     {
         $events = $this->domainEvents;

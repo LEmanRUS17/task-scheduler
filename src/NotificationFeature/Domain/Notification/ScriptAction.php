@@ -9,8 +9,7 @@ final class ScriptAction implements NotificationActionInterface
     public const string TYPE = 'script';
 
     /**
-     * @param string $script
-     * @param array $args
+     * @param array<string, mixed> $args
      */
     public function __construct(
         public readonly string $script,
@@ -23,6 +22,7 @@ final class ScriptAction implements NotificationActionInterface
         return self::TYPE;
     }
 
+    /** @return array<string, mixed> */
     public function toArray(): array
     {
         return [

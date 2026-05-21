@@ -12,6 +12,7 @@ final class RemoveTeamMemberInteractor
 {
     public function __construct(
         private readonly TeamMemberRepositoryInterface $members,
+        /** @phpstan-ignore property.onlyWritten */
         private readonly DomainEventDispatcherInterface $eventDispatcher,
     ) {
     }

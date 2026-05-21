@@ -10,6 +10,9 @@ use Symfony\Component\Validator\Constraints as Assert;
 
 final class SubscribeRequestDTO implements SubscribeRequestInterface
 {
+    /**
+     * @param list<string> $transitionIds
+     */
     public function __construct(
         #[Assert\NotBlank(message: 'Subject type is required')]
         #[Assert\Choice(choices: ['task'], message: 'Invalid subject type')]

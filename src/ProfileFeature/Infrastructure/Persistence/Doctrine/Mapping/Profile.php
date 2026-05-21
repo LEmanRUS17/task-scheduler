@@ -6,7 +6,8 @@ namespace App\ProfileFeature\Infrastructure\Persistence\Doctrine\Mapping;
 
 use Doctrine\ORM\Mapping\Builder\ClassMetadataBuilder;
 
-/** @var \Doctrine\ORM\Mapping\ClassMetadata $metadata */
+/** @var \Doctrine\ORM\Mapping\ClassMetadata<\App\ProfileFeature\Domain\Entity\Profile> $metadata */
+// @phpstan-ignore-next-line isset.variable
 if (!isset($metadata)) {
     return;
 }

@@ -10,6 +10,9 @@ use Symfony\Component\Validator\Constraints as Assert;
 
 final class UpdateSubscriptionRequestDTO implements UpdateSubscriptionRequestInterface
 {
+    /**
+     * @param list<string> $transitionIds
+     */
     public function __construct(
         #[Assert\NotNull(message: 'Transition IDs is required')]
         #[Assert\Count(min: 1, minMessage: 'At least one transition must be specified')]

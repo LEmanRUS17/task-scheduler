@@ -39,7 +39,7 @@ final class SubscriptionDataMapper
             userId: $subscription->userId(),
             subjectType: $subscription->subjectType()->value,
             subjectId: $subscription->subjectId(),
-            channels: array_map(fn(SubscriptionChannel $c) => $c->channel()->value, $channels),
+            channels: array_map(fn(SubscriptionChannel $c) => (string) $c->channel()->value, $channels),
             transitionIds: array_map(fn($t) => $t->workflowTransitionId(), $transitions),
             createdAt: $subscription->createdAt(),
         );

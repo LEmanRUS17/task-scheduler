@@ -15,6 +15,9 @@ final class AuditEntry
     private ?string $actorId;
     private \DateTimeImmutable $occurredAt;
 
+    /**
+     * @param array<string, array{0: mixed, 1: mixed}> $changedData
+     */
     private function __construct(
         string $id,
         string $entityClass,

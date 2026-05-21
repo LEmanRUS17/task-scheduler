@@ -21,6 +21,7 @@ final class MessageAction implements NotificationActionInterface
         return self::TYPE;
     }
 
+    /** @return array<string, mixed> */
     public function toArray(): array
     {
         return [

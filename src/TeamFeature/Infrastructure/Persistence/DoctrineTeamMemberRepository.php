@@ -22,6 +22,7 @@ final class DoctrineTeamMemberRepository implements TeamMemberRepositoryInterfac
         $this->entityManager->flush();
     }
 
+    /** @return list<TeamMember> */
     public function findByTeamId(TeamId $teamId): array
     {
         return $this->entityManager->getRepository(TeamMember::class)->findBy([
