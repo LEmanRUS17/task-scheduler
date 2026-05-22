@@ -158,7 +158,7 @@ final class Task implements WorkflowSubjectInterface, AuditableInterface
             $this->estimatedTime = $estimatedTime;
         }
 
-        $this->recordEvent(new TaskUpdated($this->id(), $this->title(), $this->priority));
+        $this->recordEvent(new TaskUpdated($this->id()->value()));
     }
 
     public function logActualTime(int $minutes): void

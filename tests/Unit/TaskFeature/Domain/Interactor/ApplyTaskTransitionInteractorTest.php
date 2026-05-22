@@ -55,12 +55,13 @@ final class ApplyTaskTransitionInteractorTest extends TestCase
         TaskRepositoryInterface $tasks,
         TaskWorkflowInterface $workflow,
         WorkflowTransitionRepositoryInterface $transitions,
+        ?DomainEventDispatcherInterface $dispatcher = null,
     ): ApplyTaskTransitionInteractor {
         return new ApplyTaskTransitionInteractor(
             $tasks,
             $workflow,
             $transitions,
-            $this->createStub(DomainEventDispatcherInterface::class),
+            $dispatcher ?? $this->createStub(DomainEventDispatcherInterface::class),
         );
     }
 

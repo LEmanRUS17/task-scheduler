@@ -139,3 +139,24 @@ services:
 
     App\SearchFeature\Domain\Port\TaskSearchRepositoryInterface:
         class: App\SearchFeature\Infrastructure\Manticore\ManticoreTaskSearchRepository
+    App\AnalyticsFeature\Infrastructure\ClickHouse\ClickHouseClient:
+        arguments:
+            $baseUrl: '%env(CLICKHOUSE_URL)%'
+            $user: '%env(CLICKHOUSE_USER)%'
+            $password: '%env(CLICKHOUSE_PASSWORD)%'
+
+    App\AnalyticsFeature\Domain\Port\TaskEventStorageInterface:
+        class: App\AnalyticsFeature\Infrastructure\ClickHouse\ClickHouseTaskEventStorage
+
+    App\AnalyticsFeature\Infrastructure\Messenger\EventSubscriber\TaskAnalyticsSubscriber:
+        arguments:
+            $defaultBus: '@messenger.bus.default'
+
+    App\AnalyticsFeature\Domain\Port\TaskActionStorageInterface:
+        class: App\AnalyticsFeature\Infrastructure\ClickHouse\ClickHouseTaskActionStorage
+
+    App\AnalyticsFeatureApi\Contract\AnalyticsServiceInterface:
+        class: App\AnalyticsFeature\Application\ApiService\AnalyticsApiService
+
+    App\AnalyticsFeature\Domain\Port\AnalyticsQueryInterface:
+        class: App\AnalyticsFeature\Infrastructure\ClickHouse\ClickHouseAnalyticsQuery

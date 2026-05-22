@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace App\TaskFeature\Domain\Interactor;
 
 use App\TaskFeature\Domain\Entity\Task;
+use App\TaskFeature\Domain\Event\TaskUpdated;
+use App\TaskFeature\Domain\Port\DomainEventDispatcherInterface;
 use App\TaskFeature\Domain\Repository\TaskRepositoryInterface;
 use App\TaskFeature\Domain\ValueObject\TaskId;
 use App\TaskFeature\Domain\ValueObject\TaskPriority;
@@ -14,6 +16,7 @@ final class UpdateTaskInteractor
 {
     public function __construct(
         private readonly TaskRepositoryInterface $tasks,
+        private readonly DomainEventDispatcherInterface $eventDispatcher,
     ) {
     }
 
@@ -34,6 +37,8 @@ final class UpdateTaskInteractor
         $task->update($title, $priority, $scheduledStart, $scheduledEnd, $estimatedTime);
 
         $this->tasks->save($task);
+
+        $this->eventDispatcher->dispatch(new TaskUpdated($id));
 
         return $task;
     }

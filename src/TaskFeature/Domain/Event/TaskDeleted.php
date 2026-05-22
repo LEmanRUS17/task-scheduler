@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\TaskFeature\Domain\Event;
 
-final class TaskUpdated
+final class TaskDeleted
 {
     public function __construct(
         public readonly string $taskId,
