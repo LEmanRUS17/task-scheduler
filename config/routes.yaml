@@ -47,6 +47,7 @@ search_controllers:
     resource:
         path: ../src/SearchFeature/Presentation/Controller/
         namespace: App\SearchFeature\Presentation\Controller
+    type: attribute
 
 analytics_controllers:
     resource:
