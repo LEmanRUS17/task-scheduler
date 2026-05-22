@@ -12,5 +12,6 @@ final class RecordTaskEventMessage
         public readonly string $fromStatus,
         public readonly string $toStatus,
         public readonly \DateTimeImmutable $occurredAt,
-    ) {}
+    ) {
+    }
 }

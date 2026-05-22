@@ -11,7 +11,9 @@ use Symfony\Component\Messenger\Attribute\AsMessageHandler;
 #[AsMessageHandler]
 final class RecordTaskActionHandler
 {
-    public function __construct(private readonly TaskActionStorageInterface $storage) {}
+    public function __construct(private readonly TaskActionStorageInterface $storage)
+    {
+    }
 
     public function __invoke(RecordTaskActionMessage $message): void
     {

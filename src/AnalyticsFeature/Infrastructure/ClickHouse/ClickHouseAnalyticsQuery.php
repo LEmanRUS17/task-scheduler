@@ -8,7 +8,9 @@ use App\AnalyticsFeature\Domain\Port\AnalyticsQueryInterface;
 
 final class ClickHouseAnalyticsQuery implements AnalyticsQueryInterface
 {
-    public function __construct(private readonly ClickHouseClient $client) {}
+    public function __construct(private readonly ClickHouseClient $client)
+    {
+    }
 
     public function avgTimePerStatus(\DateTimeImmutable $from, \DateTimeImmutable $to): array
     {

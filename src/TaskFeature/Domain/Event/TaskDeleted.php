@@ -8,5 +8,6 @@ final class TaskDeleted
 {
     public function __construct(
         public readonly string $taskId,
-    ) {}
+    ) {
+    }
 }

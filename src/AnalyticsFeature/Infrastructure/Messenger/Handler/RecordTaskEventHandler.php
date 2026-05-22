@@ -11,7 +11,9 @@ use Symfony\Component\Messenger\Attribute\AsMessageHandler;
 #[AsMessageHandler]
 final class RecordTaskEventHandler
 {
-    public function __construct(private readonly TaskEventStorageInterface $storage) {}
+    public function __construct(private readonly TaskEventStorageInterface $storage)
+    {
+    }
 
     public function __invoke(RecordTaskEventMessage $message): void
     {

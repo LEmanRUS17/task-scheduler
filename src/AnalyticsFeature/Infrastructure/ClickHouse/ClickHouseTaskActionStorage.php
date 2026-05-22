@@ -8,7 +8,9 @@ use App\AnalyticsFeature\Domain\Port\TaskActionStorageInterface;
 
 final class ClickHouseTaskActionStorage implements TaskActionStorageInterface
 {
-    public function __construct(private readonly ClickHouseClient $client) {}
+    public function __construct(private readonly ClickHouseClient $client)
+    {
+    }
 
     public function record(
         string $taskId,

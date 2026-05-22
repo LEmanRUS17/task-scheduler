@@ -12,5 +12,6 @@ final class RecordTaskActionMessage
         public readonly string $actorId,
         public readonly string $metadata,
         public readonly \DateTimeImmutable $occurredAt,
-    ) {}
+    ) {
+    }
 }

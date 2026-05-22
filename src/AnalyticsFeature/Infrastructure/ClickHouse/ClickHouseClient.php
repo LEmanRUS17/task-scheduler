@@ -13,7 +13,8 @@ final class ClickHouseClient
         private readonly string $baseUrl,
         private readonly string $user,
         private readonly string $password,
-    ) {}
+    ) {
+    }
 
     /**
      * @param array<array<string, mixed>> $rows

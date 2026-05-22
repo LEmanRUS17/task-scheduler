@@ -8,7 +8,9 @@ use App\AnalyticsFeature\Domain\Port\TaskEventStorageInterface;
 
 final class ClickHouseTaskEventStorage implements TaskEventStorageInterface
 {
-    public function __construct(private readonly ClickHouseClient $client) {}
+    public function __construct(private readonly ClickHouseClient $client)
+    {
+    }
 
     public function record(
         string $taskId,

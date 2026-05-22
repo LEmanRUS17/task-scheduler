@@ -17,7 +17,9 @@ use Symfony\Component\Messenger\MessageBusInterface;
 
 final class TaskAnalyticsSubscriber
 {
-    public function __construct(private readonly MessageBusInterface $defaultBus) {}
+    public function __construct(private readonly MessageBusInterface $defaultBus)
+    {
+    }
 
     #[AsMessageHandler(bus: 'event.bus')]
     public function onTaskStatusChanged(TaskStatusChanged $event): void

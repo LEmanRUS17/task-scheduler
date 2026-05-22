@@ -14,7 +14,9 @@ use Symfony\Component\Routing\Attribute\Route;
 #[AsController]
 final class TeamAnalyticsController
 {
-    public function __construct(private readonly AnalyticsServiceInterface $analyticsService) {}
+    public function __construct(private readonly AnalyticsServiceInterface $analyticsService)
+    {
+    }
 
     #[Route('/analytics', name: 'analytics', methods: ['GET'])]
     public function __invoke(Request $request): JsonResponse

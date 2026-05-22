@@ -20,7 +20,8 @@ final class TeamAnalyticsResponse implements TeamAnalyticsResponseInterface
         private readonly array $throughputPerDay,
         private readonly array $crudActionsCount,
         private readonly array $statusTransitionsPerDay,
-    ) {}
+    ) {
+    }
 
     public function getAvgTimePerStatus(): array
     {
