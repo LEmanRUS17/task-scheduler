@@ -26,7 +26,7 @@ final class TaskSearchIndexSubscriber
     #[AsMessageHandler(bus: 'event.bus')]
     public function onTaskUpdated(TaskUpdated $event): void
     {
-        $this->defaultBus->dispatch(new IndexTaskMessage($event->id->value()));
+        $this->defaultBus->dispatch(new IndexTaskMessage($event->taskId));
     }
 
     #[AsMessageHandler(bus: 'event.bus')]
