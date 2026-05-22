@@ -11,8 +11,6 @@ use App\AnalyticsFeatureApi\DTOResponse\TeamAnalyticsResponseInterface;
 
 final class AnalyticsApiService implements AnalyticsServiceInterface
 {
-    private const FINAL_STATUS = 'done';
-
     public function __construct(private readonly AnalyticsQueryInterface $analyticsQuery)
     {
     }

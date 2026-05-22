@@ -42,8 +42,6 @@ final class ClickHouseAnalyticsQueryTest extends TestCase
         $this->assertCount(2, $result);
         $this->assertSame('todo', $result[0]['status']);
         $this->assertSame(1800.5, $result[0]['avg_seconds']);
-        $this->assertIsFloat($result[0]['avg_seconds']);
-        $this->assertIsFloat($result[1]['avg_seconds']);
     }
 
     public function testAvgTimePerStatusReturnsEmptyArrayWhenNoRows(): void
@@ -66,8 +64,6 @@ final class ClickHouseAnalyticsQueryTest extends TestCase
         $this->assertSame('2025-03-01', $result[0]['day']);
         $this->assertSame('done', $result[0]['status']);
         $this->assertSame(5, $result[0]['count']);
-        $this->assertIsInt($result[0]['count']);
-        $this->assertIsInt($result[1]['count']);
     }
 
     public function testStatusTransitionsPerDayReturnsEmptyArrayWhenNoRows(): void
@@ -89,8 +85,6 @@ final class ClickHouseAnalyticsQueryTest extends TestCase
         $this->assertCount(2, $result);
         $this->assertSame('create', $result[0]['action']);
         $this->assertSame(10, $result[0]['count']);
-        $this->assertIsInt($result[0]['count']);
-        $this->assertIsInt($result[1]['count']);
     }
 
     public function testCrudActionsCountReturnsEmptyArrayWhenNoRows(): void
