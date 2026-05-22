@@ -123,3 +123,19 @@ services:
     App\NotificationFeature\Infrastructure\Messenger\EventSubscriber\TaskNotificationSubscriber:
         arguments:
             $defaultBus: '@messenger.bus.default'
+    App\SearchFeature\Infrastructure\Manticore\ManticoreClient:
+        arguments:
+            $baseUrl: '%env(MANTICORE_URL)%'
+
+    App\SearchFeature\Domain\Port\TaskSearchIndexInterface:
+        class: App\SearchFeature\Infrastructure\Manticore\ManticoreTaskSearchIndex
+
+    App\SearchFeature\Infrastructure\Messenger\EventSubscriber\TaskSearchIndexSubscriber:
+        arguments:
+            $defaultBus: '@messenger.bus.default'
+
+    App\SearchFeatureApi\Contract\SearchServiceInterface:
+        class: App\SearchFeature\Application\ApiService\SearchApiService
+
+    App\SearchFeature\Domain\Port\TaskSearchRepositoryInterface:
+        class: App\SearchFeature\Infrastructure\Manticore\ManticoreTaskSearchRepository

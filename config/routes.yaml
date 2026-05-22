@@ -42,3 +42,9 @@ subscription_controllers:
         path: ../src/SubscriptionFeature/Presentation/Controller/
         namespace: App\SubscriptionFeature\Presentation\Controller
     type: attribute
+
+search_controllers:
+    resource:
+        path: ../src/SearchFeature/Presentation/Controller/
+        namespace: App\SearchFeature\Presentation\Controller
+    type: attribute

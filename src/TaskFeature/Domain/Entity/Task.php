@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\TaskFeature\Domain\Entity;
 
 use App\TaskFeature\Domain\Event\TaskCreated;
+use App\TaskFeature\Domain\Event\TaskUpdated;
 use App\TaskFeature\Domain\ValueObject\TaskId;
 use App\TaskFeature\Domain\ValueObject\TaskPriority;
 use App\TaskFeature\Domain\ValueObject\TaskTitle;
@@ -156,6 +157,8 @@ final class Task implements WorkflowSubjectInterface, AuditableInterface
         if ($estimatedTime !== null) {
             $this->estimatedTime = $estimatedTime;
         }
+
+        $this->recordEvent(new TaskUpdated($this->id(), $this->title(), $this->priority));
     }
 
     public function logActualTime(int $minutes): void
