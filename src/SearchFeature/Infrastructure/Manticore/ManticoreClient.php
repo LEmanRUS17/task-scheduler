@@ -11,7 +11,8 @@ final class ManticoreClient
     public function __construct(
         private readonly HttpClientInterface $httpClient,
         private readonly string $baseUrl,
-    ) {}
+    ) {
+    }
 
     public function replace(string $table, int $id, array $document): void
     {

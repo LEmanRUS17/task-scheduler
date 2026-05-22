@@ -15,7 +15,8 @@ final class IndexTaskHandler
     public function __construct(
         private readonly TaskServiceInterface $taskService,
         private readonly TaskSearchIndexInterface $searchIndex,
-    ) {}
+    ) {
+    }
 
     public function __invoke(IndexTaskMessage $message): void
     {

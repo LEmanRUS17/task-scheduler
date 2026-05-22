@@ -14,7 +14,9 @@ use Symfony\Component\Routing\Attribute\Route;
 #[AsController]
 final class SearchTaskController
 {
-    public function __construct(private readonly SearchServiceInterface $searchService) {}
+    public function __construct(private readonly SearchServiceInterface $searchService)
+    {
+    }
 
     #[Route('/tasks/search', name: 'tasks_search', methods: ['GET'])]
     public function __invoke(Request $request): JsonResponse

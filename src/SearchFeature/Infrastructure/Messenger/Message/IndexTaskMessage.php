@@ -6,5 +6,7 @@ namespace App\SearchFeature\Infrastructure\Messenger\Message;
 
 final class IndexTaskMessage
 {
-    public function __construct(public readonly string $taskId) {}
+    public function __construct(public readonly string $taskId)
+    {
+    }
 }

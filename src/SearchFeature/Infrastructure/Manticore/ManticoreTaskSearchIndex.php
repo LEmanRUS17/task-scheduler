@@ -8,7 +8,9 @@ use App\SearchFeature\Domain\Port\TaskSearchIndexInterface;
 
 final class ManticoreTaskSearchIndex implements TaskSearchIndexInterface
 {
-    public function __construct(private readonly ManticoreClient $client) {}
+    public function __construct(private readonly ManticoreClient $client)
+    {
+    }
 
     public function index(string $taskId, string $title, string $priority, string $status, ?string $teamId, string $createdBy): void
     {

@@ -11,7 +11,9 @@ use App\SearchFeatureApi\DTOResponse\TaskSearchResultInterface;
 
 final class SearchApiService implements SearchServiceInterface
 {
-    public function __construct(private readonly TaskSearchRepositoryInterface $repository) {}
+    public function __construct(private readonly TaskSearchRepositoryInterface $repository)
+    {
+    }
 
     /** @return TaskSearchResultInterface[] */
     public function searchTasks(string $query, ?string $teamId = null, ?string $status = null): array

@@ -14,5 +14,6 @@ final class TaskUpdated
         public readonly TaskId $id,
         public readonly TaskTitle $title,
         public readonly TaskPriority $priority,
-    ) {}
+    ) {
+    }
 }

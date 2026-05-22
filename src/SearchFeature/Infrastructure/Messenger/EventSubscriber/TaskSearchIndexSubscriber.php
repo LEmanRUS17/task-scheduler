@@ -13,7 +13,9 @@ use Symfony\Component\Messenger\MessageBusInterface;
 
 final class TaskSearchIndexSubscriber
 {
-    public function __construct(private readonly MessageBusInterface $defaultBus) {}
+    public function __construct(private readonly MessageBusInterface $defaultBus)
+    {
+    }
 
     #[AsMessageHandler(bus: 'event.bus')]
     public function onTaskCreated(TaskCreated $event): void

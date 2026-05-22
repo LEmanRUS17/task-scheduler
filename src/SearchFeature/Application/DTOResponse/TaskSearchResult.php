@@ -12,7 +12,8 @@ final class TaskSearchResult implements TaskSearchResultInterface
         private readonly string $taskId,
         private readonly string $title,
         private readonly string $status,
-    ) {}
+    ) {
+    }
 
     public function getTaskId(): string
     {

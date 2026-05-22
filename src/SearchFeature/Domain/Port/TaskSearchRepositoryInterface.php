@@ -7,9 +7,9 @@ namespace App\SearchFeature\Domain\Port;
 interface TaskSearchRepositoryInterface
 {
     /**
-     * @param string $query 
-     * @param string|null $teamId 
-     * @param string|null $status 
+     * @param string $query
+     * @param string|null $teamId
+     * @param string|null $status
      *
      * @return array
      */

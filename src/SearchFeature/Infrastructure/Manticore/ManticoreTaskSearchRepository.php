@@ -8,7 +8,9 @@ use App\SearchFeature\Domain\Port\TaskSearchRepositoryInterface;
 
 final class ManticoreTaskSearchRepository implements TaskSearchRepositoryInterface
 {
-    public function __construct(private readonly ManticoreClient $client) {}
+    public function __construct(private readonly ManticoreClient $client)
+    {
+    }
 
     public function search(string $query, ?string $teamId, ?string $status): array
     {
