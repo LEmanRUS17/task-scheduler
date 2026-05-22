@@ -12,6 +12,7 @@ final class ManticoreTaskSearchRepository implements TaskSearchRepositoryInterfa
     {
     }
 
+    /** @return array<int, array{taskId: string, title: string, status: string}> */
     public function search(string $query, ?string $teamId, ?string $status): array
     {
         $must = [

@@ -11,7 +11,7 @@ interface TaskSearchRepositoryInterface
      * @param string|null $teamId
      * @param string|null $status
      *
-     * @return array
+     * @return array<int, array{taskId: string, title: string, status: string}>
      */
     public function search(string $query, ?string $teamId, ?string $status): array;
 }

@@ -14,6 +14,7 @@ final class ManticoreClient
     ) {
     }
 
+    /** @param array<string, mixed> $document */
     public function replace(string $table, int $id, array $document): void
     {
         $this->request('POST', '/replace', ['index' => $table, 'id' => $id, 'doc' => $document]);
@@ -24,6 +25,10 @@ final class ManticoreClient
         $this->request('POST', '/delete', ['index' => $table, 'id' => $id]);
     }
 
+    /**
+     * @param array<string, mixed> $body
+     * @return array<string, mixed>
+     */
     public function search(string $table, array $body): array
     {
         return $this->request('POST', '/search', array_merge(['index' => $table], $body));
@@ -41,6 +46,10 @@ final class ManticoreClient
         }
     }
 
+    /**
+     * @param array<string, mixed> $body
+     * @return array<string, mixed>
+     */
     private function request(string $method, string $path, array $body): array
     {
         $response = $this->httpClient->request($method, $this->baseUrl . $path, [
