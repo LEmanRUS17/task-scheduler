@@ -13,6 +13,7 @@ final class ManticoreClientTest extends TestCase
 {
     private const BASE_URL = 'http://manticore:9308';
 
+    /** @param array<string, mixed> $captured */
     private function captureRequest(array &$captured, string $responseBody = '{}'): ManticoreClient
     {
         $httpClient = new MockHttpClient(function (string $method, string $url, array $options) use (&$captured, $responseBody) {

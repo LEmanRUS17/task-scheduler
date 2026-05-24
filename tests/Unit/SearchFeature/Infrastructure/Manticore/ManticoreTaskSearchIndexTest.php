@@ -12,6 +12,7 @@ use Symfony\Component\HttpClient\Response\MockResponse;
 
 final class ManticoreTaskSearchIndexTest extends TestCase
 {
+    /** @param list<array<string, mixed>> $requests */
     private function buildIndex(array &$requests): ManticoreTaskSearchIndex
     {
         $httpClient = new MockHttpClient(function (string $method, string $url, array $options) use (&$requests) {

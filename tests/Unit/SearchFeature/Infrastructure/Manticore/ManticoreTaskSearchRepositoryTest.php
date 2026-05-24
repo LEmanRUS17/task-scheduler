@@ -12,6 +12,7 @@ use Symfony\Component\HttpClient\Response\MockResponse;
 
 final class ManticoreTaskSearchRepositoryTest extends TestCase
 {
+    /** @param array<string, mixed> $capturedBody */
     private function buildRepository(array &$capturedBody, string $hitsJson = '{"hits":{"hits":[]}}'): ManticoreTaskSearchRepository
     {
         $httpClient = new MockHttpClient(function (string $method, string $url, array $options) use (&$capturedBody, $hitsJson) {
