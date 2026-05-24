@@ -6,7 +6,6 @@ namespace App\Tests\Unit\AuditLogFeature\Infrastructure\Doctrine\Subscriber;
 
 use App\AuditLogFeature\Domain\Entity\AuditEntry;
 use App\AuditLogFeature\Infrastructure\Doctrine\Subscriber\AuditDoctrineSubscriber;
-use App\AuditLogFeatureApi\Contract\AuditableInterface;
 use App\UserFeature\Domain\Entity\User;
 use App\UserFeature\Domain\ValueObject\Email;
 use App\UserFeature\Domain\ValueObject\HashedPassword;
@@ -20,34 +19,6 @@ use PHPUnit\Framework\TestCase;
 use Symfony\Bundle\SecurityBundle\Security;
 use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
-
-class AuditableStub implements AuditableInterface
-{
-}
-
-enum FakePriority: string
-{
-    case High = 'high';
-    case Low  = 'low';
-}
-
-enum FakeColor
-{
-    case Red;
-    case Blue;
-}
-
-class StringableObject
-{
-    public function __construct(private readonly string $value)
-    {
-    }
-
-    public function __toString(): string
-    {
-        return $this->value;
-    }
-}
 
 final class AuditDoctrineSubscriberTest extends TestCase
 {
