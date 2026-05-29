@@ -27,6 +27,15 @@ final class DoctrineTeamRepository implements TeamRepositoryInterface
         return $this->entityManager->find(Team::class, $id->value());
     }
 
+    public function findByIds(array $ids): array
+    {
+        if (empty($ids)) {
+            return [];
+        }
+
+        return $this->entityManager->getRepository(Team::class)->findBy(['id' => $ids]);
+    }
+
     public function findAll(): array
     {
         return $this->entityManager->getRepository(Team::class)->findAll();

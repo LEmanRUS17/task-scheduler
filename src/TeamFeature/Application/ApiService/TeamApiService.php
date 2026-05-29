@@ -40,6 +40,18 @@ final class TeamApiService implements TeamServiceInterface
         );
     }
 
+    public function getTeamsByUserId(string $userId): array
+    {
+        $members = $this->members->findByUserId($userId);
+
+        $teamIds = array_map(fn($member) => $member->teamId()->value(), $members);
+
+        return array_map(
+            fn($team) => $this->dataMapper->teamToResponse($team),
+            $this->teams->findByIds($teamIds),
+        );
+    }
+
     public function getById(string $id): ?TeamDataResponseInterface
     {
         $team = $this->teams->findById(TeamId::fromString($id));

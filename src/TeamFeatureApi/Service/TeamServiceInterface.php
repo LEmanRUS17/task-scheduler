@@ -14,6 +14,9 @@ interface TeamServiceInterface
     /** @return ResponseDTO[] */
     public function getList(): array;
 
+    /** @return ResponseDTO[] */
+    public function getTeamsByUserId(string $userId): array;
+
     public function getById(string $id): ?ResponseDTO;
 
     public function create(TeamCreateRequestInterface $dtoRequest, string $creatorUserId): ResponseDTO;
