@@ -22,6 +22,8 @@ final class TaskResponseDTO implements TaskDataResponseInterface
         private readonly ?\DateTimeImmutable $scheduledEnd,
         private readonly ?int $estimatedTime,
         private readonly ?int $actualTime,
+        /** @var string[] */
+        private readonly array $availableTransitions,
     ) {
     }
 
@@ -83,5 +85,10 @@ final class TaskResponseDTO implements TaskDataResponseInterface
     public function getActualTime(): ?int
     {
         return $this->actualTime;
+    }
+
+    public function getAvailableTransitions(): array
+    {
+        return $this->availableTransitions;
     }
 }

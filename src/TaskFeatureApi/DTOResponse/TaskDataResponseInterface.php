@@ -19,4 +19,6 @@ interface TaskDataResponseInterface
     public function getScheduledEnd(): ?\DateTimeImmutable;
     public function getEstimatedTime(): ?int;
     public function getActualTime(): ?int;
+    /** @return string[] */
+    public function getAvailableTransitions(): array;
 }

@@ -13,6 +13,7 @@ use App\TaskFeature\Domain\Interactor\RemoveTaskAssigneeInteractor;
 use App\TaskFeature\Domain\Event\TaskDeleted;
 use App\TaskFeature\Domain\Interactor\UpdateTaskInteractor;
 use App\TaskFeature\Domain\Port\DomainEventDispatcherInterface;
+use App\TaskFeature\Domain\Port\TaskWorkflowInterface;
 use App\TaskFeature\Domain\Repository\TaskAssigneeRepositoryInterface;
 use App\TaskFeature\Domain\Repository\TaskRepositoryInterface;
 use App\TaskFeature\Domain\ValueObject\TaskId;
@@ -36,13 +37,18 @@ final class TaskApiService implements TaskServiceInterface
         private readonly TaskDataMapper $dataMapper,
         private readonly TaskValidatorInterface $validator,
         private readonly DomainEventDispatcherInterface $eventDispatcher,
+        private readonly TaskWorkflowInterface $workflow,
     ) {
     }
 
     public function getList(string $userId): array
     {
         return array_map(
-            fn($task) => $this->dataMapper->taskToResponse($task, $this->loadAssigneeIds($task->id())),
+            fn($task) => $this->dataMapper->taskToResponse(
+                $task,
+                $this->loadAssigneeIds($task->id()),
+                $this->workflow->getEnabledTransitions($task),
+            ),
             $this->tasks->findByAssigneeUserId($userId),
         );
     }
@@ -53,7 +59,11 @@ final class TaskApiService implements TaskServiceInterface
         $task = $this->tasks->findById($taskId);
 
         return $task !== null
-            ? $this->dataMapper->taskToResponse($task, $this->loadAssigneeIds($taskId))
+            ? $this->dataMapper->taskToResponse(
+                $task,
+                $this->loadAssigneeIds($taskId),
+                $this->workflow->getEnabledTransitions($task),
+            )
             : null;
     }
 
@@ -77,7 +87,11 @@ final class TaskApiService implements TaskServiceInterface
             $dtoRequest->getEstimatedTime(),
         );
 
-        return $this->dataMapper->taskToResponse($task, $this->loadAssigneeIds($task->id()));
+        return $this->dataMapper->taskToResponse(
+            $task,
+            $this->loadAssigneeIds($task->id()),
+            $this->workflow->getEnabledTransitions($task),
+        );
     }
 
     public function update(string $id, TaskUpdateRequestInterface $dtoRequest): TaskDataResponseInterface
@@ -97,14 +111,22 @@ final class TaskApiService implements TaskServiceInterface
             $dtoRequest->getEstimatedTime(),
         );
 
-        return $this->dataMapper->taskToResponse($task, $this->loadAssigneeIds($task->id()));
+        return $this->dataMapper->taskToResponse(
+            $task,
+            $this->loadAssigneeIds($task->id()),
+            $this->workflow->getEnabledTransitions($task),
+        );
     }
 
     public function applyTransition(string $id, string $transition): TaskDataResponseInterface
     {
         $task = $this->transitionInteractor->apply($id, $transition);
 
-        return $this->dataMapper->taskToResponse($task, $this->loadAssigneeIds($task->id()));
+        return $this->dataMapper->taskToResponse(
+            $task,
+            $this->loadAssigneeIds($task->id()),
+            $this->workflow->getEnabledTransitions($task),
+        );
     }
 
     public function addAssignee(string $taskId, string $userId): void

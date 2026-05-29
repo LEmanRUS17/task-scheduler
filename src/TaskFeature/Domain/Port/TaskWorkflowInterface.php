@@ -13,4 +13,7 @@ interface TaskWorkflowInterface
     public function applyTransition(Task $task, string $transition): void;
 
     public function canApply(Task $task, string $transition): bool;
+
+    /** @return string[] */
+    public function getEnabledTransitions(Task $task): array;
 }
