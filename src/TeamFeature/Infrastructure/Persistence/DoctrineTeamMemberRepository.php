@@ -30,6 +30,14 @@ final class DoctrineTeamMemberRepository implements TeamMemberRepositoryInterfac
         ]);
     }
 
+    /** @return list<TeamMember> */
+    public function findByUserId(string $userId): array
+    {
+        return $this->entityManager->getRepository(TeamMember::class)->findBy([
+            'userId' => $userId,
+        ]);
+    }
+
     public function findByTeamAndUser(TeamId $teamId, string $userId): ?TeamMember
     {
         return $this->entityManager->getRepository(TeamMember::class)->findOneBy([

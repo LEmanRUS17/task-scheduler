@@ -13,6 +13,12 @@ interface TeamRepositoryInterface
 
     public function findById(TeamId $id): ?Team;
 
+    /**
+     * @param string[] $ids
+     * @return Team[]
+     */
+    public function findByIds(array $ids): array;
+
     /** @return Team[] */
     public function findAll(): array;
 

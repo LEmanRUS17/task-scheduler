@@ -14,6 +14,9 @@ interface TeamMemberRepositoryInterface
     /** @return list<TeamMember> */
     public function findByTeamId(TeamId $teamId): array;
 
+    /** @return list<TeamMember> */
+    public function findByUserId(string $userId): array;
+
     public function findByTeamAndUser(TeamId $teamId, string $userId): ?TeamMember;
 
     public function delete(TeamMember $member): void;
