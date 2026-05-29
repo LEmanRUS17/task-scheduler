@@ -20,8 +20,7 @@ final class UpdateTaskController
     public function __construct(
         private readonly TaskServiceInterface $taskService,
         private readonly Security $security,
-    ) {
-    }
+    ) {}
 
     #[Route('/task/{id}', name: 'task_update', methods: ['PATCH'])]
     public function __invoke(
@@ -67,7 +66,16 @@ final class UpdateTaskController
                     'id' => $task->getId(),
                     'title' => $task->getTitle(),
                     'status' => $task->getStatus(),
+                    'priority' => $task->getPriority(),
+                    'teamId' => $task->getTeamId(),
+                    'createdBy' => $task->getCreatedBy(),
+                    'assigneeIds' => $task->getAssigneeIds(),
+                    'scheduledStart' => $task->getScheduledStart()?->format(\DateTimeInterface::ATOM),
+                    'scheduledEnd' => $task->getScheduledEnd()?->format(\DateTimeInterface::ATOM),
+                    'estimatedTime' => $task->getEstimatedTime(),
+                    'actualTime' => $task->getActualTime(),
                     'createdAt' => $task->getCreatedAt()->format(\DateTimeInterface::ATOM),
+                    'availableTransitions' => $task->getAvailableTransitions(),
                 ],
             ],
             Response::HTTP_OK,

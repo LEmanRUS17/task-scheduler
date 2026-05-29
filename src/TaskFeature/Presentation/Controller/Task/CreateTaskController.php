@@ -20,8 +20,7 @@ final class CreateTaskController
     public function __construct(
         private readonly TaskServiceInterface $taskService,
         private readonly Security $security,
-    ) {
-    }
+    ) {}
 
     #[Route('/task/create', name: 'task_create', methods: ['POST'])]
     public function __invoke(
@@ -62,6 +61,16 @@ final class CreateTaskController
                     'id' => $task->getId(),
                     'title' => $task->getTitle(),
                     'status' => $task->getStatus(),
+                    'priority' => $task->getPriority(),
+                    'teamId' => $task->getTeamId(),
+                    'createdBy' => $task->getCreatedBy(),
+                    'assigneeIds' => $task->getAssigneeIds(),
+                    'scheduledStart' => $task->getScheduledStart()?->format(\DateTimeInterface::ATOM),
+                    'scheduledEnd' => $task->getScheduledEnd()?->format(\DateTimeInterface::ATOM),
+                    'estimatedTime' => $task->getEstimatedTime(),
+                    'actualTime' => $task->getActualTime(),
+                    'createdAt' => $task->getCreatedAt()->format(\DateTimeInterface::ATOM),
+                    'availableTransitions' => $task->getAvailableTransitions(),
                 ],
             ],
             Response::HTTP_CREATED,
