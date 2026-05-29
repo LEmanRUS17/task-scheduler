@@ -20,7 +20,8 @@ final class CreateTaskController
     public function __construct(
         private readonly TaskServiceInterface $taskService,
         private readonly Security $security,
-    ) {}
+    ) {
+    }
 
     #[Route('/task/create', name: 'task_create', methods: ['POST'])]
     public function __invoke(
