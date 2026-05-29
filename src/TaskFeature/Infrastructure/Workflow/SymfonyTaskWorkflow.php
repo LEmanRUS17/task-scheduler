@@ -52,6 +52,14 @@ final class SymfonyTaskWorkflow implements TaskWorkflowInterface
         return $this->registry->get($task, $this->resolveTitle($task))->can($task, $transition);
     }
 
+    public function getEnabledTransitions(Task $task): array
+    {
+        return array_map(
+            fn($t) => $t->getName(),
+            $this->registry->get($task, $this->resolveTitle($task))->getEnabledTransitions($task),
+        );
+    }
+
     private function resolveTitle(Task $task): string
     {
         $workflow = $this->workflows->findById(WorkflowId::fromString($task->getWorkflowDefinitionTitle()));

@@ -44,9 +44,10 @@ final class GetTaskController
                 'assigneeIds'   => $task->getAssigneeIds(),
                 'scheduledStart' => $task->getScheduledStart()?->format(\DateTimeInterface::ATOM),
                 'scheduledEnd'  => $task->getScheduledEnd()?->format(\DateTimeInterface::ATOM),
-                'estimatedTime' => $task->getEstimatedTime(),
-                'actualTime'    => $task->getActualTime(),
-                'createdAt'     => $task->getCreatedAt()->format(\DateTimeInterface::ATOM),
+                'estimatedTime'        => $task->getEstimatedTime(),
+                'actualTime'           => $task->getActualTime(),
+                'createdAt'            => $task->getCreatedAt()->format(\DateTimeInterface::ATOM),
+                'availableTransitions' => $task->getAvailableTransitions(),
             ],
             Response::HTTP_OK,
         );
