@@ -29,23 +29,17 @@ final class AddTeamMemberController
             $member = $this->teamService->addMember($teamId, $request);
         } catch (\DomainException $e) {
             return new JsonResponse(
-                [
-                    'success' => false,
-                    'message' => $e->getMessage()
-                ],
+                ['message' => $e->getMessage()],
                 Response::HTTP_CONFLICT,
             );
         }
 
         return new JsonResponse(
             [
-                'success' => true,
-                'data' => [
-                    'teamId' => $member->getTeamId(),
-                    'userId' => $member->getUserId(),
-                    'role' => $member->getRole(),
-                    'joinedAt' => $member->getJoinedAt()->format(\DateTimeInterface::ATOM),
-                ],
+                'teamId' => $member->getTeamId(),
+                'userId' => $member->getUserId(),
+                'role' => $member->getRole(),
+                'joinedAt' => $member->getJoinedAt()->format(\DateTimeInterface::ATOM),
             ],
             Response::HTTP_CREATED,
         );
