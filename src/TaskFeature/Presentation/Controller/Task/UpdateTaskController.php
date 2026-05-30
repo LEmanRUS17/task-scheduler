@@ -21,8 +21,7 @@ final class UpdateTaskController
     public function __construct(
         private readonly TaskServiceInterface $taskService,
         private readonly Security $security,
-    ) {
-    }
+    ) {}
 
     #[Route('/task/{id}', name: 'task_update', methods: ['PATCH'])]
     public function __invoke(

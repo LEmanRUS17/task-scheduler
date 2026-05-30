@@ -19,8 +19,7 @@ final class ApplyTaskTransitionController
     public function __construct(
         private readonly TaskServiceInterface $taskService,
         private readonly Security $security,
-    ) {
-    }
+    ) {}
 
     #[Route('/task/{id}/transition', name: 'task_transition', methods: ['POST'])]
     public function __invoke(string $id, Request $request): JsonResponse
@@ -59,10 +58,7 @@ final class ApplyTaskTransitionController
                 'id' => $task->getId(),
                 'title' => $task->getTitle(),
                 'status' => $task->getStatus(),
-                'status_id' => $task->getStatusId(),
                 'createdAt' => $task->getCreatedAt()->format(\DateTimeInterface::ATOM),
-                'isClosed' => $task->isClosed(),
-                'closedAt' => $task->getClosedAt()?->format(\DateTimeInterface::ATOM),
             ],
             Response::HTTP_OK,
         );
