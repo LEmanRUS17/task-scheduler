@@ -22,35 +22,27 @@ final class DeleteTaskController
     }
 
     #[Route('/task/{id}', name: 'task_delete', methods: ['DELETE'])]
-    public function __invoke(string $id): JsonResponse
+    public function __invoke(string $id): Response
     {
         $task = $this->taskService->getById($id);
 
         if ($task === null) {
-            return new JsonResponse(['success' => false, 'message' => 'Task not found'], Response::HTTP_NOT_FOUND);
+            return new JsonResponse(['message' => 'Task not found'], Response::HTTP_NOT_FOUND);
         }
 
         if (!$this->security->isGranted(TaskPermission::DELETE, $task)) {
-            return new JsonResponse(['success' => false, 'message' => 'Access denied'], Response::HTTP_FORBIDDEN);
+            return new JsonResponse(['message' => 'Access denied'], Response::HTTP_FORBIDDEN);
         }
 
         try {
             $this->taskService->deleteById($id);
         } catch (\DomainException $e) {
             return new JsonResponse(
-                [
-                    'success' => false,
-                    'message' => $e->getMessage()
-                ],
+                ['message' => $e->getMessage()],
                 Response::HTTP_NOT_FOUND,
             );
         }
 
-        return new JsonResponse(
-            [
-                'success' => true
-            ],
-            Response::HTTP_OK,
-        );
+        return new Response(null, Response::HTTP_NO_CONTENT);
     }
 }

@@ -36,8 +36,6 @@ final class CreateTaskController
         } catch (\InvalidArgumentException $e) {
             return new JsonResponse(
                 [
-                    'success' => false,
-                    'variant' => 'danger',
                     'message' => 'Validation failed',
                     'errors' => json_decode($e->getMessage(), true),
                 ],
@@ -45,34 +43,26 @@ final class CreateTaskController
             );
         } catch (\DomainException $e) {
             return new JsonResponse(
-                [
-                    'success' => false,
-                    'variant' => 'danger',
-                    'message' => $e->getMessage(),
-                ],
+                ['message' => $e->getMessage()],
                 Response::HTTP_BAD_REQUEST,
             );
         }
 
         return new JsonResponse(
             [
-                'success' => true,
-                'variant' => 'success',
-                'data' => [
-                    'id' => $task->getId(),
-                    'title' => $task->getTitle(),
-                    'status' => $task->getStatus(),
-                    'priority' => $task->getPriority(),
-                    'teamId' => $task->getTeamId(),
-                    'createdBy' => $task->getCreatedBy(),
-                    'assigneeIds' => $task->getAssigneeIds(),
-                    'scheduledStart' => $task->getScheduledStart()?->format(\DateTimeInterface::ATOM),
-                    'scheduledEnd' => $task->getScheduledEnd()?->format(\DateTimeInterface::ATOM),
-                    'estimatedTime' => $task->getEstimatedTime(),
-                    'actualTime' => $task->getActualTime(),
-                    'createdAt' => $task->getCreatedAt()->format(\DateTimeInterface::ATOM),
-                    'availableTransitions' => $task->getAvailableTransitions(),
-                ],
+                'id' => $task->getId(),
+                'title' => $task->getTitle(),
+                'status' => $task->getStatus(),
+                'priority' => $task->getPriority(),
+                'teamId' => $task->getTeamId(),
+                'createdBy' => $task->getCreatedBy(),
+                'assigneeIds' => $task->getAssigneeIds(),
+                'scheduledStart' => $task->getScheduledStart()?->format(\DateTimeInterface::ATOM),
+                'scheduledEnd' => $task->getScheduledEnd()?->format(\DateTimeInterface::ATOM),
+                'estimatedTime' => $task->getEstimatedTime(),
+                'actualTime' => $task->getActualTime(),
+                'createdAt' => $task->getCreatedAt()->format(\DateTimeInterface::ATOM),
+                'availableTransitions' => $task->getAvailableTransitions(),
             ],
             Response::HTTP_CREATED,
         );

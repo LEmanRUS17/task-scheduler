@@ -27,22 +27,22 @@ final class AddTaskAssigneeController
         $task = $this->taskService->getById($taskId);
 
         if ($task === null) {
-            return new JsonResponse(['success' => false, 'message' => 'Task not found'], Response::HTTP_NOT_FOUND);
+            return new JsonResponse(['message' => 'Task not found'], Response::HTTP_NOT_FOUND);
         }
 
         if (!$this->security->isGranted(TaskPermission::EDIT, $task)) {
-            return new JsonResponse(['success' => false, 'message' => 'Access denied'], Response::HTTP_FORBIDDEN);
+            return new JsonResponse(['message' => 'Access denied'], Response::HTTP_FORBIDDEN);
         }
 
         try {
             $this->taskService->addAssignee($taskId, $userId);
         } catch (\DomainException $e) {
             return new JsonResponse(
-                ['success' => false, 'message' => $e->getMessage()],
+                ['message' => $e->getMessage()],
                 Response::HTTP_CONFLICT,
             );
         }
 
-        return new JsonResponse(['success' => true], Response::HTTP_CREATED);
+        return new JsonResponse(null, Response::HTTP_CREATED);
     }
 }

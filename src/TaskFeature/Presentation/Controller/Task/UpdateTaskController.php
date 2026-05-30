@@ -31,11 +31,11 @@ final class UpdateTaskController
         $task = $this->taskService->getById($id);
 
         if ($task === null) {
-            return new JsonResponse(['success' => false, 'message' => 'Task not found'], Response::HTTP_NOT_FOUND);
+            return new JsonResponse(['message' => 'Task not found'], Response::HTTP_NOT_FOUND);
         }
 
         if (!$this->security->isGranted(TaskPermission::EDIT, $task)) {
-            return new JsonResponse(['success' => false, 'message' => 'Access denied'], Response::HTTP_FORBIDDEN);
+            return new JsonResponse(['message' => 'Access denied'], Response::HTTP_FORBIDDEN);
         }
 
         try {
@@ -43,8 +43,6 @@ final class UpdateTaskController
         } catch (\InvalidArgumentException $e) {
             return new JsonResponse(
                 [
-                    'success' => false,
-                    'variant' => 'danger',
                     'message' => 'Validation failed',
                     'errors' => json_decode($e->getMessage(), true),
                 ],
@@ -52,32 +50,26 @@ final class UpdateTaskController
             );
         } catch (\DomainException $e) {
             return new JsonResponse(
-                [
-                    'success' => false,
-                    'message' => $e->getMessage()
-                ],
+                ['message' => $e->getMessage()],
                 Response::HTTP_NOT_FOUND,
             );
         }
 
         return new JsonResponse(
             [
-                'success' => true,
-                'data' => [
-                    'id' => $task->getId(),
-                    'title' => $task->getTitle(),
-                    'status' => $task->getStatus(),
-                    'priority' => $task->getPriority(),
-                    'teamId' => $task->getTeamId(),
-                    'createdBy' => $task->getCreatedBy(),
-                    'assigneeIds' => $task->getAssigneeIds(),
-                    'scheduledStart' => $task->getScheduledStart()?->format(\DateTimeInterface::ATOM),
-                    'scheduledEnd' => $task->getScheduledEnd()?->format(\DateTimeInterface::ATOM),
-                    'estimatedTime' => $task->getEstimatedTime(),
-                    'actualTime' => $task->getActualTime(),
-                    'createdAt' => $task->getCreatedAt()->format(\DateTimeInterface::ATOM),
-                    'availableTransitions' => $task->getAvailableTransitions(),
-                ],
+                'id' => $task->getId(),
+                'title' => $task->getTitle(),
+                'status' => $task->getStatus(),
+                'priority' => $task->getPriority(),
+                'teamId' => $task->getTeamId(),
+                'createdBy' => $task->getCreatedBy(),
+                'assigneeIds' => $task->getAssigneeIds(),
+                'scheduledStart' => $task->getScheduledStart()?->format(\DateTimeInterface::ATOM),
+                'scheduledEnd' => $task->getScheduledEnd()?->format(\DateTimeInterface::ATOM),
+                'estimatedTime' => $task->getEstimatedTime(),
+                'actualTime' => $task->getActualTime(),
+                'createdAt' => $task->getCreatedAt()->format(\DateTimeInterface::ATOM),
+                'availableTransitions' => $task->getAvailableTransitions(),
             ],
             Response::HTTP_OK,
         );
