@@ -36,7 +36,6 @@ final class CreateWorkflowController
         } catch (\InvalidArgumentException $e) {
             return new JsonResponse(
                 [
-                    'success' => false,
                     'message' => 'Validation failed',
                     'errors' => json_decode($e->getMessage(), true),
                 ],
@@ -44,23 +43,17 @@ final class CreateWorkflowController
             );
         } catch (\DomainException $e) {
             return new JsonResponse(
-                [
-                    'success' => false,
-                    'message' => $e->getMessage(),
-                ],
+                ['message' => $e->getMessage()],
                 Response::HTTP_CONFLICT,
             );
         }
 
         return new JsonResponse(
             [
-                'success' => true,
-                'data' => [
-                    'id' => $workflow->getId(),
-                    'title' => $workflow->getTitle(),
-                    'createdBy' => $workflow->getCreatedBy(),
-                    'createdAt' => $workflow->getCreatedAt()->format(\DateTimeInterface::ATOM),
-                ],
+                'id' => $workflow->getId(),
+                'title' => $workflow->getTitle(),
+                'createdBy' => $workflow->getCreatedBy(),
+                'createdAt' => $workflow->getCreatedAt()->format(\DateTimeInterface::ATOM),
             ],
             Response::HTTP_CREATED,
         );
