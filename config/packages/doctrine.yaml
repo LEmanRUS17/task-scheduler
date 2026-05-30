@@ -13,6 +13,12 @@ doctrine:
         identity_generation_preferences:
             Doctrine\DBAL\Platforms\PostgreSQLPlatform: identity
         auto_mapping: false
+        mappings:
+            GesdinetJWTRefreshTokenBundle:
+                type: xml
+                dir: '%kernel.project_dir%/vendor/gesdinet/jwt-refresh-token-bundle/config/doctrine'
+                prefix: Gesdinet\JWTRefreshTokenBundle\Entity
+                is_bundle: false
 
 when@test:
     doctrine:
