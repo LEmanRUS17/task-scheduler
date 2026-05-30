@@ -41,8 +41,6 @@ final class UpdateSubscriptionController
         } catch (ValidationException $e) {
             return new JsonResponse(
                 [
-                    'success' => false,
-                    'variant' => 'danger',
                     'message' => 'Validation failed',
                     'errors' => $e->getViolations(),
                 ],
@@ -50,23 +48,23 @@ final class UpdateSubscriptionController
             );
         } catch (SubscriptionNotFoundException $e) {
             return new JsonResponse(
-                ['success' => false, 'variant' => 'danger', 'message' => $e->getMessage()],
+                ['message' => $e->getMessage()],
                 Response::HTTP_NOT_FOUND,
             );
         } catch (SubscriptionAccessDeniedException $e) {
             return new JsonResponse(
-                ['success' => false, 'variant' => 'danger', 'message' => $e->getMessage()],
+                ['message' => $e->getMessage()],
                 Response::HTTP_FORBIDDEN,
             );
         } catch (\InvalidArgumentException $e) {
             return new JsonResponse(
-                ['success' => false, 'variant' => 'danger', 'message' => $e->getMessage()],
+                ['message' => $e->getMessage()],
                 Response::HTTP_UNPROCESSABLE_ENTITY,
             );
         }
 
         return new JsonResponse(
-            ['success' => true, 'variant' => 'success', 'data' => SubscriptionResponseFormatter::format($subscription)],
+            SubscriptionResponseFormatter::format($subscription),
             Response::HTTP_OK,
         );
     }

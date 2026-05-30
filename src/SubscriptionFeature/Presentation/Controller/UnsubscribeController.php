@@ -24,7 +24,7 @@ final class UnsubscribeController
     }
 
     #[Route('/subscriptions/{subscriptionId}', name: 'subscription_delete', methods: ['DELETE'])]
-    public function __invoke(string $subscriptionId): JsonResponse
+    public function __invoke(string $subscriptionId): Response
     {
         /** @var SecurityUser $securityUser */
         $securityUser = $this->security->getUser();
@@ -34,21 +34,21 @@ final class UnsubscribeController
             $this->subscriptionService->unsubscribe($subscriptionId, $userId);
         } catch (SubscriptionNotFoundException $e) {
             return new JsonResponse(
-                ['success' => false, 'variant' => 'danger', 'message' => $e->getMessage()],
+                ['message' => $e->getMessage()],
                 Response::HTTP_NOT_FOUND,
             );
         } catch (SubscriptionAccessDeniedException $e) {
             return new JsonResponse(
-                ['success' => false, 'variant' => 'danger', 'message' => $e->getMessage()],
+                ['message' => $e->getMessage()],
                 Response::HTTP_FORBIDDEN,
             );
         } catch (\InvalidArgumentException $e) {
             return new JsonResponse(
-                ['success' => false, 'variant' => 'danger', 'message' => $e->getMessage()],
+                ['message' => $e->getMessage()],
                 Response::HTTP_UNPROCESSABLE_ENTITY,
             );
         }
 
-        return new JsonResponse(['success' => true], Response::HTTP_OK);
+        return new Response(null, Response::HTTP_NO_CONTENT);
     }
 }
