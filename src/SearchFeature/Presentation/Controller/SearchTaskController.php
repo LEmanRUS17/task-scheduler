@@ -24,7 +24,7 @@ final class SearchTaskController
         $q = $request->query->get('q', '');
 
         if (strlen($q) < 2) {
-            return new JsonResponse(['error' => 'Query must be at least 2 characters.'], Response::HTTP_BAD_REQUEST);
+            return new JsonResponse(['message' => 'Query must be at least 2 characters.'], Response::HTTP_BAD_REQUEST);
         }
 
         $teamId = $request->query->get('team_id');
