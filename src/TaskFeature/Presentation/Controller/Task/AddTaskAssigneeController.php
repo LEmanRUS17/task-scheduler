@@ -22,7 +22,7 @@ final class AddTaskAssigneeController
     }
 
     #[Route('/task/{taskId}/assignee/{userId}', name: 'task_assignee_add', methods: ['POST'])]
-    public function __invoke(string $taskId, string $userId): JsonResponse
+    public function __invoke(string $taskId, string $userId): Response
     {
         $task = $this->taskService->getById($taskId);
 
