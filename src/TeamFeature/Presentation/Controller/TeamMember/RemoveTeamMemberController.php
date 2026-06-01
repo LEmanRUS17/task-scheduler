@@ -19,25 +19,17 @@ final class RemoveTeamMemberController
     }
 
     #[Route('/team/{teamId}/member/{userId}', name: 'team_member_remove', methods: ['DELETE'])]
-    public function __invoke(string $teamId, string $userId): JsonResponse
+    public function __invoke(string $teamId, string $userId): Response
     {
         try {
             $this->teamService->removeMember($teamId, $userId);
         } catch (\DomainException $e) {
             return new JsonResponse(
-                [
-                    'success' => false,
-                    'variant' => 'danger',
-                    'message' => $e->getMessage()
-                ],
+                ['message' => $e->getMessage()],
                 Response::HTTP_NOT_FOUND,
             );
         }
 
-        return new JsonResponse([
-            'success' => true,
-            'variant' => 'success',
-            'message' => 'The user has been removed from the group'
-        ], Response::HTTP_NO_CONTENT);
+        return new Response(null, Response::HTTP_NO_CONTENT);
     }
 }

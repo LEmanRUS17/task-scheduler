@@ -30,7 +30,6 @@ final class AddWorkflowStatusController
         } catch (\InvalidArgumentException $e) {
             return new JsonResponse(
                 [
-                    'success' => false,
                     'message' => 'Validation failed',
                     'errors' => json_decode($e->getMessage(), true),
                 ],
@@ -38,24 +37,18 @@ final class AddWorkflowStatusController
             );
         } catch (\DomainException $e) {
             return new JsonResponse(
-                [
-                    'success' => false,
-                    'message' => $e->getMessage()
-                ],
+                ['message' => $e->getMessage()],
                 Response::HTTP_CONFLICT,
             );
         }
 
         return new JsonResponse(
             [
-                'success' => true,
-                'data' => [
-                    'id' => $status->getId(),
-                    'workflowId' => $status->getWorkflowId(),
-                    'label' => $status->getLabel(),
-                    'isInitial' => $status->isInitial(),
-                    'createdAt' => $status->getCreatedAt()->format(\DateTimeInterface::ATOM),
-                ],
+                'id' => $status->getId(),
+                'workflowId' => $status->getWorkflowId(),
+                'label' => $status->getLabel(),
+                'isInitial' => $status->isInitial(),
+                'createdAt' => $status->getCreatedAt()->format(\DateTimeInterface::ATOM),
             ],
             Response::HTTP_CREATED,
         );

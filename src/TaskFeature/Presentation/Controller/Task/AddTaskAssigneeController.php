@@ -18,8 +18,7 @@ final class AddTaskAssigneeController
     public function __construct(
         private readonly TaskServiceInterface $taskService,
         private readonly Security $security,
-    ) {
-    }
+    ) {}
 
     #[Route('/task/{taskId}/assignee/{userId}', name: 'task_assignee_add', methods: ['POST'])]
     public function __invoke(string $taskId, string $userId): Response
@@ -43,6 +42,6 @@ final class AddTaskAssigneeController
             );
         }
 
-        return new Response(null, Response::HTTP_CREATED);
+        return new JsonResponse(null, Response::HTTP_CREATED);
     }
 }

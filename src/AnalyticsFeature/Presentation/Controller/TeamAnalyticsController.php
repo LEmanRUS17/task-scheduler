@@ -26,7 +26,7 @@ final class TeamAnalyticsController
 
         if ($fromParam === null || $toParam === null) {
             return new JsonResponse([
-                'error' => 'Parameters "from" and "to" are required'
+                'message' => 'Parameters "from" and "to" are required'
             ], Response::HTTP_BAD_REQUEST);
         }
 
@@ -35,7 +35,7 @@ final class TeamAnalyticsController
 
         if ($from === false || $to === false) {
             return new JsonResponse([
-                'error' => 'Parameters "from" and "to" must be in Y-m-d format'
+                'message' => 'Parameters "from" and "to" must be in Y-m-d format'
             ], Response::HTTP_BAD_REQUEST);
         }
 
@@ -44,7 +44,7 @@ final class TeamAnalyticsController
 
         if ($from >= $to) {
             return new JsonResponse([
-                'error' => 'Parameter "from" must be before "to"'
+                'message' => 'Parameter "from" must be before "to"'
             ], Response::HTTP_BAD_REQUEST);
         }
 
