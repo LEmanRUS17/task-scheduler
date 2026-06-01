@@ -36,8 +36,6 @@ final class CreateTeamController
         } catch (\InvalidArgumentException $e) {
             return new JsonResponse(
                 [
-                    'success' => false,
-                    'variant' => 'danger',
                     'message' => 'Validation failed',
                     'errors' => json_decode($e->getMessage(), true),
                 ],
@@ -47,13 +45,9 @@ final class CreateTeamController
 
         return new JsonResponse(
             [
-                'success' => true,
-                'variant' => 'success',
-                'data' => [
-                    'id' => $team->getId(),
-                    'title' => $team->getTitle(),
-                    'status' => $team->getStatus(),
-                ],
+                'id' => $team->getId(),
+                'title' => $team->getTitle(),
+                'status' => $team->getStatus(),
             ],
             Response::HTTP_CREATED,
         );
