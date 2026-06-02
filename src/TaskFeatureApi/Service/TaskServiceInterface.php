@@ -13,6 +13,9 @@ interface TaskServiceInterface
     /** @return ResponseDTO[] */
     public function getList(string $userId): array;
 
+    /** @return ResponseDTO[] */
+    public function getListByTeam(string $teamId, string $userId): array;
+
     public function getById(string $id): ?ResponseDTO;
 
     public function create(

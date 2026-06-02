@@ -13,6 +13,7 @@ use App\TaskFeature\Domain\Interactor\RemoveTaskAssigneeInteractor;
 use App\TaskFeature\Domain\Event\TaskDeleted;
 use App\TaskFeature\Domain\Interactor\UpdateTaskInteractor;
 use App\TaskFeature\Domain\Port\DomainEventDispatcherInterface;
+use App\TaskFeature\Domain\Port\TeamMembershipInterface;
 use App\TaskFeature\Domain\Port\TaskWorkflowInterface;
 use App\TaskFeature\Domain\Repository\TaskAssigneeRepositoryInterface;
 use App\TaskFeature\Domain\Repository\TaskRepositoryInterface;
@@ -38,6 +39,7 @@ final class TaskApiService implements TaskServiceInterface
         private readonly TaskValidatorInterface $validator,
         private readonly DomainEventDispatcherInterface $eventDispatcher,
         private readonly TaskWorkflowInterface $workflow,
+        private readonly TeamMembershipInterface $teamMembership,
     ) {
     }
 
@@ -50,6 +52,22 @@ final class TaskApiService implements TaskServiceInterface
                 $this->workflow->getEnabledTransitions($task),
             ),
             $this->tasks->findByAssigneeUserId($userId),
+        );
+    }
+
+    public function getListByTeam(string $teamId, string $userId): array
+    {
+        if (!$this->teamMembership->isMember($teamId, $userId)) {
+            throw new \DomainException('Access denied: user is not a member of the team.');
+        }
+
+        return array_map(
+            fn($task) => $this->dataMapper->taskToResponse(
+                $task,
+                $this->loadAssigneeIds($task->id()),
+                $this->workflow->getEnabledTransitions($task),
+            ),
+            $this->tasks->findByTeamId($teamId),
         );
     }
 
