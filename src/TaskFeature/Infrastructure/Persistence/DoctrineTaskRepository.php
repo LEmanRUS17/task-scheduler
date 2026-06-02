@@ -39,6 +39,11 @@ final class DoctrineTaskRepository implements TaskRepositoryInterface
             ->getResult();
     }
 
+    public function findByTeamId(string $teamId): array
+    {
+        return $this->entityManager->getRepository(Task::class)->findBy(['teamId' => $teamId]);
+    }
+
     public function findById(TaskId $id): ?Task
     {
         return $this->entityManager->find(Task::class, $id->value());
