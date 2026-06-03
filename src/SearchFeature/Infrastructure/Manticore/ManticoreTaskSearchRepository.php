@@ -13,7 +13,7 @@ final class ManticoreTaskSearchRepository implements TaskSearchRepositoryInterfa
     }
 
     /** @return array<int, array{taskId: string, title: string, status: string}> */
-    public function search(string $query, ?string $teamId, ?string $status): array
+    public function search(string $query, string $userId, ?string $teamId, ?string $status): array
     {
         $must = [
             [
@@ -22,15 +22,10 @@ final class ManticoreTaskSearchRepository implements TaskSearchRepositoryInterfa
                 ]
             ]
         ];
-        $filter = [];
 
-        if ($teamId !== null) {
-            $filter[] = [
-                'equals' => [
-                    'team_id' => $teamId
-                ]
-            ];
-        }
+        $filter = $teamId !== null
+            ? [['equals' => ['team_id' => $teamId]]]
+            : [['equals' => ['created_by' => $userId]]];
 
         if ($status !== null) {
             $filter[] = [
@@ -40,11 +35,7 @@ final class ManticoreTaskSearchRepository implements TaskSearchRepositoryInterfa
             ];
         }
 
-        $queryBody = empty($filter)
-            ? ['must' => $must]
-            : ['must' => $must, 'filter' => $filter];
-
-        $result = $this->client->search('tasks', ['query' => ['bool' => $queryBody]]);
+        $result = $this->client->search('tasks', ['query' => ['bool' => ['must' => $must, 'filter' => $filter]]]);
 
         $hits = $result['hits']['hits'] ?? [];
 

@@ -19,7 +19,7 @@ final class SearchApiServiceTest extends TestCase
             ['taskId' => 'task-2', 'title' => 'Add tests', 'status' => 'done'],
         ]);
 
-        $results = (new SearchApiService($repository))->searchTasks('fix');
+        $results = (new SearchApiService($repository))->searchTasks('fix', 'user-1');
 
         $this->assertCount(2, $results);
         $this->assertInstanceOf(TaskSearchResult::class, $results[0]);
@@ -34,10 +34,10 @@ final class SearchApiServiceTest extends TestCase
         $repository = $this->createMock(TaskSearchRepositoryInterface::class);
         $repository->expects($this->once())
             ->method('search')
-            ->with('fix bug', 'team-1', 'open')
+            ->with('fix bug', 'user-1', 'team-1', 'open')
             ->willReturn([]);
 
-        (new SearchApiService($repository))->searchTasks('fix bug', 'team-1', 'open');
+        (new SearchApiService($repository))->searchTasks('fix bug', 'user-1', 'team-1', 'open');
     }
 
     public function testSearchTasksWithDefaultNullFilters(): void
@@ -45,10 +45,10 @@ final class SearchApiServiceTest extends TestCase
         $repository = $this->createMock(TaskSearchRepositoryInterface::class);
         $repository->expects($this->once())
             ->method('search')
-            ->with('fix', null, null)
+            ->with('fix', 'user-1', null, null)
             ->willReturn([]);
 
-        (new SearchApiService($repository))->searchTasks('fix');
+        (new SearchApiService($repository))->searchTasks('fix', 'user-1');
     }
 
     public function testSearchTasksReturnsEmptyArrayWhenRepositoryReturnsNothing(): void
@@ -56,6 +56,6 @@ final class SearchApiServiceTest extends TestCase
         $repository = $this->createStub(TaskSearchRepositoryInterface::class);
         $repository->method('search')->willReturn([]);
 
-        $this->assertSame([], (new SearchApiService($repository))->searchTasks('nothing'));
+        $this->assertSame([], (new SearchApiService($repository))->searchTasks('nothing', 'user-1'));
     }
 }

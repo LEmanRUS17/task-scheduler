@@ -9,5 +9,5 @@ use App\SearchFeatureApi\DTOResponse\TaskSearchResultInterface;
 interface SearchServiceInterface
 {
     /** @return TaskSearchResultInterface[] */
-    public function searchTasks(string $query, ?string $teamId = null, ?string $status = null): array;
+    public function searchTasks(string $query, string $userId, ?string $teamId = null, ?string $status = null): array;
 }
