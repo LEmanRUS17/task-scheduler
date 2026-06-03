@@ -11,6 +11,9 @@ use App\TaskFeatureApi\DTOResponse\TaskDataResponseInterface as ResponseDTO;
 interface TaskServiceInterface
 {
     /** @return ResponseDTO[] */
+    public function getAll(): array;
+
+    /** @return ResponseDTO[] */
     public function getList(string $userId): array;
 
     /** @return ResponseDTO[] */
