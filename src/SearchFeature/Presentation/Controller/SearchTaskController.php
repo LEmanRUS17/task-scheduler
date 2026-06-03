@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace App\SearchFeature\Presentation\Controller;
 
 use App\SearchFeatureApi\Contract\SearchServiceInterface;
+use App\UserFeature\Infrastructure\Security\SecurityUser;
+use Symfony\Bundle\SecurityBundle\Security;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -14,8 +16,10 @@ use Symfony\Component\Routing\Attribute\Route;
 #[AsController]
 final class SearchTaskController
 {
-    public function __construct(private readonly SearchServiceInterface $searchService)
-    {
+    public function __construct(
+        private readonly SearchServiceInterface $searchService,
+        private readonly Security $security,
+    ) {
     }
 
     #[Route('/tasks/search', name: 'tasks_search', methods: ['GET'])]
@@ -27,10 +31,14 @@ final class SearchTaskController
             return new JsonResponse(['message' => 'Query must be at least 2 characters.'], Response::HTTP_BAD_REQUEST);
         }
 
+        /** @var SecurityUser $securityUser */
+        $securityUser = $this->security->getUser();
+        $userId = $securityUser->getDomainUser()->id()->value();
+
         $teamId = $request->query->get('team_id');
         $status = $request->query->get('status');
 
-        $results = $this->searchService->searchTasks($q, $teamId ?: null, $status ?: null);
+        $results = $this->searchService->searchTasks($q, $userId, $teamId ?: null, $status ?: null);
 
         return new JsonResponse([
             'results' => array_map(

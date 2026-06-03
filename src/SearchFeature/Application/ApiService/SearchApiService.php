@@ -16,11 +16,11 @@ final class SearchApiService implements SearchServiceInterface
     }
 
     /** @return TaskSearchResultInterface[] */
-    public function searchTasks(string $query, ?string $teamId = null, ?string $status = null): array
+    public function searchTasks(string $query, string $userId, ?string $teamId = null, ?string $status = null): array
     {
         return array_map(
             static fn(array $row) => new TaskSearchResult($row['taskId'], $row['title'], $row['status']),
-            $this->repository->search($query, $teamId, $status),
+            $this->repository->search($query, $userId, $teamId, $status),
         );
     }
 }
