@@ -12,6 +12,9 @@ use App\TaskFeatureApi\DTOResponse\TaskStatusHistoryResponseInterface;
 interface TaskServiceInterface
 {
     /** @return ResponseDTO[] */
+    public function getAll(): array;
+
+    /** @return ResponseDTO[] */
     public function getList(string $userId): array;
 
     /** @return ResponseDTO[] */

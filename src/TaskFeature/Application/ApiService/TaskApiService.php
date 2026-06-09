@@ -50,6 +50,18 @@ final class TaskApiService implements TaskServiceInterface
     ) {
     }
 
+    public function getAll(): array
+    {
+        return array_map(
+            fn($task) => $this->dataMapper->taskToResponse(
+                $task,
+                $this->loadAssigneeIds($task->id()),
+                [],
+            ),
+            $this->tasks->findAll(),
+        );
+    }
+
     public function getList(string $userId): array
     {
         return array_map(
