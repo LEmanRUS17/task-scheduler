@@ -15,7 +15,8 @@ final class GetTaskStatusHistoryController
 {
     public function __construct(
         private readonly TaskServiceInterface $taskService,
-    ) {}
+    ) {
+    }
 
     #[Route('/task/{id}/status-history', name: 'task_status_history', methods: ['GET'])]
     public function __invoke(string $id): JsonResponse
