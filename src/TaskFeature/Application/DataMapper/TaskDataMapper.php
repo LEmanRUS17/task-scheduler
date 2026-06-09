@@ -4,8 +4,11 @@ declare(strict_types=1);
 
 namespace App\TaskFeature\Application\DataMapper;
 
+use App\ProfileFeatureApi\DTOResponse\ProfileDataResponseInterface;
 use App\TaskFeature\Application\DTOResponse\TaskResponseDTO;
+use App\TaskFeature\Application\DTOResponse\TaskStatusHistoryResponseDTO;
 use App\TaskFeature\Domain\Entity\Task;
+use App\TaskFeature\Domain\Entity\TaskStatusHistory;
 use App\TaskFeature\Domain\ValueObject\TaskPriority;
 use App\TaskFeature\Domain\ValueObject\TaskTitle;
 use App\TaskFeatureApi\DTORequest\TaskCreateRequestInterface;
@@ -44,6 +47,20 @@ final class TaskDataMapper
             $task->estimatedTime(),
             $task->actualTime(),
             $availableTransitions,
+        );
+    }
+
+    public function historyToResponse(
+        TaskStatusHistory $entry,
+        ?string $toStatusLabel,
+        ?ProfileDataResponseInterface $changedByProfile,
+    ): TaskStatusHistoryResponseDTO {
+        return new TaskStatusHistoryResponseDTO(
+            $entry->id(),
+            $entry->transitionId(),
+            $toStatusLabel,
+            $changedByProfile,
+            $entry->changedAt(),
         );
     }
 }
