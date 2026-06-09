@@ -15,8 +15,7 @@ final class GetTaskStatusHistoryController
 {
     public function __construct(
         private readonly TaskServiceInterface $taskService,
-    ) {
-    }
+    ) {}
 
     #[Route('/task/{id}/status-history', name: 'task_status_history', methods: ['GET'])]
     public function __invoke(string $id): JsonResponse
@@ -31,12 +30,20 @@ final class GetTaskStatusHistoryController
 
         return new JsonResponse(
             array_map(
-                fn($entry) => [
-                    'id' => $entry->getId(),
-                    'transitionId' => $entry->getTransitionId(),
-                    'changedBy' => $entry->getChangedBy(),
-                    'changedAt' => $entry->getChangedAt()->format(\DateTimeInterface::ATOM),
-                ],
+                function ($entry) {
+                    $profile = $entry->getProfile();
+
+                    return [
+                        'id' => $entry->getId(),
+                        'transitionId' => $entry->getTransitionId(),
+                        'toStatusLabel' => $entry->getToStatusLabel(),
+                        'profile' => $profile === null ? null : [
+                            'userId' => $profile->getUserId(),
+                            'username' => $profile->getUsername(),
+                        ],
+                        'changedAt' => $entry->getChangedAt()->format(\DateTimeInterface::ATOM),
+                    ];
+                },
                 $history,
             ),
             Response::HTTP_OK,

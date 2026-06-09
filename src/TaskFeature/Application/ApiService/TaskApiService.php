@@ -25,6 +25,9 @@ use App\TaskFeatureApi\DTORequest\TaskCreateRequestInterface;
 use App\TaskFeatureApi\DTORequest\TaskUpdateRequestInterface;
 use App\TaskFeatureApi\DTOResponse\TaskDataResponseInterface;
 use App\TaskFeatureApi\Service\TaskServiceInterface;
+use App\ProfileFeatureApi\Service\ProfileServiceInterface;
+use App\WorkflowFeature\Domain\Repository\WorkflowTransitionRepositoryInterface;
+use App\WorkflowFeature\Domain\ValueObject\WorkflowTransitionId;
 
 final class TaskApiService implements TaskServiceInterface
 {
@@ -37,6 +40,8 @@ final class TaskApiService implements TaskServiceInterface
         private readonly TaskRepositoryInterface $tasks,
         private readonly TaskAssigneeRepositoryInterface $assignees,
         private readonly TaskStatusHistoryRepositoryInterface $statusHistory,
+        private readonly WorkflowTransitionRepositoryInterface $transitions,
+        private readonly ProfileServiceInterface $profiles,
         private readonly TaskDataMapper $dataMapper,
         private readonly TaskValidatorInterface $validator,
         private readonly DomainEventDispatcherInterface $eventDispatcher,
@@ -175,10 +180,20 @@ final class TaskApiService implements TaskServiceInterface
 
     public function getStatusHistory(string $taskId): array
     {
-        return array_map(
-            fn($entry) => $this->dataMapper->historyToResponse($entry),
-            $this->statusHistory->findByTaskId($taskId),
-        );
+        return array_map(function ($entry) {
+            $transition = $this->transitions->findById(WorkflowTransitionId::fromString($entry->transitionId()));
+            $toStatusLabel = $transition?->toStatusLabel()->value();
+
+            $profile = null;
+            if ($entry->changedBy() !== null) {
+                try {
+                    $profile = $this->profiles->getByUserId($entry->changedBy());
+                } catch (\DomainException) {
+                }
+            }
+
+            return $this->dataMapper->historyToResponse($entry, $toStatusLabel, $profile);
+        }, $this->statusHistory->findByTaskId($taskId));
     }
 
     /** @return string[] */

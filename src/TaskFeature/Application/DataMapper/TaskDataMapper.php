@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\TaskFeature\Application\DataMapper;
 
+use App\ProfileFeatureApi\DTOResponse\ProfileDataResponseInterface;
 use App\TaskFeature\Application\DTOResponse\TaskResponseDTO;
 use App\TaskFeature\Application\DTOResponse\TaskStatusHistoryResponseDTO;
 use App\TaskFeature\Domain\Entity\Task;
@@ -49,12 +50,16 @@ final class TaskDataMapper
         );
     }
 
-    public function historyToResponse(TaskStatusHistory $entry): TaskStatusHistoryResponseDTO
-    {
+    public function historyToResponse(
+        TaskStatusHistory $entry,
+        ?string $toStatusLabel,
+        ?ProfileDataResponseInterface $changedByProfile,
+    ): TaskStatusHistoryResponseDTO {
         return new TaskStatusHistoryResponseDTO(
             $entry->id(),
             $entry->transitionId(),
-            $entry->changedBy(),
+            $toStatusLabel,
+            $changedByProfile,
             $entry->changedAt(),
         );
     }

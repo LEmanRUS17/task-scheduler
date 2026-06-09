@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\TaskFeature\Application\DTOResponse;
 
+use App\ProfileFeatureApi\DTOResponse\ProfileDataResponseInterface;
 use App\TaskFeatureApi\DTOResponse\TaskStatusHistoryResponseInterface;
 
 final class TaskStatusHistoryResponseDTO implements TaskStatusHistoryResponseInterface
@@ -11,7 +12,8 @@ final class TaskStatusHistoryResponseDTO implements TaskStatusHistoryResponseInt
     public function __construct(
         private readonly string $id,
         private readonly string $transitionId,
-        private readonly ?string $changedBy,
+        private readonly ?string $toStatusLabel,
+        private readonly ?ProfileDataResponseInterface $changedByProfile,
         private readonly \DateTimeImmutable $changedAt,
     ) {
     }
@@ -26,9 +28,14 @@ final class TaskStatusHistoryResponseDTO implements TaskStatusHistoryResponseInt
         return $this->transitionId;
     }
 
-    public function getChangedBy(): ?string
+    public function getToStatusLabel(): ?string
     {
-        return $this->changedBy;
+        return $this->toStatusLabel;
+    }
+
+    public function getProfile(): ?ProfileDataResponseInterface
+    {
+        return $this->changedByProfile;
     }
 
     public function getChangedAt(): \DateTimeImmutable

@@ -23,6 +23,7 @@ use App\TaskFeature\Domain\Repository\TaskStatusHistoryRepositoryInterface;
 use App\TaskFeature\Domain\ValueObject\TaskId;
 use App\TaskFeature\Domain\ValueObject\TaskPriority;
 use App\TaskFeature\Domain\ValueObject\TaskTitle;
+use App\ProfileFeatureApi\Service\ProfileServiceInterface;
 use App\WorkflowFeature\Domain\Repository\WorkflowTransitionRepositoryInterface;
 use PHPUnit\Framework\TestCase;
 
@@ -52,6 +53,8 @@ final class TaskApiServiceTest extends TestCase
             $tasks,
             $assignees,
             $this->createStub(TaskStatusHistoryRepositoryInterface::class),
+            $this->createStub(WorkflowTransitionRepositoryInterface::class),
+            $this->createStub(ProfileServiceInterface::class),
             new TaskDataMapper(),
             $this->createStub(TaskValidatorInterface::class),
             $dispatcher,
