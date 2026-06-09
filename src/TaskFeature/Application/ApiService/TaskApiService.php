@@ -17,6 +17,7 @@ use App\TaskFeature\Domain\Port\TeamMembershipInterface;
 use App\TaskFeature\Domain\Port\TaskWorkflowInterface;
 use App\TaskFeature\Domain\Repository\TaskAssigneeRepositoryInterface;
 use App\TaskFeature\Domain\Repository\TaskRepositoryInterface;
+use App\TaskFeature\Domain\Repository\TaskStatusHistoryRepositoryInterface;
 use App\TaskFeature\Domain\ValueObject\TaskId;
 use App\TaskFeature\Domain\ValueObject\TaskPriority;
 use App\TaskFeature\Domain\ValueObject\TaskTitle;
@@ -35,6 +36,7 @@ final class TaskApiService implements TaskServiceInterface
         private readonly RemoveTaskAssigneeInteractor $removeAssigneeInteractor,
         private readonly TaskRepositoryInterface $tasks,
         private readonly TaskAssigneeRepositoryInterface $assignees,
+        private readonly TaskStatusHistoryRepositoryInterface $statusHistory,
         private readonly TaskDataMapper $dataMapper,
         private readonly TaskValidatorInterface $validator,
         private readonly DomainEventDispatcherInterface $eventDispatcher,
@@ -169,6 +171,14 @@ final class TaskApiService implements TaskServiceInterface
         $this->assignees->deleteByTaskId($taskId);
         $this->tasks->delete($taskId);
         $this->eventDispatcher->dispatch(new TaskDeleted($id));
+    }
+
+    public function getStatusHistory(string $taskId): array
+    {
+        return array_map(
+            fn($entry) => $this->dataMapper->historyToResponse($entry),
+            $this->statusHistory->findByTaskId($taskId),
+        );
     }
 
     /** @return string[] */

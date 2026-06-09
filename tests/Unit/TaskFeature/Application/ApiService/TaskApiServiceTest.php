@@ -19,6 +19,7 @@ use App\TaskFeature\Domain\Port\TaskWorkflowInterface;
 use App\TaskFeature\Domain\Port\TeamMembershipInterface;
 use App\TaskFeature\Domain\Repository\TaskAssigneeRepositoryInterface;
 use App\TaskFeature\Domain\Repository\TaskRepositoryInterface;
+use App\TaskFeature\Domain\Repository\TaskStatusHistoryRepositoryInterface;
 use App\TaskFeature\Domain\ValueObject\TaskId;
 use App\TaskFeature\Domain\ValueObject\TaskPriority;
 use App\TaskFeature\Domain\ValueObject\TaskTitle;
@@ -50,6 +51,7 @@ final class TaskApiServiceTest extends TestCase
             new RemoveTaskAssigneeInteractor($tasks, $assignees, $dispatcher),
             $tasks,
             $assignees,
+            $this->createStub(TaskStatusHistoryRepositoryInterface::class),
             new TaskDataMapper(),
             $this->createStub(TaskValidatorInterface::class),
             $dispatcher,

@@ -7,6 +7,7 @@ namespace App\TaskFeatureApi\Service;
 use App\TaskFeatureApi\DTORequest\TaskCreateRequestInterface;
 use App\TaskFeatureApi\DTORequest\TaskUpdateRequestInterface;
 use App\TaskFeatureApi\DTOResponse\TaskDataResponseInterface as ResponseDTO;
+use App\TaskFeatureApi\DTOResponse\TaskStatusHistoryResponseInterface;
 
 interface TaskServiceInterface
 {
@@ -32,4 +33,7 @@ interface TaskServiceInterface
     public function removeAssignee(string $taskId, string $userId): void;
 
     public function deleteById(string $id): void;
+
+    /** @return TaskStatusHistoryResponseInterface[] */
+    public function getStatusHistory(string $taskId): array;
 }
