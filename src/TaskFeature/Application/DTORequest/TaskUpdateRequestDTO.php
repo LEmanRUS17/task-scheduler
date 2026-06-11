@@ -21,6 +21,7 @@ final class TaskUpdateRequestDTO implements TaskUpdateRequestInterface
         private readonly ?\DateTimeImmutable $scheduledEnd = null,
         #[Assert\PositiveOrZero(message: 'Estimated time must be a non-negative integer')]
         private readonly ?int $estimatedTime = null,
+        private readonly ?string $description = null,
     ) {
     }
 
@@ -47,5 +48,10 @@ final class TaskUpdateRequestDTO implements TaskUpdateRequestInterface
     public function getEstimatedTime(): ?int
     {
         return $this->estimatedTime;
+    }
+
+    public function getDescription(): ?string
+    {
+        return $this->description;
     }
 }

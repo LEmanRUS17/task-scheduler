@@ -31,8 +31,12 @@ final class TaskDataMapper
      * @param string[] $assigneeIds
      * @param string[] $availableTransitions
      */
-    public function taskToResponse(Task $task, array $assigneeIds, array $availableTransitions): TaskResponseDTO
-    {
+    public function taskToResponse(
+        Task $task,
+        array $assigneeIds,
+        array $availableTransitions,
+        ?string $description = null,
+    ): TaskResponseDTO {
         return new TaskResponseDTO(
             $task->id()->value(),
             $task->title()->value(),
@@ -47,6 +51,7 @@ final class TaskDataMapper
             $task->estimatedTime(),
             $task->actualTime(),
             $availableTransitions,
+            $description,
         );
     }
 

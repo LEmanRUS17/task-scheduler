@@ -63,6 +63,7 @@ final class CreateTaskController
                 'actualTime' => $task->getActualTime(),
                 'createdAt' => $task->getCreatedAt()->format(\DateTimeInterface::ATOM),
                 'availableTransitions' => $task->getAvailableTransitions(),
+                'description' => $task->getDescription(),
             ],
             Response::HTTP_CREATED,
         );

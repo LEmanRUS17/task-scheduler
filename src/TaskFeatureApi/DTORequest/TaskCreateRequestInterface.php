@@ -22,4 +22,6 @@ interface TaskCreateRequestInterface
     public function getScheduledEnd(): ?\DateTimeImmutable;
 
     public function getEstimatedTime(): ?int;
+
+    public function getDescription(): ?string;
 }
