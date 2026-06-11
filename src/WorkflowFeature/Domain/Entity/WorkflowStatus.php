@@ -4,12 +4,13 @@ declare(strict_types=1);
 
 namespace App\WorkflowFeature\Domain\Entity;
 
+use App\DescriptionFeatureApi\Contract\DescribableInterface;
 use App\WorkflowFeature\Domain\Event\WorkflowStatusAdded;
 use App\WorkflowFeature\Domain\ValueObject\StatusLabel;
 use App\WorkflowFeature\Domain\ValueObject\WorkflowId;
 use App\WorkflowFeature\Domain\ValueObject\WorkflowStatusId;
 
-final class WorkflowStatus
+final class WorkflowStatus implements DescribableInterface
 {
     private string $id;
     private string $workflowId;

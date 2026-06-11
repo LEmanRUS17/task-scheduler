@@ -50,6 +50,7 @@ final class AddWorkflowTransitionController
                 'fromStatusLabel' => $transition->getFromStatusLabel(),
                 'toStatusLabel' => $transition->getToStatusLabel(),
                 'createdAt' => $transition->getCreatedAt()->format(\DateTimeInterface::ATOM),
+                'description' => $transition->getDescription(),
             ],
             Response::HTTP_CREATED,
         );

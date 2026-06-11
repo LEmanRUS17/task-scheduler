@@ -15,4 +15,6 @@ interface WorkflowStatusResponseInterface
     public function isInitial(): bool;
 
     public function getCreatedAt(): \DateTimeImmutable;
+
+    public function getDescription(): ?string;
 }

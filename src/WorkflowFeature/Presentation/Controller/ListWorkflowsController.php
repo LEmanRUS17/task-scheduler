@@ -29,6 +29,7 @@ final class ListWorkflowsController
                     'id' => $w->getId(),
                     'title' => $w->getTitle(),
                     'createdBy' => $w->getCreatedBy(),
+                    'description' => $w->getDescription(),
                     'createdAt' => $w->getCreatedAt()->format(\DateTimeInterface::ATOM),
                 ],
                 $workflows,

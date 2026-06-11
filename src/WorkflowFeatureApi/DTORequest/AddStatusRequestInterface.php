@@ -9,4 +9,6 @@ interface AddStatusRequestInterface extends WorkflowRequestInterface
     public function getLabel(): string;
 
     public function isInitial(): bool;
+
+    public function getDescription(): ?string;
 }

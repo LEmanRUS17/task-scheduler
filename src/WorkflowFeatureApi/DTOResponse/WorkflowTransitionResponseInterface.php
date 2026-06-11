@@ -17,4 +17,6 @@ interface WorkflowTransitionResponseInterface
     public function getToStatusLabel(): string;
 
     public function getCreatedAt(): \DateTimeImmutable;
+
+    public function getDescription(): ?string;
 }

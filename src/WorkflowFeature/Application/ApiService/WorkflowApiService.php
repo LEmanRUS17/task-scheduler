@@ -17,6 +17,10 @@ use App\WorkflowFeature\Domain\ValueObject\TransitionName;
 use App\WorkflowFeature\Domain\ValueObject\WorkflowId;
 use App\WorkflowFeatureApi\DTORequest\AddStatusRequestInterface;
 use App\WorkflowFeatureApi\DTORequest\AddTransitionRequestInterface;
+use App\DescriptionFeatureApi\Contract\DescriptionServiceInterface;
+use App\WorkflowFeature\Domain\Entity\Workflow;
+use App\WorkflowFeature\Domain\Entity\WorkflowStatus;
+use App\WorkflowFeature\Domain\Entity\WorkflowTransition;
 use App\WorkflowFeatureApi\DTORequest\CreateWorkflowRequestInterface;
 use App\WorkflowFeatureApi\DTOResponse\WorkflowResponseInterface;
 use App\WorkflowFeatureApi\DTOResponse\WorkflowStatusResponseInterface;
@@ -34,6 +38,7 @@ final class WorkflowApiService implements WorkflowServiceInterface
         private readonly WorkflowTransitionRepositoryInterface $transitions,
         private readonly WorkflowDataMapper $dataMapper,
         private readonly WorkflowValidatorInterface $validator,
+        private readonly DescriptionServiceInterface $descriptions,
     ) {
     }
 
@@ -48,20 +53,33 @@ final class WorkflowApiService implements WorkflowServiceInterface
         $title = $this->dataMapper->requestToTitle($request);
         $workflow = $this->createInteractor->create($title, $createdBy);
 
-        return $this->dataMapper->workflowToResponse($workflow);
+        $description = $request->getDescription();
+        if ($description !== null) {
+            $this->descriptions->set(Workflow::class, $workflow->id()->value(), $description);
+        }
+
+        return $this->dataMapper->workflowToResponse($workflow, $description);
     }
 
     public function getById(string $id): ?WorkflowResponseInterface
     {
         $workflow = $this->workflows->findById(WorkflowId::fromString($id));
 
-        return $workflow !== null ? $this->dataMapper->workflowToResponse($workflow) : null;
+        return $workflow !== null
+            ? $this->dataMapper->workflowToResponse(
+                $workflow,
+                $this->descriptions->get(Workflow::class, $id),
+            )
+            : null;
     }
 
     public function getList(): array
     {
         return array_map(
-            fn($workflow) => $this->dataMapper->workflowToResponse($workflow),
+            fn($workflow) => $this->dataMapper->workflowToResponse(
+                $workflow,
+                $this->descriptions->get(Workflow::class, $workflow->id()->value()),
+            ),
             $this->workflows->findAll(),
         );
     }
@@ -81,13 +99,21 @@ final class WorkflowApiService implements WorkflowServiceInterface
             $request->isInitial(),
         );
 
-        return $this->dataMapper->statusToResponse($status);
+        $description = $request->getDescription();
+        if ($description !== null) {
+            $this->descriptions->set(WorkflowStatus::class, $status->id()->value(), $description);
+        }
+
+        return $this->dataMapper->statusToResponse($status, $description);
     }
 
     public function getStatuses(string $workflowId): array
     {
         return array_map(
-            fn($status) => $this->dataMapper->statusToResponse($status),
+            fn($status) => $this->dataMapper->statusToResponse(
+                $status,
+                $this->descriptions->get(WorkflowStatus::class, $status->id()->value()),
+            ),
             $this->statuses->findByWorkflowId(WorkflowId::fromString($workflowId)),
         );
     }
@@ -109,13 +135,21 @@ final class WorkflowApiService implements WorkflowServiceInterface
             StatusLabel::fromString($request->getToStatusLabel()),
         );
 
-        return $this->dataMapper->transitionToResponse($transition);
+        $description = $request->getDescription();
+        if ($description !== null) {
+            $this->descriptions->set(WorkflowTransition::class, $transition->id()->value(), $description);
+        }
+
+        return $this->dataMapper->transitionToResponse($transition, $description);
     }
 
     public function getTransitions(string $workflowId): array
     {
         return array_map(
-            fn($transition) => $this->dataMapper->transitionToResponse($transition),
+            fn($transition) => $this->dataMapper->transitionToResponse(
+                $transition,
+                $this->descriptions->get(WorkflowTransition::class, $transition->id()->value()),
+            ),
             $this->transitions->findByWorkflowId(WorkflowId::fromString($workflowId)),
         );
     }

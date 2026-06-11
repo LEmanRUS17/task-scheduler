@@ -11,4 +11,6 @@ interface AddTransitionRequestInterface extends WorkflowRequestInterface
     public function getFromStatusLabel(): string;
 
     public function getToStatusLabel(): string;
+
+    public function getDescription(): ?string;
 }
