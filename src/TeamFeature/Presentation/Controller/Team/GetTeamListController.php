@@ -19,6 +19,7 @@ final class GetTeamListController
         private readonly TeamServiceInterface $teamService,
         private readonly Security $security,
     ) {
+        return;
     }
 
     #[Route('/team/list', name: 'team_list', methods: ['GET'])]
@@ -34,10 +35,11 @@ final class GetTeamListController
             [
                 'teams' => array_map(
                     fn($team) => [
-                        'id'        => $team->getId(),
-                        'title'     => $team->getTitle(),
-                        'status'    => $team->getStatus(),
+                        'id' => $team->getId(),
+                        'title' => $team->getTitle(),
+                        'status' => $team->getStatus(),
                         'createdAt' => $team->getCreatedAt()->format(\DateTimeInterface::ATOM),
+                        'description' => $team->getDescription(),
                     ],
                     $teams,
                 ),

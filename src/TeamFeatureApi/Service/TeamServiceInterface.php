@@ -6,6 +6,7 @@ namespace App\TeamFeatureApi\Service;
 
 use App\TeamFeatureApi\DTORequest\TeamAddMemberRequestInterface;
 use App\TeamFeatureApi\DTORequest\TeamCreateRequestInterface;
+use App\TeamFeatureApi\DTORequest\TeamUpdateRequestInterface;
 use App\TeamFeatureApi\DTOResponse\TeamDataResponseInterface as ResponseDTO;
 use App\TeamFeatureApi\DTOResponse\TeamMemberDataResponseInterface as MemberResponseDTO;
 
@@ -20,6 +21,8 @@ interface TeamServiceInterface
     public function getById(string $id): ?ResponseDTO;
 
     public function create(TeamCreateRequestInterface $dtoRequest, string $creatorUserId): ResponseDTO;
+
+    public function update(string $id, TeamUpdateRequestInterface $dtoRequest): ResponseDTO;
 
     public function deleteById(string $id): void;
 

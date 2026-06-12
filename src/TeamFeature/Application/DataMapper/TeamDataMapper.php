@@ -18,13 +18,14 @@ final class TeamDataMapper
         return Title::fromString($request->getTitle());
     }
 
-    public function teamToResponse(Team $team): TeamResponseDTO
+    public function teamToResponse(Team $team, ?string $description = null): TeamResponseDTO
     {
         return new TeamResponseDTO(
             $team->id()->value(),
             $team->title()->value(),
             $team->status()->value,
             $team->createdAt(),
+            $description,
         );
     }
 

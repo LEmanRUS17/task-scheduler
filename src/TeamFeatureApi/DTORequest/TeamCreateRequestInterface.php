@@ -9,4 +9,6 @@ interface TeamCreateRequestInterface
     public function getTitle(): string;
 
     public function setTitle(string $title): void;
+
+    public function getDescription(): ?string;
 }

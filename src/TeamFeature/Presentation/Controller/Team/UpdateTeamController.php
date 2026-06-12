@@ -4,10 +4,8 @@ declare(strict_types=1);
 
 namespace App\TeamFeature\Presentation\Controller\Team;
 
-use App\TeamFeature\Application\DTORequest\TeamCreateRequestDTO;
+use App\TeamFeature\Application\DTORequest\TeamUpdateRequestDTO;
 use App\TeamFeatureApi\Service\TeamServiceInterface;
-use App\UserFeature\Infrastructure\Security\SecurityUser;
-use Symfony\Bundle\SecurityBundle\Security;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Attribute\AsController;
@@ -15,31 +13,24 @@ use Symfony\Component\HttpKernel\Attribute\MapRequestPayload;
 use Symfony\Component\Routing\Attribute\Route;
 
 #[AsController]
-final class CreateTeamController
+final class UpdateTeamController
 {
     public function __construct(
         private readonly TeamServiceInterface $teamService,
-        private readonly Security $security,
     ) {
     }
 
-    #[Route('/team/create', name: 'team_create', methods: ['POST'])]
+    #[Route('/team/{id}', name: 'team_update', methods: ['PATCH'])]
     public function __invoke(
-        #[MapRequestPayload] TeamCreateRequestDTO $request,
+        string $id,
+        #[MapRequestPayload] TeamUpdateRequestDTO $request,
     ): JsonResponse {
-        /** @var SecurityUser $securityUser */
-        $securityUser = $this->security->getUser();
-        $creatorUserId = $securityUser->getDomainUser()->id()->value();
-
         try {
-            $team = $this->teamService->create($request, $creatorUserId);
-        } catch (\InvalidArgumentException $e) {
+            $team = $this->teamService->update($id, $request);
+        } catch (\DomainException $e) {
             return new JsonResponse(
-                [
-                    'message' => 'Validation failed',
-                    'errors' => json_decode($e->getMessage(), true),
-                ],
-                Response::HTTP_UNPROCESSABLE_ENTITY,
+                ['message' => $e->getMessage()],
+                Response::HTTP_NOT_FOUND,
             );
         }
 
@@ -48,9 +39,10 @@ final class CreateTeamController
                 'id' => $team->getId(),
                 'title' => $team->getTitle(),
                 'status' => $team->getStatus(),
+                'createdAt' => $team->getCreatedAt()->format(\DateTimeInterface::ATOM),
                 'description' => $team->getDescription(),
             ],
-            Response::HTTP_CREATED,
+            Response::HTTP_OK,
         );
     }
 }

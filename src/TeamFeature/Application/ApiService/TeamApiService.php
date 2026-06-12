@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace App\TeamFeature\Application\ApiService;
 
+use App\DescriptionFeatureApi\Contract\DescriptionServiceInterface;
 use App\TeamFeature\Application\DataMapper\TeamDataMapper;
+use App\TeamFeature\Domain\Entity\Team;
 use App\TeamFeature\Application\DTORequestValidator\TeamValidatorInterface;
 use App\TeamFeature\Domain\Interactor\AddTeamMemberInteractor;
 use App\TeamFeature\Domain\Interactor\RemoveTeamMemberInteractor;
@@ -15,6 +17,7 @@ use App\TeamFeature\Domain\ValueObject\TeamId;
 use App\TeamFeature\Domain\ValueObject\TeamMemberRole;
 use App\TeamFeatureApi\DTORequest\TeamAddMemberRequestInterface;
 use App\TeamFeatureApi\DTORequest\TeamCreateRequestInterface;
+use App\TeamFeatureApi\DTORequest\TeamUpdateRequestInterface;
 use App\TeamFeatureApi\DTOResponse\TeamDataResponseInterface;
 use App\TeamFeatureApi\DTOResponse\TeamMemberDataResponseInterface;
 use App\TeamFeatureApi\Service\TeamServiceInterface;
@@ -29,13 +32,17 @@ final class TeamApiService implements TeamServiceInterface
         private readonly TeamMemberRepositoryInterface $members,
         private readonly TeamDataMapper $dataMapper,
         private readonly TeamValidatorInterface $validator,
+        private readonly DescriptionServiceInterface $descriptions,
     ) {
     }
 
     public function getList(): array
     {
         return array_map(
-            fn($team) => $this->dataMapper->teamToResponse($team),
+            fn($team) => $this->dataMapper->teamToResponse(
+                $team,
+                $this->descriptions->get(Team::class, $team->id()->value()),
+            ),
             $this->teams->findAll(),
         );
     }
@@ -47,7 +54,10 @@ final class TeamApiService implements TeamServiceInterface
         $teamIds = array_map(fn($member) => $member->teamId()->value(), $members);
 
         return array_map(
-            fn($team) => $this->dataMapper->teamToResponse($team),
+            fn($team) => $this->dataMapper->teamToResponse(
+                $team,
+                $this->descriptions->get(Team::class, $team->id()->value()),
+            ),
             $this->teams->findByIds($teamIds),
         );
     }
@@ -56,7 +66,12 @@ final class TeamApiService implements TeamServiceInterface
     {
         $team = $this->teams->findById(TeamId::fromString($id));
 
-        return $team !== null ? $this->dataMapper->teamToResponse($team) : null;
+        return $team !== null
+            ? $this->dataMapper->teamToResponse(
+                $team,
+                $this->descriptions->get(Team::class, $id),
+            )
+            : null;
     }
 
     public function create(TeamCreateRequestInterface $dtoRequest, string $creatorUserId): TeamDataResponseInterface
@@ -70,7 +85,31 @@ final class TeamApiService implements TeamServiceInterface
         $title = $this->dataMapper->requestToTitle($dtoRequest);
         $team = $this->createInteractor->create($title, $creatorUserId);
 
-        return $this->dataMapper->teamToResponse($team);
+        $description = $dtoRequest->getDescription();
+        if ($description !== null) {
+            $this->descriptions->set(Team::class, $team->id()->value(), $description);
+        }
+
+        return $this->dataMapper->teamToResponse($team, $description);
+    }
+
+    public function update(string $id, TeamUpdateRequestInterface $dtoRequest): TeamDataResponseInterface
+    {
+        $team = $this->teams->findById(TeamId::fromString($id));
+
+        if ($team === null) {
+            throw new \DomainException("Team {$id} not found");
+        }
+
+        $description = $dtoRequest->getDescription();
+        if ($description !== null) {
+            $this->descriptions->set(Team::class, $id, $description);
+        }
+
+        return $this->dataMapper->teamToResponse(
+            $team,
+            $this->descriptions->get(Team::class, $id),
+        );
     }
 
     public function deleteById(string $id): void
@@ -82,6 +121,7 @@ final class TeamApiService implements TeamServiceInterface
         }
 
         $this->teams->delete($team);
+        $this->descriptions->delete(Team::class, $id);
     }
 
     public function getMembers(string $teamId): array

@@ -17,6 +17,7 @@ final class TeamCreateRequestDTO implements TeamCreateRequestInterface
             maxMessage: 'Title must not exceed 255 characters',
         )]
         private readonly string $title,
+        private readonly ?string $description = null,
     ) {
     }
 
@@ -27,5 +28,10 @@ final class TeamCreateRequestDTO implements TeamCreateRequestInterface
 
     public function setTitle(string $title): void
     {
+    }
+
+    public function getDescription(): ?string
+    {
+        return $this->description;
     }
 }
