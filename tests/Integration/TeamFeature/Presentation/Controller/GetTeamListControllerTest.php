@@ -64,6 +64,7 @@ final class GetTeamListControllerTest extends WebTestCase
         $team->method('getTitle')->willReturn('Backend');
         $team->method('getStatus')->willReturn('ACTIVE');
         $team->method('getCreatedAt')->willReturn(new \DateTimeImmutable('2026-01-01T00:00:00+00:00'));
+        $team->method('getDescription')->willReturn('Backend team description');
 
         $service = $this->createMock(TeamServiceInterface::class);
         $service->expects($this->once())
@@ -84,6 +85,7 @@ final class GetTeamListControllerTest extends WebTestCase
         $this->assertSame('Backend', $body['teams'][0]['title']);
         $this->assertSame('ACTIVE', $body['teams'][0]['status']);
         $this->assertSame('2026-01-01T00:00:00+00:00', $body['teams'][0]['createdAt']);
+        $this->assertSame('Backend team description', $body['teams'][0]['description']);
     }
 
     private function makeUser(string $userId): User

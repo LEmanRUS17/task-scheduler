@@ -44,12 +44,24 @@ final class GetWorkflowController
                 'title' => $workflow->getTitle(),
                 'createdBy' => $workflow->getCreatedBy(),
                 'createdAt' => $workflow->getCreatedAt()->format(\DateTimeInterface::ATOM),
+                'description' => $workflow->getDescription(),
                 'statuses' => array_map(
-                    fn($s) => ['id' => $s->getId(), 'label' => $s->getLabel(), 'isInitial' => $s->isInitial()],
+                    fn($s) => [
+                        'id' => $s->getId(),
+                        'label' => $s->getLabel(),
+                        'isInitial' => $s->isInitial(),
+                        'description' => $s->getDescription(),
+                    ],
                     $this->workflowService->getStatuses($id),
                 ),
                 'transitions' => array_map(
-                    fn($t) => ['id' => $t->getId(), 'name' => $t->getName(), 'from' => $t->getFromStatusLabel(), 'to' => $t->getToStatusLabel()],
+                    fn($t) => [
+                        'id' => $t->getId(),
+                        'name' => $t->getName(),
+                        'from' => $t->getFromStatusLabel(),
+                        'to' => $t->getToStatusLabel(),
+                        'description' => $t->getDescription(),
+                    ],
                     $this->workflowService->getTransitions($id),
                 ),
             ],

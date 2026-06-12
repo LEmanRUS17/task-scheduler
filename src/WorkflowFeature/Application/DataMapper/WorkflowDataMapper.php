@@ -34,17 +34,18 @@ final class WorkflowDataMapper
         return TransitionName::fromString($request->getName());
     }
 
-    public function workflowToResponse(Workflow $workflow): WorkflowResponseDTO
+    public function workflowToResponse(Workflow $workflow, ?string $description = null): WorkflowResponseDTO
     {
         return new WorkflowResponseDTO(
             $workflow->id()->value(),
             $workflow->title()->value(),
             $workflow->createdBy(),
             $workflow->createdAt(),
+            $description,
         );
     }
 
-    public function statusToResponse(WorkflowStatus $status): WorkflowStatusResponseDTO
+    public function statusToResponse(WorkflowStatus $status, ?string $description = null): WorkflowStatusResponseDTO
     {
         return new WorkflowStatusResponseDTO(
             $status->id()->value(),
@@ -52,11 +53,14 @@ final class WorkflowDataMapper
             $status->label()->value(),
             $status->isInitial(),
             $status->createdAt(),
+            $description,
         );
     }
 
-    public function transitionToResponse(WorkflowTransition $transition): WorkflowTransitionResponseDTO
-    {
+    public function transitionToResponse(
+        WorkflowTransition $transition,
+        ?string $description = null,
+    ): WorkflowTransitionResponseDTO {
         return new WorkflowTransitionResponseDTO(
             $transition->id()->value(),
             $transition->workflowId()->value(),
@@ -64,6 +68,7 @@ final class WorkflowDataMapper
             $transition->fromStatusLabel()->value(),
             $transition->toStatusLabel()->value(),
             $transition->createdAt(),
+            $description,
         );
     }
 }

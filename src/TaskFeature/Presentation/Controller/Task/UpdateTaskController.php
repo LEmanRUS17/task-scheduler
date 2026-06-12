@@ -70,6 +70,7 @@ final class UpdateTaskController
                 'actualTime' => $task->getActualTime(),
                 'createdAt' => $task->getCreatedAt()->format(\DateTimeInterface::ATOM),
                 'availableTransitions' => $task->getAvailableTransitions(),
+                'description' => $task->getDescription(),
             ],
             Response::HTTP_OK,
         );

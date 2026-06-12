@@ -4,11 +4,12 @@ declare(strict_types=1);
 
 namespace App\WorkflowFeature\Domain\Entity;
 
+use App\DescriptionFeatureApi\Contract\DescribableInterface;
 use App\WorkflowFeature\Domain\Event\WorkflowCreated;
 use App\WorkflowFeature\Domain\ValueObject\WorkflowId;
 use App\WorkflowFeature\Domain\ValueObject\WorkflowTitle;
 
-final class Workflow
+final class Workflow implements DescribableInterface
 {
     private string $id;
     private string $title;

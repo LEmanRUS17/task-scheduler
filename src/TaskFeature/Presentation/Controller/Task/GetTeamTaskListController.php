@@ -54,6 +54,7 @@ final class GetTeamTaskListController
                         'actualTime' => $task->getActualTime(),
                         'createdAt' => $task->getCreatedAt()->format(\DateTimeInterface::ATOM),
                         'availableTransitions' => $task->getAvailableTransitions(),
+                        'description' => $task->getDescription(),
                     ],
                     $tasks,
                 ),

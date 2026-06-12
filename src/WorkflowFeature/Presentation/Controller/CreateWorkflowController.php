@@ -54,6 +54,7 @@ final class CreateWorkflowController
                 'title' => $workflow->getTitle(),
                 'createdBy' => $workflow->getCreatedBy(),
                 'createdAt' => $workflow->getCreatedAt()->format(\DateTimeInterface::ATOM),
+                'description' => $workflow->getDescription(),
             ],
             Response::HTTP_CREATED,
         );

@@ -14,6 +14,7 @@ final class WorkflowStatusResponseDTO implements WorkflowStatusResponseInterface
         private readonly string $label,
         private readonly bool $isInitial,
         private readonly \DateTimeImmutable $createdAt,
+        private readonly ?string $description = null,
     ) {
     }
 
@@ -40,5 +41,10 @@ final class WorkflowStatusResponseDTO implements WorkflowStatusResponseInterface
     public function getCreatedAt(): \DateTimeImmutable
     {
         return $this->createdAt;
+    }
+
+    public function getDescription(): ?string
+    {
+        return $this->description;
     }
 }

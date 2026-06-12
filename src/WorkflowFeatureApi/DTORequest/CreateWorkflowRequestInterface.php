@@ -7,4 +7,6 @@ namespace App\WorkflowFeatureApi\DTORequest;
 interface CreateWorkflowRequestInterface extends WorkflowRequestInterface
 {
     public function getTitle(): string;
+
+    public function getDescription(): ?string;
 }

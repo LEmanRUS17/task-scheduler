@@ -13,6 +13,7 @@ final class TeamResponseDTO implements TeamDataResponseInterface
         private readonly string $title,
         private readonly string $status,
         private readonly \DateTimeImmutable $createdAt,
+        private readonly ?string $description = null,
     ) {
     }
 
@@ -34,5 +35,10 @@ final class TeamResponseDTO implements TeamDataResponseInterface
     public function getCreatedAt(): \DateTimeImmutable
     {
         return $this->createdAt;
+    }
+
+    public function getDescription(): ?string
+    {
+        return $this->description;
     }
 }

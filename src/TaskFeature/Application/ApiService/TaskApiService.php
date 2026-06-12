@@ -25,7 +25,9 @@ use App\TaskFeatureApi\DTORequest\TaskCreateRequestInterface;
 use App\TaskFeatureApi\DTORequest\TaskUpdateRequestInterface;
 use App\TaskFeatureApi\DTOResponse\TaskDataResponseInterface;
 use App\TaskFeatureApi\Service\TaskServiceInterface;
+use App\DescriptionFeatureApi\Contract\DescriptionServiceInterface;
 use App\ProfileFeatureApi\Service\ProfileServiceInterface;
+use App\TaskFeature\Domain\Entity\Task;
 use App\WorkflowFeature\Domain\Repository\WorkflowTransitionRepositoryInterface;
 use App\WorkflowFeature\Domain\ValueObject\WorkflowTransitionId;
 
@@ -47,6 +49,7 @@ final class TaskApiService implements TaskServiceInterface
         private readonly DomainEventDispatcherInterface $eventDispatcher,
         private readonly TaskWorkflowInterface $workflow,
         private readonly TeamMembershipInterface $teamMembership,
+        private readonly DescriptionServiceInterface $descriptions,
     ) {
     }
 
@@ -57,6 +60,7 @@ final class TaskApiService implements TaskServiceInterface
                 $task,
                 $this->loadAssigneeIds($task->id()),
                 [],
+                $this->descriptions->get(Task::class, $task->id()->value()),
             ),
             $this->tasks->findAll(),
         );
@@ -69,6 +73,7 @@ final class TaskApiService implements TaskServiceInterface
                 $task,
                 $this->loadAssigneeIds($task->id()),
                 $this->workflow->getEnabledTransitions($task),
+                $this->descriptions->get(Task::class, $task->id()->value()),
             ),
             $this->tasks->findByAssigneeUserId($userId),
         );
@@ -85,6 +90,7 @@ final class TaskApiService implements TaskServiceInterface
                 $task,
                 $this->loadAssigneeIds($task->id()),
                 $this->workflow->getEnabledTransitions($task),
+                $this->descriptions->get(Task::class, $task->id()->value()),
             ),
             $this->tasks->findByTeamId($teamId),
         );
@@ -100,6 +106,7 @@ final class TaskApiService implements TaskServiceInterface
                 $task,
                 $this->loadAssigneeIds($taskId),
                 $this->workflow->getEnabledTransitions($task),
+                $this->descriptions->get(Task::class, $id),
             )
             : null;
     }
@@ -124,10 +131,16 @@ final class TaskApiService implements TaskServiceInterface
             $dtoRequest->getEstimatedTime(),
         );
 
+        $description = $dtoRequest->getDescription();
+        if ($description !== null) {
+            $this->descriptions->set(Task::class, $task->id()->value(), $description);
+        }
+
         return $this->dataMapper->taskToResponse(
             $task,
             $this->loadAssigneeIds($task->id()),
             $this->workflow->getEnabledTransitions($task),
+            $description,
         );
     }
 
@@ -148,10 +161,16 @@ final class TaskApiService implements TaskServiceInterface
             $dtoRequest->getEstimatedTime(),
         );
 
+        $description = $dtoRequest->getDescription();
+        if ($description !== null) {
+            $this->descriptions->set(Task::class, $id, $description);
+        }
+
         return $this->dataMapper->taskToResponse(
             $task,
             $this->loadAssigneeIds($task->id()),
             $this->workflow->getEnabledTransitions($task),
+            $this->descriptions->get(Task::class, $id),
         );
     }
 
@@ -163,6 +182,7 @@ final class TaskApiService implements TaskServiceInterface
             $task,
             $this->loadAssigneeIds($task->id()),
             $this->workflow->getEnabledTransitions($task),
+            $this->descriptions->get(Task::class, $id),
         );
     }
 
@@ -187,6 +207,7 @@ final class TaskApiService implements TaskServiceInterface
         $taskId = TaskId::fromString($id);
         $this->assignees->deleteByTaskId($taskId);
         $this->tasks->delete($taskId);
+        $this->descriptions->delete(Task::class, $id);
         $this->eventDispatcher->dispatch(new TaskDeleted($id));
     }
 

@@ -15,6 +15,7 @@ final class WorkflowTransitionResponseDTO implements WorkflowTransitionResponseI
         private readonly string $fromStatusLabel,
         private readonly string $toStatusLabel,
         private readonly \DateTimeImmutable $createdAt,
+        private readonly ?string $description = null,
     ) {
     }
 
@@ -46,5 +47,10 @@ final class WorkflowTransitionResponseDTO implements WorkflowTransitionResponseI
     public function getCreatedAt(): \DateTimeImmutable
     {
         return $this->createdAt;
+    }
+
+    public function getDescription(): ?string
+    {
+        return $this->description;
     }
 }

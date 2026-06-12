@@ -21,4 +21,5 @@ interface TaskDataResponseInterface
     public function getActualTime(): ?int;
     /** @return string[] */
     public function getAvailableTransitions(): array;
+    public function getDescription(): ?string;
 }

@@ -24,7 +24,9 @@ final class TaskResponseDTO implements TaskDataResponseInterface
         private readonly ?int $actualTime,
         /** @var string[] */
         private readonly array $availableTransitions,
+        private readonly ?string $description = null
     ) {
+        return;
     }
 
     public function getId(): string
@@ -90,5 +92,10 @@ final class TaskResponseDTO implements TaskDataResponseInterface
     public function getAvailableTransitions(): array
     {
         return $this->availableTransitions;
+    }
+
+    public function getDescription(): ?string
+    {
+        return $this->description;
     }
 }

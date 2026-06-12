@@ -48,6 +48,7 @@ final class CreateTeamController
                 'id' => $team->getId(),
                 'title' => $team->getTitle(),
                 'status' => $team->getStatus(),
+                'description' => $team->getDescription(),
             ],
             Response::HTTP_CREATED,
         );

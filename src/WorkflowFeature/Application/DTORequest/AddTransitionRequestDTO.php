@@ -20,6 +20,7 @@ final class AddTransitionRequestDTO implements AddTransitionRequestInterface
         #[Assert\NotBlank(message: 'To status label is required')]
         #[Assert\Regex(pattern: '/^\S+$/', message: 'To status label must not contain whitespace')]
         private readonly string $toStatusLabel,
+        private readonly ?string $description = null,
     ) {
     }
 
@@ -36,5 +37,10 @@ final class AddTransitionRequestDTO implements AddTransitionRequestInterface
     public function getToStatusLabel(): string
     {
         return $this->toStatusLabel;
+    }
+
+    public function getDescription(): ?string
+    {
+        return $this->description;
     }
 }

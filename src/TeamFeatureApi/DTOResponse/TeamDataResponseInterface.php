@@ -10,4 +10,5 @@ interface TeamDataResponseInterface
     public function getTitle(): string;
     public function getStatus(): string;
     public function getCreatedAt(): \DateTimeImmutable;
+    public function getDescription(): ?string;
 }

@@ -49,6 +49,7 @@ final class AddWorkflowStatusController
                 'label' => $status->getLabel(),
                 'isInitial' => $status->isInitial(),
                 'createdAt' => $status->getCreatedAt()->format(\DateTimeInterface::ATOM),
+                'description' => $status->getDescription(),
             ],
             Response::HTTP_CREATED,
         );
