@@ -18,7 +18,7 @@ $builder->createField('id', 'string')
     ->build();
 
 $builder->addField('entityClass', 'string', ['columnName' => 'entity_class', 'length' => 255]);
-$builder->addField('entityId', 'string', ['columnName' => 'entity_id', 'length' => 36]);
+$builder->addField('entityId', 'string', ['columnName' => 'entity_id', 'length' => 255]);
 $builder->addField('action', 'string', ['length' => 10]);
 $builder->addField('changedData', 'json', ['columnName' => 'changed_data']);
 $builder->addField('actorId', 'string', ['columnName' => 'actor_id', 'length' => 36, 'nullable' => true]);
