@@ -6,6 +6,7 @@ namespace App\WorkflowFeature\Domain\Entity;
 
 use App\DescriptionFeatureApi\Contract\DescribableInterface;
 use App\WorkflowFeature\Domain\Event\WorkflowTransitionAdded;
+use App\WorkflowFeature\Domain\Event\WorkflowTransitionUpdated;
 use App\WorkflowFeature\Domain\ValueObject\StatusLabel;
 use App\WorkflowFeature\Domain\ValueObject\TransitionName;
 use App\WorkflowFeature\Domain\ValueObject\WorkflowId;
@@ -51,6 +52,17 @@ final class WorkflowTransition implements DescribableInterface
         $transition->recordEvent(new WorkflowTransitionAdded($id, $workflowId, $name));
 
         return $transition;
+    }
+
+    public function update(
+        TransitionName $name,
+        StatusLabel $fromStatusLabel,
+        StatusLabel $toStatusLabel,
+    ): void {
+        $this->name = $name->value();
+        $this->fromStatusLabel = $fromStatusLabel->value();
+        $this->toStatusLabel = $toStatusLabel->value();
+        $this->recordEvent(new WorkflowTransitionUpdated($this->id(), $this->workflowId(), $name));
     }
 
     public function id(): WorkflowTransitionId

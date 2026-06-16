@@ -6,6 +6,7 @@ namespace App\Tests\Unit\WorkflowFeature\Domain\Entity;
 
 use App\WorkflowFeature\Domain\Entity\Workflow;
 use App\WorkflowFeature\Domain\Event\WorkflowCreated;
+use App\WorkflowFeature\Domain\Event\WorkflowUpdated;
 use App\WorkflowFeature\Domain\ValueObject\WorkflowId;
 use App\WorkflowFeature\Domain\ValueObject\WorkflowTitle;
 use PHPUnit\Framework\TestCase;
@@ -44,6 +45,31 @@ final class WorkflowTest extends TestCase
         $this->assertSame($this->id->value(), $events[0]->id->value());
         $this->assertSame('Test Workflow', $events[0]->title->value());
         $this->assertSame('user-1', $events[0]->createdBy);
+    }
+
+    public function testUpdateTitleChangesTitle(): void
+    {
+        $workflow = Workflow::create($this->id, $this->title, 'user-1', $this->createdAt);
+        $workflow->pullDomainEvents();
+
+        $workflow->updateTitle(WorkflowTitle::fromString('Renamed Workflow'));
+
+        $this->assertSame('Renamed Workflow', $workflow->title()->value());
+    }
+
+    public function testUpdateTitleRecordsWorkflowUpdatedEvent(): void
+    {
+        $workflow = Workflow::create($this->id, $this->title, 'user-1', $this->createdAt);
+        $workflow->pullDomainEvents();
+
+        $workflow->updateTitle(WorkflowTitle::fromString('Renamed Workflow'));
+
+        $events = $workflow->pullDomainEvents();
+
+        $this->assertCount(1, $events);
+        $this->assertInstanceOf(WorkflowUpdated::class, $events[0]);
+        $this->assertSame($this->id->value(), $events[0]->id->value());
+        $this->assertSame('Renamed Workflow', $events[0]->title->value());
     }
 
     public function testPullDomainEventsClearsEvents(): void
