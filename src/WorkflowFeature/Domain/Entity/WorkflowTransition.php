@@ -7,9 +7,9 @@ namespace App\WorkflowFeature\Domain\Entity;
 use App\DescriptionFeatureApi\Contract\DescribableInterface;
 use App\WorkflowFeature\Domain\Event\WorkflowTransitionAdded;
 use App\WorkflowFeature\Domain\Event\WorkflowTransitionUpdated;
-use App\WorkflowFeature\Domain\ValueObject\StatusLabel;
 use App\WorkflowFeature\Domain\ValueObject\TransitionName;
 use App\WorkflowFeature\Domain\ValueObject\WorkflowId;
+use App\WorkflowFeature\Domain\ValueObject\WorkflowStatusId;
 use App\WorkflowFeature\Domain\ValueObject\WorkflowTransitionId;
 
 final class WorkflowTransition implements DescribableInterface
@@ -17,8 +17,8 @@ final class WorkflowTransition implements DescribableInterface
     private string $id;
     private string $workflowId;
     private string $name;
-    private string $fromStatusLabel;
-    private string $toStatusLabel;
+    private string $fromStatusId;
+    private string $toStatusId;
     private \DateTimeImmutable $createdAt;
 
     /** @var list<object> */
@@ -28,15 +28,15 @@ final class WorkflowTransition implements DescribableInterface
         WorkflowTransitionId $id,
         WorkflowId $workflowId,
         TransitionName $name,
-        StatusLabel $fromStatusLabel,
-        StatusLabel $toStatusLabel,
+        WorkflowStatusId $fromStatusId,
+        WorkflowStatusId $toStatusId,
         \DateTimeImmutable $createdAt,
     ) {
         $this->id = $id->value();
         $this->workflowId = $workflowId->value();
         $this->name = $name->value();
-        $this->fromStatusLabel = $fromStatusLabel->value();
-        $this->toStatusLabel = $toStatusLabel->value();
+        $this->fromStatusId = $fromStatusId->value();
+        $this->toStatusId = $toStatusId->value();
         $this->createdAt = $createdAt;
     }
 
@@ -44,11 +44,11 @@ final class WorkflowTransition implements DescribableInterface
         WorkflowTransitionId $id,
         WorkflowId $workflowId,
         TransitionName $name,
-        StatusLabel $fromStatusLabel,
-        StatusLabel $toStatusLabel,
+        WorkflowStatusId $fromStatusId,
+        WorkflowStatusId $toStatusId,
         \DateTimeImmutable $createdAt,
     ): self {
-        $transition = new self($id, $workflowId, $name, $fromStatusLabel, $toStatusLabel, $createdAt);
+        $transition = new self($id, $workflowId, $name, $fromStatusId, $toStatusId, $createdAt);
         $transition->recordEvent(new WorkflowTransitionAdded($id, $workflowId, $name));
 
         return $transition;
@@ -56,12 +56,12 @@ final class WorkflowTransition implements DescribableInterface
 
     public function update(
         TransitionName $name,
-        StatusLabel $fromStatusLabel,
-        StatusLabel $toStatusLabel,
+        WorkflowStatusId $fromStatusId,
+        WorkflowStatusId $toStatusId,
     ): void {
         $this->name = $name->value();
-        $this->fromStatusLabel = $fromStatusLabel->value();
-        $this->toStatusLabel = $toStatusLabel->value();
+        $this->fromStatusId = $fromStatusId->value();
+        $this->toStatusId = $toStatusId->value();
         $this->recordEvent(new WorkflowTransitionUpdated($this->id(), $this->workflowId(), $name));
     }
 
@@ -80,14 +80,14 @@ final class WorkflowTransition implements DescribableInterface
         return TransitionName::fromString($this->name);
     }
 
-    public function fromStatusLabel(): StatusLabel
+    public function fromStatusId(): WorkflowStatusId
     {
-        return StatusLabel::fromString($this->fromStatusLabel);
+        return WorkflowStatusId::fromString($this->fromStatusId);
     }
 
-    public function toStatusLabel(): StatusLabel
+    public function toStatusId(): WorkflowStatusId
     {
-        return StatusLabel::fromString($this->toStatusLabel);
+        return WorkflowStatusId::fromString($this->toStatusId);
     }
 
     public function createdAt(): \DateTimeImmutable

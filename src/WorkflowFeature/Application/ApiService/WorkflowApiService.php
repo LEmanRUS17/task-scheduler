@@ -18,6 +18,7 @@ use App\WorkflowFeature\Domain\Repository\WorkflowTransitionRepositoryInterface;
 use App\WorkflowFeature\Domain\ValueObject\StatusLabel;
 use App\WorkflowFeature\Domain\ValueObject\TransitionName;
 use App\WorkflowFeature\Domain\ValueObject\WorkflowId;
+use App\WorkflowFeature\Domain\ValueObject\WorkflowStatusId;
 use App\WorkflowFeatureApi\DTORequest\AddStatusRequestInterface;
 use App\WorkflowFeatureApi\DTORequest\AddTransitionRequestInterface;
 use App\WorkflowFeatureApi\DTORequest\UpdateStatusRequestInterface;
@@ -193,8 +194,8 @@ final class WorkflowApiService implements WorkflowServiceInterface
         $transition = $this->addTransitionInteractor->add(
             WorkflowId::fromString($workflowId),
             TransitionName::fromString($request->getName()),
-            StatusLabel::fromString($request->getFromStatusLabel()),
-            StatusLabel::fromString($request->getToStatusLabel()),
+            WorkflowStatusId::fromString($request->getFromStatusId()),
+            WorkflowStatusId::fromString($request->getToStatusId()),
         );
 
         $description = $request->getDescription();
@@ -220,8 +221,8 @@ final class WorkflowApiService implements WorkflowServiceInterface
             WorkflowId::fromString($workflowId),
             WorkflowTransitionId::fromString($transitionId),
             TransitionName::fromString($request->getName()),
-            StatusLabel::fromString($request->getFromStatusLabel()),
-            StatusLabel::fromString($request->getToStatusLabel()),
+            WorkflowStatusId::fromString($request->getFromStatusId()),
+            WorkflowStatusId::fromString($request->getToStatusId()),
         );
 
         $description = $request->getDescription();

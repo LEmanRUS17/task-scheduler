@@ -14,12 +14,12 @@ final class UpdateTransitionRequestDTO implements UpdateTransitionRequestInterfa
         #[Assert\Regex(pattern: '/^\S+$/', message: 'Name must not contain whitespace')]
         #[Assert\Length(max: 100, maxMessage: 'Name must not exceed 100 characters')]
         private readonly string $name,
-        #[Assert\NotBlank(message: 'From status label is required')]
-        #[Assert\Regex(pattern: '/^\S+$/', message: 'From status label must not contain whitespace')]
-        private readonly string $fromStatusLabel,
-        #[Assert\NotBlank(message: 'To status label is required')]
-        #[Assert\Regex(pattern: '/^\S+$/', message: 'To status label must not contain whitespace')]
-        private readonly string $toStatusLabel,
+        #[Assert\NotBlank(message: 'From status id is required')]
+        #[Assert\Uuid(message: 'From status id must be a valid UUID')]
+        private readonly string $fromStatusId,
+        #[Assert\NotBlank(message: 'To status id is required')]
+        #[Assert\Uuid(message: 'To status id must be a valid UUID')]
+        private readonly string $toStatusId,
         private readonly ?string $description = null,
     ) {
     }
@@ -29,14 +29,14 @@ final class UpdateTransitionRequestDTO implements UpdateTransitionRequestInterfa
         return $this->name;
     }
 
-    public function getFromStatusLabel(): string
+    public function getFromStatusId(): string
     {
-        return $this->fromStatusLabel;
+        return $this->fromStatusId;
     }
 
-    public function getToStatusLabel(): string
+    public function getToStatusId(): string
     {
-        return $this->toStatusLabel;
+        return $this->toStatusId;
     }
 
     public function getDescription(): ?string

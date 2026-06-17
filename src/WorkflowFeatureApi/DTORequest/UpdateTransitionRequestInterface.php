@@ -8,9 +8,9 @@ interface UpdateTransitionRequestInterface extends WorkflowRequestInterface
 {
     public function getName(): string;
 
-    public function getFromStatusLabel(): string;
+    public function getFromStatusId(): string;
 
-    public function getToStatusLabel(): string;
+    public function getToStatusId(): string;
 
     public function getDescription(): ?string;
 }

@@ -58,8 +58,8 @@ final class GetWorkflowController
                     fn($t) => [
                         'id' => $t->getId(),
                         'name' => $t->getName(),
-                        'from' => $t->getFromStatusLabel(),
-                        'to' => $t->getToStatusLabel(),
+                        'from' => $t->getFromStatusId(),
+                        'to' => $t->getToStatusId(),
                         'description' => $t->getDescription(),
                     ],
                     $this->workflowService->getTransitions($id),

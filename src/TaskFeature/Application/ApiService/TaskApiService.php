@@ -28,6 +28,7 @@ use App\TaskFeatureApi\Service\TaskServiceInterface;
 use App\DescriptionFeatureApi\Contract\DescriptionServiceInterface;
 use App\ProfileFeatureApi\Service\ProfileServiceInterface;
 use App\TaskFeature\Domain\Entity\Task;
+use App\WorkflowFeature\Domain\Repository\WorkflowStatusRepositoryInterface;
 use App\WorkflowFeature\Domain\Repository\WorkflowTransitionRepositoryInterface;
 use App\WorkflowFeature\Domain\ValueObject\WorkflowTransitionId;
 
@@ -43,6 +44,7 @@ final class TaskApiService implements TaskServiceInterface
         private readonly TaskAssigneeRepositoryInterface $assignees,
         private readonly TaskStatusHistoryRepositoryInterface $statusHistory,
         private readonly WorkflowTransitionRepositoryInterface $transitions,
+        private readonly WorkflowStatusRepositoryInterface $statuses,
         private readonly ProfileServiceInterface $profiles,
         private readonly TaskDataMapper $dataMapper,
         private readonly TaskValidatorInterface $validator,
@@ -215,7 +217,15 @@ final class TaskApiService implements TaskServiceInterface
     {
         return array_map(function ($entry) {
             $transition = $this->transitions->findById(WorkflowTransitionId::fromString($entry->transitionId()));
-            $toStatusLabel = $transition?->toStatusLabel()->value();
+
+            $toStatusLabel = null;
+            if ($transition !== null) {
+                $toStatus = $this->statuses->findById(
+                    $transition->workflowId(),
+                    $transition->toStatusId()->value(),
+                );
+                $toStatusLabel = $toStatus?->label()->value();
+            }
 
             $profile = null;
             if ($entry->changedBy() !== null) {
