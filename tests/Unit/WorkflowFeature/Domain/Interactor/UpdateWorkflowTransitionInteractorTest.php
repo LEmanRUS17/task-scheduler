@@ -24,11 +24,15 @@ final class UpdateWorkflowTransitionInteractorTest extends TestCase
 {
     private WorkflowId $workflowId;
     private WorkflowTransitionId $transitionId;
+    private WorkflowStatusId $from;
+    private WorkflowStatusId $to;
 
     protected function setUp(): void
     {
         $this->workflowId = WorkflowId::fromString('550e8400-e29b-4d4d-a716-446655440000');
         $this->transitionId = WorkflowTransitionId::fromString('550e8400-e29b-4d4d-a716-446655440002');
+        $this->from = WorkflowStatusId::fromString('550e8400-e29b-4d4d-a716-446655440010');
+        $this->to = WorkflowStatusId::fromString('550e8400-e29b-4d4d-a716-446655440011');
     }
 
     private function buildInteractor(
@@ -61,7 +65,7 @@ final class UpdateWorkflowTransitionInteractorTest extends TestCase
     private function statusesWithBothFound(): WorkflowStatusRepositoryInterface
     {
         $statuses = $this->createStub(WorkflowStatusRepositoryInterface::class);
-        $statuses->method('findByLabel')->willReturn(WorkflowStatus::add(
+        $statuses->method('findById')->willReturn(WorkflowStatus::add(
             WorkflowStatusId::fromString('550e8400-e29b-4d4d-a716-446655440001'),
             $this->workflowId,
             StatusLabel::fromString('open'),
@@ -78,8 +82,8 @@ final class UpdateWorkflowTransitionInteractorTest extends TestCase
             $this->transitionId,
             $this->workflowId,
             TransitionName::fromString('start'),
-            StatusLabel::fromString('open'),
-            StatusLabel::fromString('done'),
+            $this->from,
+            $this->to,
             new \DateTimeImmutable(),
         );
     }
@@ -99,8 +103,8 @@ final class UpdateWorkflowTransitionInteractorTest extends TestCase
             $this->workflowId,
             $this->transitionId,
             TransitionName::fromString('reopen'),
-            StatusLabel::fromString('open'),
-            StatusLabel::fromString('done'),
+            $this->from,
+            $this->to,
         );
 
         $this->assertSame('reopen', $result->name()->value());
@@ -120,8 +124,8 @@ final class UpdateWorkflowTransitionInteractorTest extends TestCase
             $this->workflowId,
             $this->transitionId,
             TransitionName::fromString('start'),
-            StatusLabel::fromString('open'),
-            StatusLabel::fromString('done'),
+            $this->from,
+            $this->to,
         );
 
         $this->assertSame('start', $result->name()->value());
@@ -143,8 +147,8 @@ final class UpdateWorkflowTransitionInteractorTest extends TestCase
             $this->workflowId,
             $this->transitionId,
             TransitionName::fromString('start'),
-            StatusLabel::fromString('open'),
-            StatusLabel::fromString('done'),
+            $this->from,
+            $this->to,
         );
     }
 
@@ -164,8 +168,8 @@ final class UpdateWorkflowTransitionInteractorTest extends TestCase
             $this->workflowId,
             $this->transitionId,
             TransitionName::fromString('start'),
-            StatusLabel::fromString('open'),
-            StatusLabel::fromString('done'),
+            $this->from,
+            $this->to,
         );
     }
 
@@ -175,8 +179,8 @@ final class UpdateWorkflowTransitionInteractorTest extends TestCase
             $this->transitionId,
             WorkflowId::fromString('550e8400-e29b-4d4d-a716-4466554400ff'),
             TransitionName::fromString('start'),
-            StatusLabel::fromString('open'),
-            StatusLabel::fromString('done'),
+            $this->from,
+            $this->to,
             new \DateTimeImmutable(),
         );
 
@@ -194,15 +198,15 @@ final class UpdateWorkflowTransitionInteractorTest extends TestCase
             $this->workflowId,
             $this->transitionId,
             TransitionName::fromString('start'),
-            StatusLabel::fromString('open'),
-            StatusLabel::fromString('done'),
+            $this->from,
+            $this->to,
         );
     }
 
     public function testUpdateThrowsWhenFromStatusNotFound(): void
     {
         $statuses = $this->createStub(WorkflowStatusRepositoryInterface::class);
-        $statuses->method('findByLabel')->willReturn(null);
+        $statuses->method('findById')->willReturn(null);
 
         $transitions = $this->createStub(WorkflowTransitionRepositoryInterface::class);
         $transitions->method('findById')->willReturn($this->makeTransition());
@@ -215,8 +219,8 @@ final class UpdateWorkflowTransitionInteractorTest extends TestCase
                 $this->workflowId,
                 $this->transitionId,
                 TransitionName::fromString('start'),
-                StatusLabel::fromString('open'),
-                StatusLabel::fromString('done'),
+                $this->from,
+                $this->to,
             );
     }
 
@@ -237,8 +241,8 @@ final class UpdateWorkflowTransitionInteractorTest extends TestCase
             $this->workflowId,
             $this->transitionId,
             TransitionName::fromString('reopen'),
-            StatusLabel::fromString('open'),
-            StatusLabel::fromString('done'),
+            $this->from,
+            $this->to,
         );
     }
 }
