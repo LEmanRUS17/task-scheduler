@@ -33,6 +33,8 @@ interface WorkflowServiceInterface
         UpdateStatusRequestInterface $request,
     ): WorkflowStatusResponseInterface;
 
+    public function getStatusById(string $workflowId, string $statusId): ?WorkflowStatusResponseInterface;
+
     /** @return WorkflowStatusResponseInterface[] */
     public function getStatuses(string $workflowId): array;
 
@@ -46,6 +48,11 @@ interface WorkflowServiceInterface
         string $transitionId,
         UpdateTransitionRequestInterface $request,
     ): WorkflowTransitionResponseInterface;
+
+    public function getTransitionById(
+        string $workflowId,
+        string $transitionId,
+    ): ?WorkflowTransitionResponseInterface;
 
     /** @return WorkflowTransitionResponseInterface[] */
     public function getTransitions(string $workflowId): array;

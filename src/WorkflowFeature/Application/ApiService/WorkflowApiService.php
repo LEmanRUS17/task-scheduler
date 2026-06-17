@@ -171,6 +171,18 @@ final class WorkflowApiService implements WorkflowServiceInterface
         );
     }
 
+    public function getStatusById(string $workflowId, string $statusId): ?WorkflowStatusResponseInterface
+    {
+        $status = $this->statuses->findById(WorkflowId::fromString($workflowId), $statusId);
+
+        return $status !== null
+            ? $this->dataMapper->statusToResponse(
+                $status,
+                $this->descriptions->get(WorkflowStatus::class, $status->id()->value()),
+            )
+            : null;
+    }
+
     public function getStatuses(string $workflowId): array
     {
         return array_map(
@@ -229,6 +241,23 @@ final class WorkflowApiService implements WorkflowServiceInterface
         $description = $request->getDescription();
         if ($description !== null) {
             $this->descriptions->set(WorkflowTransition::class, $transition->id()->value(), $description);
+        }
+
+        return $this->dataMapper->transitionToResponse(
+            $transition,
+            $this->descriptions->get(WorkflowTransition::class, $transition->id()->value()),
+        );
+    }
+
+    public function getTransitionById(
+        string $workflowId,
+        string $transitionId,
+    ): ?WorkflowTransitionResponseInterface {
+        $workflow = WorkflowId::fromString($workflowId);
+        $transition = $this->transitions->findById(WorkflowTransitionId::fromString($transitionId));
+
+        if ($transition === null || $transition->workflowId()->value() !== $workflow->value()) {
+            return null;
         }
 
         return $this->dataMapper->transitionToResponse(
