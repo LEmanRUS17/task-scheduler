@@ -6,6 +6,7 @@ namespace App\WorkflowFeature\Domain\Entity;
 
 use App\DescriptionFeatureApi\Contract\DescribableInterface;
 use App\WorkflowFeature\Domain\Event\WorkflowStatusAdded;
+use App\WorkflowFeature\Domain\Event\WorkflowStatusUpdated;
 use App\WorkflowFeature\Domain\ValueObject\StatusLabel;
 use App\WorkflowFeature\Domain\ValueObject\WorkflowId;
 use App\WorkflowFeature\Domain\ValueObject\WorkflowStatusId;
@@ -46,6 +47,12 @@ final class WorkflowStatus implements DescribableInterface
         $status->recordEvent(new WorkflowStatusAdded($id, $workflowId, $label));
 
         return $status;
+    }
+
+    public function rename(StatusLabel $label): void
+    {
+        $this->label = $label->value();
+        $this->recordEvent(new WorkflowStatusUpdated($this->id(), $this->workflowId(), $label));
     }
 
     public function id(): WorkflowStatusId

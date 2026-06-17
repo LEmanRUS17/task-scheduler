@@ -29,7 +29,7 @@ interface WorkflowServiceInterface
 
     public function updateStatus(
         string $workflowId,
-        string $label,
+        string $statusId,
         UpdateStatusRequestInterface $request,
     ): WorkflowStatusResponseInterface;
 

@@ -145,7 +145,7 @@ final class WorkflowApiService implements WorkflowServiceInterface
 
     public function updateStatus(
         string $workflowId,
-        string $label,
+        string $statusId,
         UpdateStatusRequestInterface $request,
     ): WorkflowStatusResponseInterface {
         $violations = $this->validator->validate($request);
@@ -156,7 +156,8 @@ final class WorkflowApiService implements WorkflowServiceInterface
 
         $status = $this->updateStatusInteractor->update(
             WorkflowId::fromString($workflowId),
-            StatusLabel::fromString($label),
+            WorkflowStatusId::fromString($statusId),
+            StatusLabel::fromString($request->getLabel()),
         );
 
         $description = $request->getDescription();

@@ -20,14 +20,14 @@ final class UpdateWorkflowStatusController
     ) {
     }
 
-    #[Route('/workflows/{id}/statuses/{label}', name: 'workflow_update_status', methods: ['PUT'])]
+    #[Route('/workflows/{id}/statuses/{statusId}', name: 'workflow_update_status', methods: ['PUT'])]
     public function __invoke(
         string $id,
-        string $label,
+        string $statusId,
         #[MapRequestPayload] UpdateStatusRequestDTO $request,
     ): JsonResponse {
         try {
-            $status = $this->workflowService->updateStatus($id, $label, $request);
+            $status = $this->workflowService->updateStatus($id, $statusId, $request);
         } catch (\InvalidArgumentException $e) {
             return new JsonResponse(
                 [

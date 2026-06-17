@@ -6,5 +6,7 @@ namespace App\WorkflowFeatureApi\DTORequest;
 
 interface UpdateStatusRequestInterface extends WorkflowRequestInterface
 {
+    public function getLabel(): string;
+
     public function getDescription(): ?string;
 }
