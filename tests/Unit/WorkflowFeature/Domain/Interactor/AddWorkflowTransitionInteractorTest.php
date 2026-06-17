@@ -6,7 +6,6 @@ namespace App\Tests\Unit\WorkflowFeature\Domain\Interactor;
 
 use App\WorkflowFeature\Domain\Entity\Workflow;
 use App\WorkflowFeature\Domain\Entity\WorkflowStatus;
-use App\WorkflowFeature\Domain\Entity\WorkflowTransition;
 use App\WorkflowFeature\Domain\Interactor\AddWorkflowTransitionInteractor;
 use App\WorkflowFeature\Domain\Port\ClockInterface;
 use App\WorkflowFeature\Domain\Port\DomainEventDispatcherInterface;
@@ -17,6 +16,7 @@ use App\WorkflowFeature\Domain\ValueObject\StatusLabel;
 use App\WorkflowFeature\Domain\ValueObject\TransitionName;
 use App\WorkflowFeature\Domain\ValueObject\WorkflowId;
 use App\WorkflowFeature\Domain\ValueObject\WorkflowStatusId;
+use App\WorkflowFeature\Domain\Entity\WorkflowTransition;
 use App\WorkflowFeature\Domain\ValueObject\WorkflowTitle;
 use PHPUnit\Framework\TestCase;
 
@@ -24,8 +24,8 @@ final class AddWorkflowTransitionInteractorTest extends TestCase
 {
     private ClockInterface $clock;
     private WorkflowId $workflowId;
-    private StatusLabel $from;
-    private StatusLabel $to;
+    private WorkflowStatusId $from;
+    private WorkflowStatusId $to;
     private TransitionName $name;
 
     protected function setUp(): void
@@ -34,8 +34,8 @@ final class AddWorkflowTransitionInteractorTest extends TestCase
         $this->clock->method('now')->willReturn(new \DateTimeImmutable('2024-01-01 12:00:00'));
 
         $this->workflowId = WorkflowId::fromString('550e8400-e29b-4d4d-a716-446655440000');
-        $this->from = StatusLabel::fromString('open');
-        $this->to = StatusLabel::fromString('closed');
+        $this->from = WorkflowStatusId::fromString('550e8400-e29b-4d4d-a716-446655440010');
+        $this->to = WorkflowStatusId::fromString('550e8400-e29b-4d4d-a716-446655440011');
         $this->name = TransitionName::fromString('close');
     }
 
@@ -69,12 +69,12 @@ final class AddWorkflowTransitionInteractorTest extends TestCase
         return $workflows;
     }
 
-    private function makeStatus(string $label): WorkflowStatus
+    private function makeStatus(): WorkflowStatus
     {
         return WorkflowStatus::add(
             WorkflowStatusId::generate(),
             $this->workflowId,
-            StatusLabel::fromString($label),
+            StatusLabel::fromString('open'),
             false,
             new \DateTimeImmutable(),
         );
@@ -82,10 +82,8 @@ final class AddWorkflowTransitionInteractorTest extends TestCase
 
     private function statusesWithBothFound(): WorkflowStatusRepositoryInterface
     {
-        $status = $this->makeStatus('open');
-
         $statuses = $this->createStub(WorkflowStatusRepositoryInterface::class);
-        $statuses->method('findByLabel')->willReturn($status);
+        $statuses->method('findById')->willReturn($this->makeStatus());
 
         return $statuses;
     }
@@ -131,8 +129,8 @@ final class AddWorkflowTransitionInteractorTest extends TestCase
 
         $this->assertInstanceOf(WorkflowTransition::class, $transition);
         $this->assertSame('close', $transition->name()->value());
-        $this->assertSame('open', $transition->fromStatusLabel()->value());
-        $this->assertSame('closed', $transition->toStatusLabel()->value());
+        $this->assertSame($this->from->value(), $transition->fromStatusId()->value());
+        $this->assertSame($this->to->value(), $transition->toStatusId()->value());
     }
 
     public function testAddThrowsWhenWorkflowNotFound(): void
@@ -153,7 +151,7 @@ final class AddWorkflowTransitionInteractorTest extends TestCase
     public function testAddThrowsWhenFromStatusNotFound(): void
     {
         $statuses = $this->createStub(WorkflowStatusRepositoryInterface::class);
-        $statuses->method('findByLabel')->willReturnOnConsecutiveCalls(null);
+        $statuses->method('findById')->willReturnOnConsecutiveCalls(null);
 
         $this->expectException(\DomainException::class);
         $this->expectExceptionMessageMatches('/not found/');
@@ -168,7 +166,7 @@ final class AddWorkflowTransitionInteractorTest extends TestCase
     public function testAddThrowsWhenToStatusNotFound(): void
     {
         $statuses = $this->createStub(WorkflowStatusRepositoryInterface::class);
-        $statuses->method('findByLabel')->willReturnOnConsecutiveCalls($this->makeStatus('open'), null);
+        $statuses->method('findById')->willReturnOnConsecutiveCalls($this->makeStatus(), null);
 
         $this->expectException(\DomainException::class);
         $this->expectExceptionMessageMatches('/not found/');

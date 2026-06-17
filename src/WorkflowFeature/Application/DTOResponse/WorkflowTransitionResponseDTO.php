@@ -12,8 +12,8 @@ final class WorkflowTransitionResponseDTO implements WorkflowTransitionResponseI
         private readonly string $id,
         private readonly string $workflowId,
         private readonly string $name,
-        private readonly string $fromStatusLabel,
-        private readonly string $toStatusLabel,
+        private readonly string $fromStatusId,
+        private readonly string $toStatusId,
         private readonly \DateTimeImmutable $createdAt,
         private readonly ?string $description = null,
     ) {
@@ -34,14 +34,14 @@ final class WorkflowTransitionResponseDTO implements WorkflowTransitionResponseI
         return $this->name;
     }
 
-    public function getFromStatusLabel(): string
+    public function getFromStatusId(): string
     {
-        return $this->fromStatusLabel;
+        return $this->fromStatusId;
     }
 
-    public function getToStatusLabel(): string
+    public function getToStatusId(): string
     {
-        return $this->toStatusLabel;
+        return $this->toStatusId;
     }
 
     public function getCreatedAt(): \DateTimeImmutable

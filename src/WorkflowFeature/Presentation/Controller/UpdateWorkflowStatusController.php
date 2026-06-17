@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\WorkflowFeature\Presentation\Controller;
 
-use App\WorkflowFeature\Application\DTORequest\AddTransitionRequestDTO;
+use App\WorkflowFeature\Application\DTORequest\UpdateStatusRequestDTO;
 use App\WorkflowFeatureApi\Service\WorkflowServiceInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Response;
@@ -13,20 +13,21 @@ use Symfony\Component\HttpKernel\Attribute\MapRequestPayload;
 use Symfony\Component\Routing\Attribute\Route;
 
 #[AsController]
-final class AddWorkflowTransitionController
+final class UpdateWorkflowStatusController
 {
     public function __construct(
         private readonly WorkflowServiceInterface $workflowService,
     ) {
     }
 
-    #[Route('/workflows/{id}/transitions', name: 'workflow_add_transition', methods: ['POST'])]
+    #[Route('/workflows/{id}/statuses/{statusId}', name: 'workflow_update_status', methods: ['PUT'])]
     public function __invoke(
         string $id,
-        #[MapRequestPayload] AddTransitionRequestDTO $request,
+        string $statusId,
+        #[MapRequestPayload] UpdateStatusRequestDTO $request,
     ): JsonResponse {
         try {
-            $transition = $this->workflowService->addTransition($id, $request);
+            $status = $this->workflowService->updateStatus($id, $statusId, $request);
         } catch (\InvalidArgumentException $e) {
             return new JsonResponse(
                 [
@@ -44,15 +45,14 @@ final class AddWorkflowTransitionController
 
         return new JsonResponse(
             [
-                'id' => $transition->getId(),
-                'workflowId' => $transition->getWorkflowId(),
-                'name' => $transition->getName(),
-                'fromStatusId' => $transition->getFromStatusId(),
-                'toStatusId' => $transition->getToStatusId(),
-                'createdAt' => $transition->getCreatedAt()->format(\DateTimeInterface::ATOM),
-                'description' => $transition->getDescription(),
+                'id' => $status->getId(),
+                'workflowId' => $status->getWorkflowId(),
+                'label' => $status->getLabel(),
+                'isInitial' => $status->isInitial(),
+                'createdAt' => $status->getCreatedAt()->format(\DateTimeInterface::ATOM),
+                'description' => $status->getDescription(),
             ],
-            Response::HTTP_CREATED,
+            Response::HTTP_OK,
         );
     }
 }

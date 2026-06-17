@@ -9,14 +9,23 @@ use App\WorkflowFeature\Application\DTORequestValidator\WorkflowValidatorInterfa
 use App\WorkflowFeature\Domain\Interactor\AddWorkflowStatusInteractor;
 use App\WorkflowFeature\Domain\Interactor\AddWorkflowTransitionInteractor;
 use App\WorkflowFeature\Domain\Interactor\CreateWorkflowInteractor;
+use App\WorkflowFeature\Domain\Interactor\UpdateWorkflowInteractor;
+use App\WorkflowFeature\Domain\Interactor\UpdateWorkflowStatusInteractor;
+use App\WorkflowFeature\Domain\Interactor\UpdateWorkflowTransitionInteractor;
 use App\WorkflowFeature\Domain\Repository\WorkflowRepositoryInterface;
 use App\WorkflowFeature\Domain\Repository\WorkflowStatusRepositoryInterface;
 use App\WorkflowFeature\Domain\Repository\WorkflowTransitionRepositoryInterface;
 use App\WorkflowFeature\Domain\ValueObject\StatusLabel;
 use App\WorkflowFeature\Domain\ValueObject\TransitionName;
 use App\WorkflowFeature\Domain\ValueObject\WorkflowId;
+use App\WorkflowFeature\Domain\ValueObject\WorkflowStatusId;
 use App\WorkflowFeatureApi\DTORequest\AddStatusRequestInterface;
 use App\WorkflowFeatureApi\DTORequest\AddTransitionRequestInterface;
+use App\WorkflowFeatureApi\DTORequest\UpdateStatusRequestInterface;
+use App\WorkflowFeatureApi\DTORequest\UpdateTransitionRequestInterface;
+use App\WorkflowFeatureApi\DTORequest\UpdateWorkflowRequestInterface;
+use App\WorkflowFeature\Domain\ValueObject\WorkflowTransitionId;
+use App\WorkflowFeature\Domain\ValueObject\WorkflowTitle;
 use App\DescriptionFeatureApi\Contract\DescriptionServiceInterface;
 use App\WorkflowFeature\Domain\Entity\Workflow;
 use App\WorkflowFeature\Domain\Entity\WorkflowStatus;
@@ -31,8 +40,11 @@ final class WorkflowApiService implements WorkflowServiceInterface
 {
     public function __construct(
         private readonly CreateWorkflowInteractor $createInteractor,
+        private readonly UpdateWorkflowInteractor $updateInteractor,
         private readonly AddWorkflowStatusInteractor $addStatusInteractor,
+        private readonly UpdateWorkflowStatusInteractor $updateStatusInteractor,
         private readonly AddWorkflowTransitionInteractor $addTransitionInteractor,
+        private readonly UpdateWorkflowTransitionInteractor $updateTransitionInteractor,
         private readonly WorkflowRepositoryInterface $workflows,
         private readonly WorkflowStatusRepositoryInterface $statuses,
         private readonly WorkflowTransitionRepositoryInterface $transitions,
@@ -59,6 +71,30 @@ final class WorkflowApiService implements WorkflowServiceInterface
         }
 
         return $this->dataMapper->workflowToResponse($workflow, $description);
+    }
+
+    public function update(string $id, UpdateWorkflowRequestInterface $request): WorkflowResponseInterface
+    {
+        $violations = $this->validator->validate($request);
+
+        if (!empty($violations)) {
+            throw new \InvalidArgumentException(json_encode($violations) ?: '{}');
+        }
+
+        $workflow = $this->updateInteractor->update(
+            WorkflowId::fromString($id),
+            WorkflowTitle::fromString($request->getTitle()),
+        );
+
+        $description = $request->getDescription();
+        if ($description !== null) {
+            $this->descriptions->set(Workflow::class, $workflow->id()->value(), $description);
+        }
+
+        return $this->dataMapper->workflowToResponse(
+            $workflow,
+            $this->descriptions->get(Workflow::class, $workflow->id()->value()),
+        );
     }
 
     public function getById(string $id): ?WorkflowResponseInterface
@@ -107,6 +143,46 @@ final class WorkflowApiService implements WorkflowServiceInterface
         return $this->dataMapper->statusToResponse($status, $description);
     }
 
+    public function updateStatus(
+        string $workflowId,
+        string $statusId,
+        UpdateStatusRequestInterface $request,
+    ): WorkflowStatusResponseInterface {
+        $violations = $this->validator->validate($request);
+
+        if (!empty($violations)) {
+            throw new \InvalidArgumentException(json_encode($violations) ?: '{}');
+        }
+
+        $status = $this->updateStatusInteractor->update(
+            WorkflowId::fromString($workflowId),
+            WorkflowStatusId::fromString($statusId),
+            StatusLabel::fromString($request->getLabel()),
+        );
+
+        $description = $request->getDescription();
+        if ($description !== null) {
+            $this->descriptions->set(WorkflowStatus::class, $status->id()->value(), $description);
+        }
+
+        return $this->dataMapper->statusToResponse(
+            $status,
+            $this->descriptions->get(WorkflowStatus::class, $status->id()->value()),
+        );
+    }
+
+    public function getStatusById(string $workflowId, string $statusId): ?WorkflowStatusResponseInterface
+    {
+        $status = $this->statuses->findById(WorkflowId::fromString($workflowId), $statusId);
+
+        return $status !== null
+            ? $this->dataMapper->statusToResponse(
+                $status,
+                $this->descriptions->get(WorkflowStatus::class, $status->id()->value()),
+            )
+            : null;
+    }
+
     public function getStatuses(string $workflowId): array
     {
         return array_map(
@@ -131,8 +207,8 @@ final class WorkflowApiService implements WorkflowServiceInterface
         $transition = $this->addTransitionInteractor->add(
             WorkflowId::fromString($workflowId),
             TransitionName::fromString($request->getName()),
-            StatusLabel::fromString($request->getFromStatusLabel()),
-            StatusLabel::fromString($request->getToStatusLabel()),
+            WorkflowStatusId::fromString($request->getFromStatusId()),
+            WorkflowStatusId::fromString($request->getToStatusId()),
         );
 
         $description = $request->getDescription();
@@ -141,6 +217,53 @@ final class WorkflowApiService implements WorkflowServiceInterface
         }
 
         return $this->dataMapper->transitionToResponse($transition, $description);
+    }
+
+    public function updateTransition(
+        string $workflowId,
+        string $transitionId,
+        UpdateTransitionRequestInterface $request,
+    ): WorkflowTransitionResponseInterface {
+        $violations = $this->validator->validate($request);
+
+        if (!empty($violations)) {
+            throw new \InvalidArgumentException(json_encode($violations) ?: '{}');
+        }
+
+        $transition = $this->updateTransitionInteractor->update(
+            WorkflowId::fromString($workflowId),
+            WorkflowTransitionId::fromString($transitionId),
+            TransitionName::fromString($request->getName()),
+            WorkflowStatusId::fromString($request->getFromStatusId()),
+            WorkflowStatusId::fromString($request->getToStatusId()),
+        );
+
+        $description = $request->getDescription();
+        if ($description !== null) {
+            $this->descriptions->set(WorkflowTransition::class, $transition->id()->value(), $description);
+        }
+
+        return $this->dataMapper->transitionToResponse(
+            $transition,
+            $this->descriptions->get(WorkflowTransition::class, $transition->id()->value()),
+        );
+    }
+
+    public function getTransitionById(
+        string $workflowId,
+        string $transitionId,
+    ): ?WorkflowTransitionResponseInterface {
+        $workflow = WorkflowId::fromString($workflowId);
+        $transition = $this->transitions->findById(WorkflowTransitionId::fromString($transitionId));
+
+        if ($transition === null || $transition->workflowId()->value() !== $workflow->value()) {
+            return null;
+        }
+
+        return $this->dataMapper->transitionToResponse(
+            $transition,
+            $this->descriptions->get(WorkflowTransition::class, $transition->id()->value()),
+        );
     }
 
     public function getTransitions(string $workflowId): array

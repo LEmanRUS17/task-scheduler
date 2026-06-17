@@ -6,9 +6,10 @@ namespace App\Tests\Unit\WorkflowFeature\Domain\Entity;
 
 use App\WorkflowFeature\Domain\Entity\WorkflowTransition;
 use App\WorkflowFeature\Domain\Event\WorkflowTransitionAdded;
-use App\WorkflowFeature\Domain\ValueObject\StatusLabel;
+use App\WorkflowFeature\Domain\Event\WorkflowTransitionUpdated;
 use App\WorkflowFeature\Domain\ValueObject\TransitionName;
 use App\WorkflowFeature\Domain\ValueObject\WorkflowId;
+use App\WorkflowFeature\Domain\ValueObject\WorkflowStatusId;
 use App\WorkflowFeature\Domain\ValueObject\WorkflowTransitionId;
 use PHPUnit\Framework\TestCase;
 
@@ -17,8 +18,8 @@ final class WorkflowTransitionTest extends TestCase
     private WorkflowTransitionId $id;
     private WorkflowId $workflowId;
     private TransitionName $name;
-    private StatusLabel $from;
-    private StatusLabel $to;
+    private WorkflowStatusId $from;
+    private WorkflowStatusId $to;
     private \DateTimeImmutable $createdAt;
 
     protected function setUp(): void
@@ -26,8 +27,8 @@ final class WorkflowTransitionTest extends TestCase
         $this->id = WorkflowTransitionId::fromString('550e8400-e29b-4d4d-a716-446655440002');
         $this->workflowId = WorkflowId::fromString('550e8400-e29b-4d4d-a716-446655440000');
         $this->name = TransitionName::fromString('start');
-        $this->from = StatusLabel::fromString('open');
-        $this->to = StatusLabel::fromString('in-progress');
+        $this->from = WorkflowStatusId::fromString('550e8400-e29b-4d4d-a716-446655440010');
+        $this->to = WorkflowStatusId::fromString('550e8400-e29b-4d4d-a716-446655440011');
         $this->createdAt = new \DateTimeImmutable('2024-01-01 12:00:00');
     }
 
@@ -45,8 +46,8 @@ final class WorkflowTransitionTest extends TestCase
         $this->assertSame($this->id->value(), $transition->id()->value());
         $this->assertSame($this->workflowId->value(), $transition->workflowId()->value());
         $this->assertSame('start', $transition->name()->value());
-        $this->assertSame('open', $transition->fromStatusLabel()->value());
-        $this->assertSame('in-progress', $transition->toStatusLabel()->value());
+        $this->assertSame($this->from->value(), $transition->fromStatusId()->value());
+        $this->assertSame($this->to->value(), $transition->toStatusId()->value());
         $this->assertEquals($this->createdAt, $transition->createdAt());
     }
 
@@ -68,6 +69,59 @@ final class WorkflowTransitionTest extends TestCase
         $this->assertSame($this->id->value(), $events[0]->id->value());
         $this->assertSame($this->workflowId->value(), $events[0]->workflowId->value());
         $this->assertSame('start', $events[0]->name->value());
+    }
+
+    public function testUpdateChangesData(): void
+    {
+        $transition = WorkflowTransition::add(
+            $this->id,
+            $this->workflowId,
+            $this->name,
+            $this->from,
+            $this->to,
+            $this->createdAt,
+        );
+        $transition->pullDomainEvents();
+
+        $newFrom = WorkflowStatusId::fromString('550e8400-e29b-4d4d-a716-446655440011');
+        $newTo = WorkflowStatusId::fromString('550e8400-e29b-4d4d-a716-446655440010');
+
+        $transition->update(
+            TransitionName::fromString('reopen'),
+            $newFrom,
+            $newTo,
+        );
+
+        $this->assertSame('reopen', $transition->name()->value());
+        $this->assertSame($newFrom->value(), $transition->fromStatusId()->value());
+        $this->assertSame($newTo->value(), $transition->toStatusId()->value());
+    }
+
+    public function testUpdateRecordsWorkflowTransitionUpdatedEvent(): void
+    {
+        $transition = WorkflowTransition::add(
+            $this->id,
+            $this->workflowId,
+            $this->name,
+            $this->from,
+            $this->to,
+            $this->createdAt,
+        );
+        $transition->pullDomainEvents();
+
+        $transition->update(
+            TransitionName::fromString('reopen'),
+            $this->to,
+            $this->from,
+        );
+
+        $events = $transition->pullDomainEvents();
+
+        $this->assertCount(1, $events);
+        $this->assertInstanceOf(WorkflowTransitionUpdated::class, $events[0]);
+        $this->assertSame($this->id->value(), $events[0]->id->value());
+        $this->assertSame($this->workflowId->value(), $events[0]->workflowId->value());
+        $this->assertSame('reopen', $events[0]->name->value());
     }
 
     public function testPullDomainEventsClearsEvents(): void

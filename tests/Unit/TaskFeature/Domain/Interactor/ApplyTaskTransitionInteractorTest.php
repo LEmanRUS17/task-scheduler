@@ -14,9 +14,9 @@ use App\TaskFeature\Domain\ValueObject\TaskPriority;
 use App\TaskFeature\Domain\ValueObject\TaskTitle;
 use App\WorkflowFeature\Domain\Entity\WorkflowTransition;
 use App\WorkflowFeature\Domain\Repository\WorkflowTransitionRepositoryInterface;
-use App\WorkflowFeature\Domain\ValueObject\StatusLabel;
 use App\WorkflowFeature\Domain\ValueObject\TransitionName;
 use App\WorkflowFeature\Domain\ValueObject\WorkflowId;
+use App\WorkflowFeature\Domain\ValueObject\WorkflowStatusId;
 use App\WorkflowFeature\Domain\ValueObject\WorkflowTransitionId;
 use PHPUnit\Framework\TestCase;
 
@@ -45,8 +45,8 @@ final class ApplyTaskTransitionInteractorTest extends TestCase
             $this->transitionId,
             WorkflowId::generate(),
             TransitionName::fromString('to_in_progress'),
-            StatusLabel::fromString('todo'),
-            StatusLabel::fromString('in_progress'),
+            WorkflowStatusId::generate(),
+            WorkflowStatusId::generate(),
             new \DateTimeImmutable(),
         );
     }

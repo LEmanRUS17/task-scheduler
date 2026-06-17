@@ -19,6 +19,6 @@ $builder->createField('id', 'string')
 
 $builder->addField('workflowId', 'string', ['columnName' => 'workflow_id', 'length' => 36]);
 $builder->addField('name', 'string', ['length' => 100]);
-$builder->addField('fromStatusLabel', 'string', ['columnName' => 'from_status_label', 'length' => 100]);
-$builder->addField('toStatusLabel', 'string', ['columnName' => 'to_status_label', 'length' => 100]);
+$builder->addField('fromStatusId', 'string', ['columnName' => 'from_status_id', 'length' => 36]);
+$builder->addField('toStatusId', 'string', ['columnName' => 'to_status_id', 'length' => 36]);
 $builder->addField('createdAt', 'datetime_immutable', ['columnName' => 'created_at']);

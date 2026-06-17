@@ -65,8 +65,8 @@ final class WorkflowDataMapper
             $transition->id()->value(),
             $transition->workflowId()->value(),
             $transition->name()->value(),
-            $transition->fromStatusLabel()->value(),
-            $transition->toStatusLabel()->value(),
+            $transition->fromStatusId()->value(),
+            $transition->toStatusId()->value(),
             $transition->createdAt(),
             $description,
         );

@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\WorkflowFeature\Presentation\Controller;
 
-use App\WorkflowFeature\Application\DTORequest\AddTransitionRequestDTO;
+use App\WorkflowFeature\Application\DTORequest\UpdateTransitionRequestDTO;
 use App\WorkflowFeatureApi\Service\WorkflowServiceInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Response;
@@ -13,20 +13,21 @@ use Symfony\Component\HttpKernel\Attribute\MapRequestPayload;
 use Symfony\Component\Routing\Attribute\Route;
 
 #[AsController]
-final class AddWorkflowTransitionController
+final class UpdateWorkflowTransitionController
 {
     public function __construct(
         private readonly WorkflowServiceInterface $workflowService,
     ) {
     }
 
-    #[Route('/workflows/{id}/transitions', name: 'workflow_add_transition', methods: ['POST'])]
+    #[Route('/workflows/{id}/transitions/{transitionId}', name: 'workflow_update_transition', methods: ['PUT'])]
     public function __invoke(
         string $id,
-        #[MapRequestPayload] AddTransitionRequestDTO $request,
+        string $transitionId,
+        #[MapRequestPayload] UpdateTransitionRequestDTO $request,
     ): JsonResponse {
         try {
-            $transition = $this->workflowService->addTransition($id, $request);
+            $transition = $this->workflowService->updateTransition($id, $transitionId, $request);
         } catch (\InvalidArgumentException $e) {
             return new JsonResponse(
                 [
@@ -52,7 +53,7 @@ final class AddWorkflowTransitionController
                 'createdAt' => $transition->getCreatedAt()->format(\DateTimeInterface::ATOM),
                 'description' => $transition->getDescription(),
             ],
-            Response::HTTP_CREATED,
+            Response::HTTP_OK,
         );
     }
 }

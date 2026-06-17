@@ -6,6 +6,7 @@ namespace App\WorkflowFeature\Domain\Entity;
 
 use App\DescriptionFeatureApi\Contract\DescribableInterface;
 use App\WorkflowFeature\Domain\Event\WorkflowCreated;
+use App\WorkflowFeature\Domain\Event\WorkflowUpdated;
 use App\WorkflowFeature\Domain\ValueObject\WorkflowId;
 use App\WorkflowFeature\Domain\ValueObject\WorkflowTitle;
 
@@ -41,6 +42,12 @@ final class Workflow implements DescribableInterface
         $workflow->recordEvent(new WorkflowCreated($id, $title, $createdBy));
 
         return $workflow;
+    }
+
+    public function updateTitle(WorkflowTitle $title): void
+    {
+        $this->title = $title->value();
+        $this->recordEvent(new WorkflowUpdated($this->id(), $title));
     }
 
     public function id(): WorkflowId

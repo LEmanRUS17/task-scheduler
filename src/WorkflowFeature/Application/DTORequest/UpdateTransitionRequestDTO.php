@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace App\WorkflowFeature\Application\DTORequest;
 
-use App\WorkflowFeatureApi\DTORequest\AddTransitionRequestInterface;
+use App\WorkflowFeatureApi\DTORequest\UpdateTransitionRequestInterface;
 use Symfony\Component\Validator\Constraints as Assert;
 
-final class AddTransitionRequestDTO implements AddTransitionRequestInterface
+final class UpdateTransitionRequestDTO implements UpdateTransitionRequestInterface
 {
     public function __construct(
         #[Assert\NotBlank(message: 'Name is required')]

@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\WorkflowFeature\Presentation\Controller;
 
-use App\WorkflowFeature\Application\DTORequest\AddTransitionRequestDTO;
+use App\WorkflowFeature\Application\DTORequest\UpdateWorkflowRequestDTO;
 use App\WorkflowFeatureApi\Service\WorkflowServiceInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Response;
@@ -13,20 +13,20 @@ use Symfony\Component\HttpKernel\Attribute\MapRequestPayload;
 use Symfony\Component\Routing\Attribute\Route;
 
 #[AsController]
-final class AddWorkflowTransitionController
+final class UpdateWorkflowController
 {
     public function __construct(
         private readonly WorkflowServiceInterface $workflowService,
     ) {
     }
 
-    #[Route('/workflows/{id}/transitions', name: 'workflow_add_transition', methods: ['POST'])]
+    #[Route('/workflows/{id}', name: 'workflow_update', methods: ['PUT'])]
     public function __invoke(
         string $id,
-        #[MapRequestPayload] AddTransitionRequestDTO $request,
+        #[MapRequestPayload] UpdateWorkflowRequestDTO $request,
     ): JsonResponse {
         try {
-            $transition = $this->workflowService->addTransition($id, $request);
+            $workflow = $this->workflowService->update($id, $request);
         } catch (\InvalidArgumentException $e) {
             return new JsonResponse(
                 [
@@ -44,15 +44,13 @@ final class AddWorkflowTransitionController
 
         return new JsonResponse(
             [
-                'id' => $transition->getId(),
-                'workflowId' => $transition->getWorkflowId(),
-                'name' => $transition->getName(),
-                'fromStatusId' => $transition->getFromStatusId(),
-                'toStatusId' => $transition->getToStatusId(),
-                'createdAt' => $transition->getCreatedAt()->format(\DateTimeInterface::ATOM),
-                'description' => $transition->getDescription(),
+                'id' => $workflow->getId(),
+                'title' => $workflow->getTitle(),
+                'createdBy' => $workflow->getCreatedBy(),
+                'createdAt' => $workflow->getCreatedAt()->format(\DateTimeInterface::ATOM),
+                'description' => $workflow->getDescription(),
             ],
-            Response::HTTP_CREATED,
+            Response::HTTP_OK,
         );
     }
 }

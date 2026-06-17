@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\WorkflowFeatureApi\DTORequest;
 
-interface AddTransitionRequestInterface extends WorkflowRequestInterface
+interface UpdateTransitionRequestInterface extends WorkflowRequestInterface
 {
     public function getName(): string;
 
