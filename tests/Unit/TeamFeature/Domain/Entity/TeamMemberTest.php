@@ -6,6 +6,7 @@ namespace App\Tests\Unit\TeamFeature\Domain\Entity;
 
 use App\TeamFeature\Domain\Entity\TeamMember;
 use App\TeamFeature\Domain\Event\TeamMemberAdded;
+use App\TeamFeature\Domain\Event\TeamMemberRemoved;
 use App\TeamFeature\Domain\ValueObject\TeamId;
 use App\TeamFeature\Domain\ValueObject\TeamMemberRole;
 use PHPUnit\Framework\TestCase;
@@ -56,6 +57,23 @@ final class TeamMemberTest extends TestCase
         $this->assertSame($teamId->value(), $event->teamId->value());
         $this->assertSame($userId, $event->userId);
         $this->assertSame($role, $event->role);
+    }
+
+    public function testRemoveRecordsTeamMemberRemovedEventWithCorrectData(): void
+    {
+        $teamId = TeamId::generate();
+        $userId = 'user-170426';
+
+        $member = TeamMember::add($teamId, $userId, TeamMemberRole::MEMBER, new \DateTimeImmutable());
+        $member->pullDomainEvents();
+
+        $member->remove();
+        $events = $member->pullDomainEvents();
+
+        $this->assertCount(1, $events);
+        $this->assertInstanceOf(TeamMemberRemoved::class, $events[0]);
+        $this->assertSame($teamId->value(), $events[0]->teamId->value());
+        $this->assertSame($userId, $events[0]->userId);
     }
 
     public function testPullDomainEventsClearsQueue(): void
