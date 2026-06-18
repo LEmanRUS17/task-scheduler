@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\TeamFeature\Domain\Entity;
 
 use App\TeamFeature\Domain\Event\TeamMemberAdded;
+use App\TeamFeature\Domain\Event\TeamMemberRemoved;
 use App\TeamFeature\Domain\ValueObject\TeamId;
 use App\AuditLogFeatureApi\Contract\AuditableInterface;
 use App\TeamFeature\Domain\ValueObject\TeamMemberRole;
@@ -41,6 +42,11 @@ final class TeamMember implements AuditableInterface
         $member->recordEvent(new TeamMemberAdded($teamId, $userId, $role));
 
         return $member;
+    }
+
+    public function remove(): void
+    {
+        $this->recordEvent(new TeamMemberRemoved($this->teamId(), $this->userId));
     }
 
     public function teamId(): TeamId
