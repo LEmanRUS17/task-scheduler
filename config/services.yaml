@@ -130,7 +130,14 @@ services:
     App\SearchFeature\Domain\Port\TaskSearchIndexInterface:
         class: App\SearchFeature\Infrastructure\Manticore\ManticoreTaskSearchIndex
 
+    App\SearchFeature\Domain\Port\TeamSearchIndexInterface:
+        class: App\SearchFeature\Infrastructure\Manticore\ManticoreTeamSearchIndex
+
     App\SearchFeature\Infrastructure\Messenger\EventSubscriber\TaskSearchIndexSubscriber:
+        arguments:
+            $defaultBus: '@messenger.bus.default'
+
+    App\SearchFeature\Infrastructure\Messenger\EventSubscriber\TeamSearchIndexSubscriber:
         arguments:
             $defaultBus: '@messenger.bus.default'
 
@@ -139,6 +146,9 @@ services:
 
     App\SearchFeature\Domain\Port\TaskSearchRepositoryInterface:
         class: App\SearchFeature\Infrastructure\Manticore\ManticoreTaskSearchRepository
+
+    App\SearchFeature\Domain\Port\TeamSearchRepositoryInterface:
+        class: App\SearchFeature\Infrastructure\Manticore\ManticoreTeamSearchRepository
     App\AnalyticsFeature\Infrastructure\ClickHouse\ClickHouseClient:
         arguments:
             $baseUrl: '%env(CLICKHOUSE_URL)%'

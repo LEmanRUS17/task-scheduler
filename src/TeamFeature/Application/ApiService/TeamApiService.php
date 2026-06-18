@@ -11,6 +11,7 @@ use App\TeamFeature\Application\DTORequestValidator\TeamValidatorInterface;
 use App\TeamFeature\Domain\Interactor\AddTeamMemberInteractor;
 use App\TeamFeature\Domain\Interactor\RemoveTeamMemberInteractor;
 use App\TeamFeature\Domain\Interactor\TeamCreateInteractor;
+use App\TeamFeature\Domain\Interactor\TeamUpdateInteractor;
 use App\TeamFeature\Domain\Repository\TeamMemberRepositoryInterface;
 use App\TeamFeature\Domain\Repository\TeamRepositoryInterface;
 use App\TeamFeature\Domain\ValueObject\TeamId;
@@ -26,6 +27,7 @@ final class TeamApiService implements TeamServiceInterface
 {
     public function __construct(
         private readonly TeamCreateInteractor $createInteractor,
+        private readonly TeamUpdateInteractor $updateInteractor,
         private readonly AddTeamMemberInteractor $addMemberInteractor,
         private readonly RemoveTeamMemberInteractor $removeMemberInteractor,
         private readonly TeamRepositoryInterface $teams,
@@ -95,11 +97,7 @@ final class TeamApiService implements TeamServiceInterface
 
     public function update(string $id, TeamUpdateRequestInterface $dtoRequest): TeamDataResponseInterface
     {
-        $team = $this->teams->findById(TeamId::fromString($id));
-
-        if ($team === null) {
-            throw new \DomainException("Team {$id} not found");
-        }
+        $team = $this->updateInteractor->update($id);
 
         $description = $dtoRequest->getDescription();
         if ($description !== null) {

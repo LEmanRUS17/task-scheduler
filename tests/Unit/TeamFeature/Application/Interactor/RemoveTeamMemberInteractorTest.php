@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Tests\Unit\TeamFeature\Application\Interactor;
 
 use App\TeamFeature\Domain\Entity\TeamMember;
+use App\TeamFeature\Domain\Event\TeamMemberRemoved;
 use App\TeamFeature\Domain\Interactor\RemoveTeamMemberInteractor;
 use App\TeamFeature\Domain\Port\DomainEventDispatcherInterface;
 use App\TeamFeature\Domain\Repository\TeamMemberRepositoryInterface;
@@ -40,6 +41,22 @@ final class RemoveTeamMemberInteractorTest extends TestCase
         $members->expects($this->once())->method('delete')->with($this->member);
 
         $this->buildInteractor($members)->remove($this->teamId, 'user-170426');
+    }
+
+    public function testRemoveDispatchesTeamMemberRemovedEvent(): void
+    {
+        // Simulate an entity loaded from persistence (no pending creation events).
+        $this->member->pullDomainEvents();
+
+        $members = $this->createStub(TeamMemberRepositoryInterface::class);
+        $members->method('findByTeamAndUser')->willReturn($this->member);
+
+        $dispatcher = $this->createMock(DomainEventDispatcherInterface::class);
+        $dispatcher->expects($this->once())
+            ->method('dispatch')
+            ->with($this->isInstanceOf(TeamMemberRemoved::class));
+
+        $this->buildInteractor($members, $dispatcher)->remove($this->teamId, 'user-170426');
     }
 
     public function testRemoveThrowsWhenMemberNotFound(): void

@@ -12,7 +12,6 @@ final class RemoveTeamMemberInteractor
 {
     public function __construct(
         private readonly TeamMemberRepositoryInterface $members,
-        /** @phpstan-ignore property.onlyWritten */
         private readonly DomainEventDispatcherInterface $eventDispatcher,
     ) {
     }
@@ -25,6 +24,8 @@ final class RemoveTeamMemberInteractor
             throw new \DomainException("User {$userId} is not a member of team {$teamId->value()}");
         }
 
+        $member->remove();
         $this->members->delete($member);
+        $this->eventDispatcher->dispatch(...$member->pullDomainEvents());
     }
 }
