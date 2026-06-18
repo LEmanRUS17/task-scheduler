@@ -47,23 +47,20 @@ final class DynamicWorkflowLoader implements EventSubscriberInterface
             $statusList = $this->statuses->findByWorkflowId($workflow->id());
             $transitionList = $this->transitions->findByWorkflowId($workflow->id());
 
-            $places = array_map(fn(WorkflowStatus $s) => $s->label()->value(), $statusList);
+            $places = array_map(fn(WorkflowStatus $s) => $s->id()->value(), $statusList);
 
-            $labelByStatusId = [];
             $initialPlace = null;
             foreach ($statusList as $status) {
-                $labelByStatusId[$status->id()->value()] = $status->label()->value();
-
                 if ($status->isInitial()) {
-                    $initialPlace = $status->label()->value();
+                    $initialPlace = $status->id()->value();
                 }
             }
 
             $sfTransitions = array_map(
                 fn(WorkflowTransition $t) => new Transition(
                     $t->name()->value(),
-                    $labelByStatusId[$t->fromStatusId()->value()],
-                    $labelByStatusId[$t->toStatusId()->value()],
+                    $t->fromStatusId()->value(),
+                    $t->toStatusId()->value(),
                 ),
                 $transitionList,
             );

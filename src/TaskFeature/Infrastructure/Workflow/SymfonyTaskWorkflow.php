@@ -31,7 +31,7 @@ final class SymfonyTaskWorkflow implements TaskWorkflowInterface
             );
         }
 
-        $task->setWorkflowStatus($initial->label()->value());
+        $task->setWorkflowStatus($initial->id()->value());
     }
 
     public function applyTransition(Task $task, string $transition): void

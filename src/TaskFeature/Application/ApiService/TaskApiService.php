@@ -30,6 +30,7 @@ use App\ProfileFeatureApi\Service\ProfileServiceInterface;
 use App\TaskFeature\Domain\Entity\Task;
 use App\WorkflowFeature\Domain\Repository\WorkflowStatusRepositoryInterface;
 use App\WorkflowFeature\Domain\Repository\WorkflowTransitionRepositoryInterface;
+use App\WorkflowFeature\Domain\ValueObject\WorkflowId;
 use App\WorkflowFeature\Domain\ValueObject\WorkflowTransitionId;
 
 final class TaskApiService implements TaskServiceInterface
@@ -62,6 +63,7 @@ final class TaskApiService implements TaskServiceInterface
                 $task,
                 $this->loadAssigneeIds($task->id()),
                 [],
+                $this->resolveStatusLabel($task),
                 $this->descriptions->get(Task::class, $task->id()->value()),
             ),
             $this->tasks->findAll(),
@@ -75,6 +77,7 @@ final class TaskApiService implements TaskServiceInterface
                 $task,
                 $this->loadAssigneeIds($task->id()),
                 $this->workflow->getEnabledTransitions($task),
+                $this->resolveStatusLabel($task),
                 $this->descriptions->get(Task::class, $task->id()->value()),
             ),
             $this->tasks->findByAssigneeUserId($userId),
@@ -92,6 +95,7 @@ final class TaskApiService implements TaskServiceInterface
                 $task,
                 $this->loadAssigneeIds($task->id()),
                 $this->workflow->getEnabledTransitions($task),
+                $this->resolveStatusLabel($task),
                 $this->descriptions->get(Task::class, $task->id()->value()),
             ),
             $this->tasks->findByTeamId($teamId),
@@ -108,6 +112,7 @@ final class TaskApiService implements TaskServiceInterface
                 $task,
                 $this->loadAssigneeIds($taskId),
                 $this->workflow->getEnabledTransitions($task),
+                $this->resolveStatusLabel($task),
                 $this->descriptions->get(Task::class, $id),
             )
             : null;
@@ -142,6 +147,7 @@ final class TaskApiService implements TaskServiceInterface
             $task,
             $this->loadAssigneeIds($task->id()),
             $this->workflow->getEnabledTransitions($task),
+            $this->resolveStatusLabel($task),
             $description,
         );
     }
@@ -172,6 +178,7 @@ final class TaskApiService implements TaskServiceInterface
             $task,
             $this->loadAssigneeIds($task->id()),
             $this->workflow->getEnabledTransitions($task),
+            $this->resolveStatusLabel($task),
             $this->descriptions->get(Task::class, $id),
         );
     }
@@ -184,6 +191,7 @@ final class TaskApiService implements TaskServiceInterface
             $task,
             $this->loadAssigneeIds($task->id()),
             $this->workflow->getEnabledTransitions($task),
+            $this->resolveStatusLabel($task),
             $this->descriptions->get(Task::class, $id),
         );
     }
@@ -237,6 +245,22 @@ final class TaskApiService implements TaskServiceInterface
 
             return $this->dataMapper->historyToResponse($entry, $toStatusLabel, $profile);
         }, $this->statusHistory->findByTaskId($taskId));
+    }
+
+    private function resolveStatusLabel(Task $task): ?string
+    {
+        $statusId = $task->getWorkflowStatus();
+
+        if ($statusId === '') {
+            return null;
+        }
+
+        $status = $this->statuses->findById(
+            WorkflowId::fromString($task->getWorkflowDefinitionTitle()),
+            $statusId,
+        );
+
+        return $status?->label()->value();
     }
 
     /** @return string[] */

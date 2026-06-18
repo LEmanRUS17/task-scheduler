@@ -12,6 +12,7 @@ final class TaskResponseDTO implements TaskDataResponseInterface
         private readonly string $id,
         private readonly string $title,
         private readonly string $status,
+        private readonly string $statusId,
         private readonly string $priority,
         private readonly ?string $teamId,
         private readonly string $createdBy,
@@ -42,6 +43,11 @@ final class TaskResponseDTO implements TaskDataResponseInterface
     public function getStatus(): string
     {
         return $this->status;
+    }
+
+    public function getStatusId(): string
+    {
+        return $this->statusId;
     }
 
     public function getPriority(): string

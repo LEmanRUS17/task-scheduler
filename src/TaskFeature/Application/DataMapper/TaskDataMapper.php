@@ -35,11 +35,13 @@ final class TaskDataMapper
         Task $task,
         array $assigneeIds,
         array $availableTransitions,
+        ?string $statusLabel = null,
         ?string $description = null,
     ): TaskResponseDTO {
         return new TaskResponseDTO(
             $task->id()->value(),
             $task->title()->value(),
+            $statusLabel ?? $task->getWorkflowStatus(),
             $task->getWorkflowStatus(),
             $task->priority()->value,
             $task->teamId(),
