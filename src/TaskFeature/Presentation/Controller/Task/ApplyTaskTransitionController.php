@@ -59,6 +59,7 @@ final class ApplyTaskTransitionController
                 'id' => $task->getId(),
                 'title' => $task->getTitle(),
                 'status' => $task->getStatus(),
+                'status_id' => $task->getStatusId(),
                 'createdAt' => $task->getCreatedAt()->format(\DateTimeInterface::ATOM),
             ],
             Response::HTTP_OK,

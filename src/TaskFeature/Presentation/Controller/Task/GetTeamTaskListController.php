@@ -44,6 +44,7 @@ final class GetTeamTaskListController
                         'id' => $task->getId(),
                         'title' => $task->getTitle(),
                         'status' => $task->getStatus(),
+                        'status_id' => $task->getStatusId(),
                         'priority' => $task->getPriority(),
                         'teamId' => $task->getTeamId(),
                         'createdBy' => $task->getCreatedBy(),

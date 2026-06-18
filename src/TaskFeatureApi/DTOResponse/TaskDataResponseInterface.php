@@ -9,6 +9,7 @@ interface TaskDataResponseInterface
     public function getId(): string;
     public function getTitle(): string;
     public function getStatus(): string;
+    public function getStatusId(): string;
     public function getPriority(): string;
     public function getTeamId(): ?string;
     public function getCreatedBy(): string;
