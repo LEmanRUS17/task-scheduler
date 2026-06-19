@@ -13,9 +13,11 @@ final class ManticoreWorkflowSearchRepository implements WorkflowSearchRepositor
     }
 
     /**
-     * @return array<int, array{workflowId: string, title: string}>
+     * Returns a page of matching workflow ids, ordered by relevance, plus the total match count.
+     *
+     * @return array{ids: list<string>, total: int}
      */
-    public function search(string $query, string $userId, bool $ownedOnly): array
+    public function search(string $query, string $userId, bool $ownedOnly, int $limit, int $offset): array
     {
         $must = [
             [
@@ -47,16 +49,20 @@ final class ManticoreWorkflowSearchRepository implements WorkflowSearchRepositor
                 ['_score' => 'desc'],
                 ['created_at' => 'desc'],
             ],
+            'limit' => $limit,
+            'offset' => $offset,
         ]);
 
         $hits = $result['hits']['hits'] ?? [];
 
-        return array_map(
-            static fn(array $hit) => [
-                'workflowId' => $hit['_source']['workflow_id'],
-                'title'      => $hit['_source']['title'],
-            ],
+        $ids = array_values(array_map(
+            static fn(array $hit) => (string) $hit['_source']['workflow_id'],
             $hits,
-        );
+        ));
+
+        return [
+            'ids' => $ids,
+            'total' => (int) ($result['hits']['total'] ?? count($ids)),
+        ];
     }
 }

@@ -25,6 +25,23 @@ interface WorkflowServiceInterface
     /** @return WorkflowResponseInterface[] */
     public function getList(): array;
 
+    /**
+     * Returns a single page of workflows ordered by creation date (newest first).
+     *
+     * @return WorkflowResponseInterface[]
+     */
+    public function getPage(int $limit, int $offset): array;
+
+    public function countAll(): int;
+
+    /**
+     * Returns workflows for the given ids, preserving the order of the ids.
+     *
+     * @param list<string> $ids
+     * @return WorkflowResponseInterface[]
+     */
+    public function getByIds(array $ids): array;
+
     public function addStatus(string $workflowId, AddStatusRequestInterface $request): WorkflowStatusResponseInterface;
 
     public function updateStatus(

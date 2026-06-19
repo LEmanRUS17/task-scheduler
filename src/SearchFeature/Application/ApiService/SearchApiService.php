@@ -6,14 +6,12 @@ namespace App\SearchFeature\Application\ApiService;
 
 use App\SearchFeature\Application\DTOResponse\TaskSearchResult;
 use App\SearchFeature\Application\DTOResponse\TeamSearchResult;
-use App\SearchFeature\Application\DTOResponse\WorkflowSearchResult;
 use App\SearchFeature\Domain\Port\TaskSearchRepositoryInterface;
 use App\SearchFeature\Domain\Port\TeamSearchRepositoryInterface;
 use App\SearchFeature\Domain\Port\WorkflowSearchRepositoryInterface;
 use App\SearchFeatureApi\Contract\SearchServiceInterface;
 use App\SearchFeatureApi\DTOResponse\TaskSearchResultInterface;
 use App\SearchFeatureApi\DTOResponse\TeamSearchResultInterface;
-use App\SearchFeatureApi\DTOResponse\WorkflowSearchResultInterface;
 
 final class SearchApiService implements SearchServiceInterface
 {
@@ -45,12 +43,14 @@ final class SearchApiService implements SearchServiceInterface
         );
     }
 
-    /** @return WorkflowSearchResultInterface[] */
-    public function searchWorkflows(string $query, string $userId, bool $ownedOnly = false): array
-    {
-        return array_map(
-            static fn(array $row) => new WorkflowSearchResult($row['workflowId'], $row['title']),
-            $this->workflowRepository->search($query, $userId, $ownedOnly),
-        );
+    /** @return array{ids: list<string>, total: int} */
+    public function searchWorkflows(
+        string $query,
+        string $userId,
+        bool $ownedOnly = false,
+        int $limit = 10,
+        int $offset = 0,
+    ): array {
+        return $this->workflowRepository->search($query, $userId, $ownedOnly, $limit, $offset);
     }
 }

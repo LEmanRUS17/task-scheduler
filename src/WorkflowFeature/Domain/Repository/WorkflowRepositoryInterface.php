@@ -13,6 +13,17 @@ interface WorkflowRepositoryInterface
 
     public function findById(WorkflowId $id): ?Workflow;
 
+    /**
+     * @param list<string> $ids
+     * @return Workflow[]
+     */
+    public function findByIds(array $ids): array;
+
     /** @return Workflow[] */
     public function findAll(): array;
+
+    /** @return Workflow[] */
+    public function findPaginated(int $limit, int $offset): array;
+
+    public function count(): int;
 }

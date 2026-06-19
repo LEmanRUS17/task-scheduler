@@ -7,7 +7,9 @@ namespace App\SearchFeature\Domain\Port;
 interface WorkflowSearchRepositoryInterface
 {
     /**
-     * @return array<int, array{workflowId: string, title: string}>
+     * Returns a page of matching workflow ids, ordered by relevance, plus the total match count.
+     *
+     * @return array{ids: list<string>, total: int}
      */
-    public function search(string $query, string $userId, bool $ownedOnly): array;
+    public function search(string $query, string $userId, bool $ownedOnly, int $limit, int $offset): array;
 }

@@ -18,7 +18,7 @@ final class GetWorkflowController
     ) {
     }
 
-    #[Route('/workflows/{id}', name: 'workflow_get', methods: ['GET'], requirements: ['id' => '[0-9a-fA-F\-]{36}'])]
+    #[Route('/workflows/{id}', name: 'workflow_get', methods: ['GET'])]
     public function __invoke(string $id): JsonResponse
     {
         try {
