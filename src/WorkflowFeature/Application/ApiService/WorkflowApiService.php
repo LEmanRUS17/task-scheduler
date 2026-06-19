@@ -120,6 +120,36 @@ final class WorkflowApiService implements WorkflowServiceInterface
         );
     }
 
+    public function getPage(int $limit, int $offset): array
+    {
+        return array_map(
+            fn($workflow) => $this->dataMapper->workflowToResponse($workflow),
+            $this->workflows->findPaginated($limit, $offset),
+        );
+    }
+
+    public function countAll(): int
+    {
+        return $this->workflows->count();
+    }
+
+    public function getByIds(array $ids): array
+    {
+        $byId = [];
+        foreach ($this->workflows->findByIds($ids) as $workflow) {
+            $byId[$workflow->id()->value()] = $workflow;
+        }
+
+        $result = [];
+        foreach ($ids as $id) {
+            if (isset($byId[$id])) {
+                $result[] = $this->dataMapper->workflowToResponse($byId[$id]);
+            }
+        }
+
+        return $result;
+    }
+
     public function addStatus(string $workflowId, AddStatusRequestInterface $request): WorkflowStatusResponseInterface
     {
         $violations = $this->validator->validate($request);

@@ -4,36 +4,83 @@ declare(strict_types=1);
 
 namespace App\WorkflowFeature\Presentation\Controller;
 
+use App\SearchFeatureApi\Contract\SearchServiceInterface;
+use App\UserFeature\Infrastructure\Security\SecurityUser;
+use App\WorkflowFeatureApi\DTOResponse\WorkflowResponseInterface;
 use App\WorkflowFeatureApi\Service\WorkflowServiceInterface;
+use Symfony\Bundle\SecurityBundle\Security;
 use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Attribute\AsController;
 use Symfony\Component\Routing\Attribute\Route;
 
 #[AsController]
 final class ListWorkflowsController
 {
+    private const MIN_QUERY_LENGTH = 2;
+    private const DEFAULT_LIMIT = 10;
+    private const ALLOWED_LIMITS = [10, 20, 50];
+
     public function __construct(
         private readonly WorkflowServiceInterface $workflowService,
+        private readonly SearchServiceInterface $searchService,
+        private readonly Security $security,
     ) {
     }
 
     #[Route('/workflows', name: 'workflow_list', methods: ['GET'])]
-    public function __invoke(): JsonResponse
+    public function __invoke(Request $request): JsonResponse
     {
-        $workflows = $this->workflowService->getList();
+        $page = max(1, $request->query->getInt('page', 1));
+        $limit = $this->resolveLimit($request->query->getInt('limit', self::DEFAULT_LIMIT));
+        $offset = ($page - 1) * $limit;
+
+        $query = trim((string) $request->query->get('q', ''));
+
+        if (strlen($query) >= self::MIN_QUERY_LENGTH) {
+            [$workflows, $count] = $this->search($request, $query, $limit, $offset);
+        } else {
+            $workflows = $this->workflowService->getPage($limit, $offset);
+            $count = $this->workflowService->countAll();
+        }
 
         return new JsonResponse([
-            'success' => true,
-            'data' => array_map(
-                fn($w) => [
+            'workflow' => array_map(
+                static fn(WorkflowResponseInterface $w) => [
                     'id' => $w->getId(),
                     'title' => $w->getTitle(),
                     'createdBy' => $w->getCreatedBy(),
-                    'description' => $w->getDescription(),
                     'createdAt' => $w->getCreatedAt()->format(\DateTimeInterface::ATOM),
                 ],
                 $workflows,
             ),
+            'pagination' => [
+                'page' => $page,
+                'limit' => $limit,
+                'pages' => (int) ceil($count / $limit),
+            ],
+            'count' => $count,
         ]);
+    }
+
+    /**
+     * @return array{0: WorkflowResponseInterface[], 1: int}
+     */
+    private function search(Request $request, string $query, int $limit, int $offset): array
+    {
+        /** @var SecurityUser $securityUser */
+        $securityUser = $this->security->getUser();
+        $userId = $securityUser->getDomainUser()->id()->value();
+
+        $ownedOnly = $request->query->getBoolean('owner');
+
+        $result = $this->searchService->searchWorkflows($query, $userId, $ownedOnly, $limit, $offset);
+
+        return [$this->workflowService->getByIds($result['ids']), $result['total']];
+    }
+
+    private function resolveLimit(int $limit): int
+    {
+        return in_array($limit, self::ALLOWED_LIMITS, true) ? $limit : self::DEFAULT_LIMIT;
     }
 }

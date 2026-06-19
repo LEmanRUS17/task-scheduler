@@ -27,8 +27,28 @@ final class DoctrineWorkflowRepository implements WorkflowRepositoryInterface
         return $this->entityManager->find(Workflow::class, $id->value());
     }
 
+    public function findByIds(array $ids): array
+    {
+        if ($ids === []) {
+            return [];
+        }
+
+        return $this->entityManager->getRepository(Workflow::class)->findBy(['id' => $ids]);
+    }
+
     public function findAll(): array
     {
         return $this->entityManager->getRepository(Workflow::class)->findAll();
+    }
+
+    public function findPaginated(int $limit, int $offset): array
+    {
+        return $this->entityManager->getRepository(Workflow::class)
+            ->findBy([], ['createdAt' => 'DESC'], $limit, $offset);
+    }
+
+    public function count(): int
+    {
+        return $this->entityManager->getRepository(Workflow::class)->count([]);
     }
 }

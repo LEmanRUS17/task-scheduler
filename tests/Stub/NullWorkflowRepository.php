@@ -19,9 +19,24 @@ final class NullWorkflowRepository implements WorkflowRepositoryInterface
         return null;
     }
 
+    public function findByIds(array $ids): array
+    {
+        return [];
+    }
+
     /** @return Workflow[] */
     public function findAll(): array
     {
         return [];
+    }
+
+    public function findPaginated(int $limit, int $offset): array
+    {
+        return [];
+    }
+
+    public function count(): int
+    {
+        return 0;
     }
 }
