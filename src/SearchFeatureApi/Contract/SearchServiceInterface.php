@@ -6,6 +6,7 @@ namespace App\SearchFeatureApi\Contract;
 
 use App\SearchFeatureApi\DTOResponse\TaskSearchResultInterface;
 use App\SearchFeatureApi\DTOResponse\TeamSearchResultInterface;
+use App\SearchFeatureApi\DTOResponse\WorkflowSearchResultInterface;
 
 interface SearchServiceInterface
 {
@@ -17,4 +18,7 @@ interface SearchServiceInterface
      * @return TeamSearchResultInterface[]
      */
     public function searchTeams(string $query, string $userId, array $statuses = [], bool $ownedOnly = false): array;
+
+    /** @return WorkflowSearchResultInterface[] */
+    public function searchWorkflows(string $query, string $userId, bool $ownedOnly = false): array;
 }
