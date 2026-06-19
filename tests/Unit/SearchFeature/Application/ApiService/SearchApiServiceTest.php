@@ -7,7 +7,6 @@ namespace App\Tests\Unit\SearchFeature\Application\ApiService;
 use App\SearchFeature\Application\ApiService\SearchApiService;
 use App\SearchFeature\Application\DTOResponse\TaskSearchResult;
 use App\SearchFeature\Application\DTOResponse\TeamSearchResult;
-use App\SearchFeature\Application\DTOResponse\WorkflowSearchResult;
 use App\SearchFeature\Domain\Port\TaskSearchRepositoryInterface;
 use App\SearchFeature\Domain\Port\TeamSearchRepositoryInterface;
 use App\SearchFeature\Domain\Port\WorkflowSearchRepositoryInterface;
@@ -108,22 +107,15 @@ final class SearchApiServiceTest extends TestCase
         $service->searchTeams('backend', 'user-1');
     }
 
-    public function testSearchWorkflowsMapsRowsToWorkflowSearchResult(): void
+    public function testSearchWorkflowsReturnsIdsAndTotalFromRepository(): void
     {
         $workflowRepository = $this->createStub(WorkflowSearchRepositoryInterface::class);
-        $workflowRepository->method('search')->willReturn([
-            ['workflowId' => 'wf-1', 'title' => 'Bug flow'],
-            ['workflowId' => 'wf-2', 'title' => 'Release flow'],
-        ]);
+        $workflowRepository->method('search')->willReturn(['ids' => ['wf-1', 'wf-2'], 'total' => 5]);
 
         $service = new SearchApiService($this->taskRepositoryStub(), $this->teamRepositoryStub(), $workflowRepository);
-        $results = $service->searchWorkflows('flow', 'user-1');
+        $result = $service->searchWorkflows('flow', 'user-1');
 
-        $this->assertCount(2, $results);
-        $this->assertInstanceOf(WorkflowSearchResult::class, $results[0]);
-        $this->assertSame('wf-1', $results[0]->getWorkflowId());
-        $this->assertSame('Bug flow', $results[0]->getTitle());
-        $this->assertSame('wf-2', $results[1]->getWorkflowId());
+        $this->assertSame(['ids' => ['wf-1', 'wf-2'], 'total' => 5], $result);
     }
 
     public function testSearchWorkflowsPassesParametersToRepository(): void
@@ -131,20 +123,20 @@ final class SearchApiServiceTest extends TestCase
         $workflowRepository = $this->createMock(WorkflowSearchRepositoryInterface::class);
         $workflowRepository->expects($this->once())
             ->method('search')
-            ->with('flow', 'user-1', true)
-            ->willReturn([]);
+            ->with('flow', 'user-1', true, 20, 40)
+            ->willReturn(['ids' => [], 'total' => 0]);
 
         $service = new SearchApiService($this->taskRepositoryStub(), $this->teamRepositoryStub(), $workflowRepository);
-        $service->searchWorkflows('flow', 'user-1', true);
+        $service->searchWorkflows('flow', 'user-1', true, 20, 40);
     }
 
-    public function testSearchWorkflowsWithDefaultFilters(): void
+    public function testSearchWorkflowsWithDefaultParameters(): void
     {
         $workflowRepository = $this->createMock(WorkflowSearchRepositoryInterface::class);
         $workflowRepository->expects($this->once())
             ->method('search')
-            ->with('flow', 'user-1', false)
-            ->willReturn([]);
+            ->with('flow', 'user-1', false, 10, 0)
+            ->willReturn(['ids' => [], 'total' => 0]);
 
         $service = new SearchApiService($this->taskRepositoryStub(), $this->teamRepositoryStub(), $workflowRepository);
         $service->searchWorkflows('flow', 'user-1');

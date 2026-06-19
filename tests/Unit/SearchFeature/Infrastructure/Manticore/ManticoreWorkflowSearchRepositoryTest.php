@@ -13,7 +13,7 @@ use Symfony\Component\HttpClient\Response\MockResponse;
 final class ManticoreWorkflowSearchRepositoryTest extends TestCase
 {
     /** @param array<string, mixed> $capturedBody */
-    private function buildRepository(array &$capturedBody, string $hitsJson = '{"hits":{"hits":[]}}'): ManticoreWorkflowSearchRepository
+    private function buildRepository(array &$capturedBody, string $hitsJson = '{"hits":{"hits":[],"total":0}}'): ManticoreWorkflowSearchRepository
     {
         $httpClient = new MockHttpClient(function (string $method, string $url, array $options) use (&$capturedBody, $hitsJson) {
             $capturedBody = json_decode($options['body'] ?? '{}', true);
@@ -26,7 +26,7 @@ final class ManticoreWorkflowSearchRepositoryTest extends TestCase
     public function testSearchMatchesTitleAndDescription(): void
     {
         $body = [];
-        $this->buildRepository($body)->search('flow', 'user-1', false);
+        $this->buildRepository($body)->search('flow', 'user-1', false, 10, 0);
 
         $must = $body['query']['bool']['must'];
         $this->assertSame('flow', $must[0]['match']['title,description']);
@@ -35,7 +35,7 @@ final class ManticoreWorkflowSearchRepositoryTest extends TestCase
     public function testSearchWithoutFiltersHasNoFilter(): void
     {
         $body = [];
-        $this->buildRepository($body)->search('flow', 'user-1', false);
+        $this->buildRepository($body)->search('flow', 'user-1', false, 10, 0);
 
         $this->assertArrayNotHasKey('filter', $body['query']['bool']);
     }
@@ -43,17 +43,27 @@ final class ManticoreWorkflowSearchRepositoryTest extends TestCase
     public function testSearchOwnedOnlyAddsCreatedByFilter(): void
     {
         $body = [];
-        $this->buildRepository($body)->search('flow', 'user-1', true);
+        $this->buildRepository($body)->search('flow', 'user-1', true, 10, 0);
 
         $filter = $body['query']['bool']['filter'];
         $this->assertCount(1, $filter);
         $this->assertSame('user-1', $filter[0]['equals']['created_by']);
     }
 
-    public function testSearchMapsHitsToResultArray(): void
+    public function testSearchForwardsLimitAndOffset(): void
+    {
+        $body = [];
+        $this->buildRepository($body)->search('flow', 'user-1', false, 20, 40);
+
+        $this->assertSame(20, $body['limit']);
+        $this->assertSame(40, $body['offset']);
+    }
+
+    public function testSearchMapsHitsToOrderedIdsWithTotal(): void
     {
         $hitsJson = json_encode([
             'hits' => [
+                'total' => 7,
                 'hits' => [
                     ['_source' => ['workflow_id' => 'wf-1', 'title' => 'Bug flow']],
                     ['_source' => ['workflow_id' => 'wf-2', 'title' => 'Release flow']],
@@ -62,26 +72,24 @@ final class ManticoreWorkflowSearchRepositoryTest extends TestCase
         ]);
 
         $body = [];
-        $results = $this->buildRepository($body, $hitsJson)->search('flow', 'user-1', false);
+        $result = $this->buildRepository($body, $hitsJson)->search('flow', 'user-1', false, 10, 0);
 
-        $this->assertCount(2, $results);
-        $this->assertSame('wf-1', $results[0]['workflowId']);
-        $this->assertSame('Bug flow', $results[0]['title']);
-        $this->assertSame('wf-2', $results[1]['workflowId']);
+        $this->assertSame(['wf-1', 'wf-2'], $result['ids']);
+        $this->assertSame(7, $result['total']);
     }
 
-    public function testSearchReturnsEmptyArrayWhenNoHits(): void
+    public function testSearchReturnsEmptyResultWhenNoHits(): void
     {
         $body = [];
-        $results = $this->buildRepository($body)->search('nothing', 'user-1', false);
+        $result = $this->buildRepository($body)->search('nothing', 'user-1', false, 10, 0);
 
-        $this->assertSame([], $results);
+        $this->assertSame(['ids' => [], 'total' => 0], $result);
     }
 
     public function testSearchPassesTableNameAsIndexInBody(): void
     {
         $body = [];
-        $this->buildRepository($body)->search('flow', 'user-1', false);
+        $this->buildRepository($body)->search('flow', 'user-1', false, 10, 0);
 
         $this->assertSame('workflows', $body['index']);
     }
@@ -89,7 +97,7 @@ final class ManticoreWorkflowSearchRepositoryTest extends TestCase
     public function testSearchSortsByScoreThenCreatedAt(): void
     {
         $body = [];
-        $this->buildRepository($body)->search('flow', 'user-1', false);
+        $this->buildRepository($body)->search('flow', 'user-1', false, 10, 0);
 
         $this->assertSame(
             [['_score' => 'desc'], ['created_at' => 'desc']],
