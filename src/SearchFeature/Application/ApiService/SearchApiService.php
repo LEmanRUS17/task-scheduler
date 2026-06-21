@@ -4,13 +4,11 @@ declare(strict_types=1);
 
 namespace App\SearchFeature\Application\ApiService;
 
-use App\SearchFeature\Application\DTOResponse\TaskSearchResult;
 use App\SearchFeature\Application\DTOResponse\TeamSearchResult;
 use App\SearchFeature\Domain\Port\TaskSearchRepositoryInterface;
 use App\SearchFeature\Domain\Port\TeamSearchRepositoryInterface;
 use App\SearchFeature\Domain\Port\WorkflowSearchRepositoryInterface;
 use App\SearchFeatureApi\Contract\SearchServiceInterface;
-use App\SearchFeatureApi\DTOResponse\TaskSearchResultInterface;
 use App\SearchFeatureApi\DTOResponse\TeamSearchResultInterface;
 
 final class SearchApiService implements SearchServiceInterface
@@ -22,13 +20,16 @@ final class SearchApiService implements SearchServiceInterface
     ) {
     }
 
-    /** @return TaskSearchResultInterface[] */
-    public function searchTasks(string $query, string $userId, ?string $teamId = null, ?string $status = null): array
-    {
-        return array_map(
-            static fn(array $row) => new TaskSearchResult($row['taskId'], $row['title'], $row['status']),
-            $this->repository->search($query, $userId, $teamId, $status),
-        );
+    /** @return array{ids: list<string>, total: int} */
+    public function searchTasks(
+        string $query,
+        string $userId,
+        ?string $teamId = null,
+        ?string $status = null,
+        int $limit = 10,
+        int $offset = 0,
+    ): array {
+        return $this->repository->search($query, $userId, $teamId, $status, $limit, $offset);
     }
 
     /**

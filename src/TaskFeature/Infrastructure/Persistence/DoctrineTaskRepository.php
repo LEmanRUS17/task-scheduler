@@ -39,6 +39,40 @@ final class DoctrineTaskRepository implements TaskRepositoryInterface
             ->getResult();
     }
 
+    public function findPaginatedByAssigneeUserId(string $userId, int $limit, int $offset): array
+    {
+        return $this->entityManager->createQuery(
+            'SELECT t FROM ' . Task::class . ' t
+             JOIN ' . TaskAssignee::class . ' ta WITH ta.taskId = t.id
+             WHERE ta.userId = :userId
+             ORDER BY t.createdAt DESC',
+        )
+            ->setParameter('userId', $userId)
+            ->setMaxResults($limit)
+            ->setFirstResult($offset)
+            ->getResult();
+    }
+
+    public function countByAssigneeUserId(string $userId): int
+    {
+        return (int) $this->entityManager->createQuery(
+            'SELECT COUNT(DISTINCT t.id) FROM ' . Task::class . ' t
+             JOIN ' . TaskAssignee::class . ' ta WITH ta.taskId = t.id
+             WHERE ta.userId = :userId',
+        )
+            ->setParameter('userId', $userId)
+            ->getSingleScalarResult();
+    }
+
+    public function findByIds(array $ids): array
+    {
+        if ($ids === []) {
+            return [];
+        }
+
+        return $this->entityManager->getRepository(Task::class)->findBy(['id' => $ids]);
+    }
+
     public function findByTeamId(string $teamId): array
     {
         return $this->entityManager->getRepository(Task::class)->findBy(['teamId' => $teamId]);

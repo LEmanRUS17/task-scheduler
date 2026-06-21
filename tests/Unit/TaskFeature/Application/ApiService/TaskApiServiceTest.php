@@ -67,17 +67,136 @@ final class TaskApiServiceTest extends TestCase
         );
     }
 
-    private function makeTask(string $teamId = 'team-1'): Task
-    {
+    private function makeTask(
+        string $teamId = 'team-1',
+        string $id = 'a1b2c3d4-e5f6-4789-8abc-def012345678',
+        string $title = 'Test Task',
+    ): Task {
         return Task::create(
-            TaskId::fromString('a1b2c3d4-e5f6-4789-8abc-def012345678'),
-            TaskTitle::fromString('Test Task'),
+            TaskId::fromString($id),
+            TaskTitle::fromString($title),
             TaskPriority::NORMAL,
             'default',
             $teamId,
             'user-creator',
             new \DateTimeImmutable('2026-01-01 12:00:00'),
         );
+    }
+
+    // --- getPage / countAll ---
+
+    public function testGetPagePassesUserLimitAndOffsetToRepository(): void
+    {
+        $tasks = $this->createMock(TaskRepositoryInterface::class);
+        $tasks->expects($this->once())
+            ->method('findPaginatedByAssigneeUserId')
+            ->with('user-7', 20, 40)
+            ->willReturn([]);
+
+        $result = $this->buildService(
+            $tasks,
+            $this->createStub(TaskAssigneeRepositoryInterface::class),
+            $this->createStub(TeamMembershipInterface::class),
+        )->getPage('user-7', 20, 40);
+
+        $this->assertSame([], $result);
+    }
+
+    public function testGetPageMapsTasks(): void
+    {
+        $task = $this->makeTask('team-1');
+
+        $tasks = $this->createStub(TaskRepositoryInterface::class);
+        $tasks->method('findPaginatedByAssigneeUserId')->willReturn([$task]);
+
+        $assignees = $this->createStub(TaskAssigneeRepositoryInterface::class);
+        $assignees->method('findByTaskId')->willReturn([]);
+
+        $result = $this->buildService(
+            $tasks,
+            $assignees,
+            $this->createStub(TeamMembershipInterface::class),
+        )->getPage('user-1', 10, 0);
+
+        $this->assertCount(1, $result);
+        $this->assertSame('a1b2c3d4-e5f6-4789-8abc-def012345678', $result[0]->getId());
+    }
+
+    public function testCountAllDelegatesToRepository(): void
+    {
+        $tasks = $this->createMock(TaskRepositoryInterface::class);
+        $tasks->expects($this->once())
+            ->method('countByAssigneeUserId')
+            ->with('user-7')
+            ->willReturn(42);
+
+        $result = $this->buildService(
+            $tasks,
+            $this->createStub(TaskAssigneeRepositoryInterface::class),
+            $this->createStub(TeamMembershipInterface::class),
+        )->countAll('user-7');
+
+        $this->assertSame(42, $result);
+    }
+
+    // --- getByIds ---
+
+    public function testGetByIdsPreservesIdOrderRegardlessOfRepositoryOrder(): void
+    {
+        $t1 = $this->makeTask('team-1', '11111111-1111-4111-8111-111111111111', 'First');
+        $t2 = $this->makeTask('team-1', '22222222-2222-4222-8222-222222222222', 'Second');
+        $t3 = $this->makeTask('team-1', '33333333-3333-4333-8333-333333333333', 'Third');
+
+        // Repository returns them in a different (e.g. DB) order.
+        $tasks = $this->createStub(TaskRepositoryInterface::class);
+        $tasks->method('findByIds')->willReturn([$t3, $t1, $t2]);
+
+        $assignees = $this->createStub(TaskAssigneeRepositoryInterface::class);
+        $assignees->method('findByTaskId')->willReturn([]);
+
+        $ids = [$t1->id()->value(), $t2->id()->value(), $t3->id()->value()];
+        $result = $this->buildService(
+            $tasks,
+            $assignees,
+            $this->createStub(TeamMembershipInterface::class),
+        )->getByIds($ids);
+
+        $this->assertSame($ids, array_map(static fn($r) => $r->getId(), $result));
+        $this->assertSame('First', $result[0]->getTitle());
+    }
+
+    public function testGetByIdsSkipsMissingTasks(): void
+    {
+        $t1 = $this->makeTask('team-1', '11111111-1111-4111-8111-111111111111', 'First');
+
+        $tasks = $this->createStub(TaskRepositoryInterface::class);
+        $tasks->method('findByIds')->willReturn([$t1]);
+
+        $assignees = $this->createStub(TaskAssigneeRepositoryInterface::class);
+        $assignees->method('findByTaskId')->willReturn([]);
+
+        $result = $this->buildService(
+            $tasks,
+            $assignees,
+            $this->createStub(TeamMembershipInterface::class),
+        )->getByIds([$t1->id()->value(), 'missing-id']);
+
+        $this->assertCount(1, $result);
+        $this->assertSame($t1->id()->value(), $result[0]->getId());
+    }
+
+    public function testGetByIdsWithEmptyListReturnsEmpty(): void
+    {
+        $tasks = $this->createStub(TaskRepositoryInterface::class);
+        $tasks->method('findByIds')->willReturn([]);
+
+        $result = $this->buildService(
+            $tasks,
+            $this->createStub(TaskAssigneeRepositoryInterface::class),
+            $this->createStub(TeamMembershipInterface::class),
+        )->getByIds([]);
+
+        $this->assertSame([], $result);
     }
 
     // --- getListByTeam ---

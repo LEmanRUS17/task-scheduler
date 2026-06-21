@@ -18,6 +18,17 @@ interface TaskRepositoryInterface
     public function findByAssigneeUserId(string $userId): array;
 
     /** @return Task[] */
+    public function findPaginatedByAssigneeUserId(string $userId, int $limit, int $offset): array;
+
+    public function countByAssigneeUserId(string $userId): int;
+
+    /**
+     * @param list<string> $ids
+     * @return Task[]
+     */
+    public function findByIds(array $ids): array;
+
+    /** @return Task[] */
     public function findByTeamId(string $teamId): array;
 
     public function findById(TaskId $id): ?Task;
