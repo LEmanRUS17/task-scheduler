@@ -51,17 +51,25 @@ final class GetTaskListController
             $count = $this->taskService->countAll($userId);
         }
 
-        $tagsByTask = $this->tagService->getEntityTagsByIds(
-            TagServiceInterface::TYPE_TASK,
-            array_map(static fn(TaskDataResponseInterface $task) => $task->getId(), $tasks),
-        );
-
         return new JsonResponse([
             'tasks' => array_map(
-                static fn(TaskDataResponseInterface $task) => TaskResponseFormatter::format(
-                    $task,
-                    $tagsByTask[$task->getId()] ?? [],
-                ),
+                static fn(TaskDataResponseInterface $task) => [
+                    'id' => $task->getId(),
+                    'title' => $task->getTitle(),
+                    'status' => $task->getStatus(),
+                    'status_id' => $task->getStatusId(),
+                    'priority' => $task->getPriority(),
+                    'teamId' => $task->getTeamId(),
+                    'createdBy' => $task->getCreatedBy(),
+                    'assigneeIds' => $task->getAssigneeIds(),
+                    'scheduledStart' => $task->getScheduledStart()?->format(\DateTimeInterface::ATOM),
+                    'scheduledEnd' => $task->getScheduledEnd()?->format(\DateTimeInterface::ATOM),
+                    'estimatedTime' => $task->getEstimatedTime(),
+                    'actualTime' => $task->getActualTime(),
+                    'createdAt' => $task->getCreatedAt()->format(\DateTimeInterface::ATOM),
+                    'availableTransitions' => $task->getAvailableTransitions(),
+                    'description' => $task->getDescription(),
+                ],
                 $tasks,
             ),
             'pagination' => [

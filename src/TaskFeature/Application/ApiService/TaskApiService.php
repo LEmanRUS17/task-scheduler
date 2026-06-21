@@ -317,9 +317,11 @@ final class TaskApiService implements TaskServiceInterface
 
     private function taskToFullResponse(Task $task): TaskDataResponseInterface
     {
-        return $this->buildResponse(
+        return $this->dataMapper->taskToResponse(
             $task,
+            $this->loadAssigneeIds($task->id()),
             $this->workflow->getEnabledTransitions($task),
+            $this->resolveStatusLabel($task),
             $this->descriptions->get(Task::class, $task->id()->value()),
         );
     }
