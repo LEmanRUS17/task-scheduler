@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Tests\Integration\TeamFeature\Presentation\Controller;
 
+use App\SearchFeatureApi\Contract\SearchServiceInterface;
 use App\TeamFeatureApi\DTOResponse\TeamDataResponseInterface;
 use App\TeamFeatureApi\Service\TeamServiceInterface;
 use App\UserFeature\Domain\Entity\User;
@@ -13,11 +14,14 @@ use App\UserFeature\Domain\ValueObject\HashedPassword;
 use App\UserFeature\Domain\ValueObject\UserId;
 use App\UserFeature\Infrastructure\Security\SecurityUser;
 use Lexik\Bundle\JWTAuthenticationBundle\Services\JWTTokenManagerInterface;
+use PHPUnit\Framework\Attributes\DataProvider;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 use Symfony\Component\HttpFoundation\Response;
 
 final class GetTeamListControllerTest extends WebTestCase
 {
+    private const USER_ID = 'a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d';
+
     public function testReturnsUnauthorizedWhenNotAuthenticated(): void
     {
         $client = static::createClient();
@@ -26,72 +30,226 @@ final class GetTeamListControllerTest extends WebTestCase
         $this->assertResponseStatusCodeSame(Response::HTTP_UNAUTHORIZED);
     }
 
-    public function testReturnsEmptyListWhenUserHasNoTeams(): void
+    public function testWithoutQueryReturnsPaginatedListWithDefaults(): void
     {
-        $userId = 'a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d';
-        $user = $this->makeUser($userId);
-
+        $user = $this->makeUser();
         $client = static::createClient();
         $this->stubUserRepository($user);
 
-        $service = $this->createMock(TeamServiceInterface::class);
-        $service->expects($this->once())
-            ->method('getTeamsByUserId')
-            ->with($userId)
-            ->willReturn([]);
-        static::getContainer()->set(TeamServiceInterface::class, $service);
+        $teamService = $this->createMock(TeamServiceInterface::class);
+        $teamService->expects($this->once())
+            ->method('getPage')
+            ->with(self::USER_ID, 10, 0)
+            ->willReturn([$this->makeTeam('team-1', 'Backend')]);
+        $teamService->method('countAll')->willReturn(1);
+        $teamService->expects($this->never())->method('getByIds');
+        static::getContainer()->set(TeamServiceInterface::class, $teamService);
+
+        $search = $this->createMock(SearchServiceInterface::class);
+        $search->expects($this->never())->method('searchTeams');
+        static::getContainer()->set(SearchServiceInterface::class, $search);
 
         $client->request('GET', '/team/list', server: [
             'HTTP_AUTHORIZATION' => 'Bearer ' . $this->generateToken($user),
         ]);
 
-        $this->assertResponseStatusCodeSame(Response::HTTP_OK);
-
-        $body = json_decode($client->getResponse()->getContent(), true);
-        $this->assertSame([], $body['teams']);
-    }
-
-    public function testReturnsTeamsForAuthenticatedUser(): void
-    {
-        $userId = 'b2c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5d6e';
-        $user = $this->makeUser($userId);
-
-        $client = static::createClient();
-        $this->stubUserRepository($user);
-
-        $team = $this->createStub(TeamDataResponseInterface::class);
-        $team->method('getId')->willReturn('c3d4e5f6-a7b8-4c9d-0e1f-2a3b4c5d6e7f');
-        $team->method('getTitle')->willReturn('Backend');
-        $team->method('getStatus')->willReturn('ACTIVE');
-        $team->method('getCreatedAt')->willReturn(new \DateTimeImmutable('2026-01-01T00:00:00+00:00'));
-        $team->method('getDescription')->willReturn('Backend team description');
-
-        $service = $this->createMock(TeamServiceInterface::class);
-        $service->expects($this->once())
-            ->method('getTeamsByUserId')
-            ->with($userId)
-            ->willReturn([$team]);
-        static::getContainer()->set(TeamServiceInterface::class, $service);
-
-        $client->request('GET', '/team/list', server: [
-            'HTTP_AUTHORIZATION' => 'Bearer ' . $this->generateToken($user),
-        ]);
-
-        $this->assertResponseStatusCodeSame(Response::HTTP_OK);
-
+        $this->assertResponseIsSuccessful();
         $body = json_decode($client->getResponse()->getContent(), true);
         $this->assertCount(1, $body['teams']);
-        $this->assertSame('c3d4e5f6-a7b8-4c9d-0e1f-2a3b4c5d6e7f', $body['teams'][0]['id']);
+        $this->assertSame('team-1', $body['teams'][0]['id']);
         $this->assertSame('Backend', $body['teams'][0]['title']);
-        $this->assertSame('ACTIVE', $body['teams'][0]['status']);
-        $this->assertSame('2026-01-01T00:00:00+00:00', $body['teams'][0]['createdAt']);
-        $this->assertSame('Backend team description', $body['teams'][0]['description']);
+        $this->assertSame(['page' => 1, 'limit' => 10, 'pages' => 1], $body['pagination']);
+        $this->assertSame(1, $body['count']);
     }
 
-    private function makeUser(string $userId): User
+    public function testCountIsReturnedEvenWhenPageIsEmpty(): void
+    {
+        $user = $this->makeUser();
+        $client = static::createClient();
+        $this->stubUserRepository($user);
+
+        $teamService = $this->createStub(TeamServiceInterface::class);
+        $teamService->method('getPage')->willReturn([]);
+        $teamService->method('countAll')->willReturn(0);
+        static::getContainer()->set(TeamServiceInterface::class, $teamService);
+
+        $client->request('GET', '/team/list', server: [
+            'HTTP_AUTHORIZATION' => 'Bearer ' . $this->generateToken($user),
+        ]);
+
+        $this->assertResponseIsSuccessful();
+        $body = json_decode($client->getResponse()->getContent(), true);
+        $this->assertSame([], $body['teams']);
+        $this->assertSame(0, $body['count']);
+        $this->assertSame(0, $body['pagination']['pages']);
+    }
+
+    /**
+     * @return array<string, array{0: int|null, 1: int}>
+     */
+    public static function limitProvider(): array
+    {
+        return [
+            'default when omitted' => [null, 10],
+            'explicit 10' => [10, 10],
+            'explicit 20' => [20, 20],
+            'explicit 50' => [50, 50],
+            'invalid falls back to default' => [999, 10],
+            'zero falls back to default' => [0, 10],
+        ];
+    }
+
+    #[DataProvider('limitProvider')]
+    public function testLimitIsValidatedAgainstAllowedValues(?int $requested, int $expected): void
+    {
+        $user = $this->makeUser();
+        $client = static::createClient();
+        $this->stubUserRepository($user);
+
+        $teamService = $this->createMock(TeamServiceInterface::class);
+        $teamService->expects($this->once())
+            ->method('getPage')
+            ->with(self::USER_ID, $expected, 0)
+            ->willReturn([]);
+        $teamService->method('countAll')->willReturn(0);
+        static::getContainer()->set(TeamServiceInterface::class, $teamService);
+
+        $url = '/team/list' . ($requested !== null ? '?limit=' . $requested : '');
+        $client->request('GET', $url, server: [
+            'HTTP_AUTHORIZATION' => 'Bearer ' . $this->generateToken($user),
+        ]);
+
+        $this->assertResponseIsSuccessful();
+        $body = json_decode($client->getResponse()->getContent(), true);
+        $this->assertSame($expected, $body['pagination']['limit']);
+    }
+
+    public function testPageComputesOffsetAndPages(): void
+    {
+        $user = $this->makeUser();
+        $client = static::createClient();
+        $this->stubUserRepository($user);
+
+        $teamService = $this->createMock(TeamServiceInterface::class);
+        $teamService->expects($this->once())
+            ->method('getPage')
+            ->with(self::USER_ID, 20, 40) // page 3, limit 20 => offset 40
+            ->willReturn([]);
+        $teamService->method('countAll')->willReturn(45);
+        static::getContainer()->set(TeamServiceInterface::class, $teamService);
+
+        $client->request('GET', '/team/list?page=3&limit=20', server: [
+            'HTTP_AUTHORIZATION' => 'Bearer ' . $this->generateToken($user),
+        ]);
+
+        $this->assertResponseIsSuccessful();
+        $body = json_decode($client->getResponse()->getContent(), true);
+        $this->assertSame(3, $body['pagination']['page']);
+        $this->assertSame(20, $body['pagination']['limit']);
+        $this->assertSame(3, $body['pagination']['pages']); // ceil(45 / 20)
+        $this->assertSame(45, $body['count']);
+    }
+
+    public function testShortQueryFallsBackToList(): void
+    {
+        $user = $this->makeUser();
+        $client = static::createClient();
+        $this->stubUserRepository($user);
+
+        $teamService = $this->createMock(TeamServiceInterface::class);
+        $teamService->expects($this->once())->method('getPage')->willReturn([]);
+        $teamService->method('countAll')->willReturn(0);
+        $teamService->expects($this->never())->method('getByIds');
+        static::getContainer()->set(TeamServiceInterface::class, $teamService);
+
+        $search = $this->createMock(SearchServiceInterface::class);
+        $search->expects($this->never())->method('searchTeams');
+        static::getContainer()->set(SearchServiceInterface::class, $search);
+
+        $client->request('GET', '/team/list?q=a', server: [
+            'HTTP_AUTHORIZATION' => 'Bearer ' . $this->generateToken($user),
+        ]);
+
+        $this->assertResponseIsSuccessful();
+    }
+
+    public function testWithQuerySearchesPaginatedThenHydratesPreservingOrder(): void
+    {
+        $user = $this->makeUser();
+        $client = static::createClient();
+        $this->stubUserRepository($user);
+
+        $search = $this->createMock(SearchServiceInterface::class);
+        $search->expects($this->once())
+            ->method('searchTeams')
+            ->with('end', self::USER_ID, [], false, 10, 0)
+            ->willReturn(['ids' => ['team-2', 'team-1'], 'total' => 2]);
+        static::getContainer()->set(SearchServiceInterface::class, $search);
+
+        $teamService = $this->createMock(TeamServiceInterface::class);
+        $teamService->expects($this->never())->method('getPage');
+        $teamService->expects($this->once())
+            ->method('getByIds')
+            ->with(['team-2', 'team-1'])
+            ->willReturn([
+                $this->makeTeam('team-2', 'Frontend'),
+                $this->makeTeam('team-1', 'Backend'),
+            ]);
+        static::getContainer()->set(TeamServiceInterface::class, $teamService);
+
+        $client->request('GET', '/team/list?q=end', server: [
+            'HTTP_AUTHORIZATION' => 'Bearer ' . $this->generateToken($user),
+        ]);
+
+        $this->assertResponseIsSuccessful();
+        $body = json_decode($client->getResponse()->getContent(), true);
+        $this->assertSame(['team-2', 'team-1'], array_column($body['teams'], 'id'));
+        $this->assertSame(2, $body['count']);
+    }
+
+    public function testSearchForwardsStatusAndOwnerFiltersAndUsesTotalForCount(): void
+    {
+        $user = $this->makeUser();
+        $client = static::createClient();
+        $this->stubUserRepository($user);
+
+        $search = $this->createMock(SearchServiceInterface::class);
+        $search->expects($this->once())
+            ->method('searchTeams')
+            ->with('end', self::USER_ID, ['active', 'archived'], true, 20, 20)
+            ->willReturn(['ids' => [], 'total' => 37]);
+        static::getContainer()->set(SearchServiceInterface::class, $search);
+
+        $teamService = $this->createStub(TeamServiceInterface::class);
+        $teamService->method('getByIds')->willReturn([]);
+        static::getContainer()->set(TeamServiceInterface::class, $teamService);
+
+        $client->request('GET', '/team/list?q=end&status=active,archived&owner=true&page=2&limit=20', server: [
+            'HTTP_AUTHORIZATION' => 'Bearer ' . $this->generateToken($user),
+        ]);
+
+        $this->assertResponseIsSuccessful();
+        $body = json_decode($client->getResponse()->getContent(), true);
+        $this->assertSame(37, $body['count']);
+        $this->assertSame(2, $body['pagination']['pages']); // ceil(37 / 20)
+    }
+
+    private function makeTeam(string $id, string $title): TeamDataResponseInterface
+    {
+        $team = $this->createStub(TeamDataResponseInterface::class);
+        $team->method('getId')->willReturn($id);
+        $team->method('getTitle')->willReturn($title);
+        $team->method('getStatus')->willReturn('ACTIVE');
+        $team->method('getCreatedAt')->willReturn(new \DateTimeImmutable('2026-01-01 00:00:00'));
+        $team->method('getDescription')->willReturn(null);
+
+        return $team;
+    }
+
+    private function makeUser(): User
     {
         return User::register(
-            UserId::fromString($userId),
+            UserId::fromString(self::USER_ID),
             Email::fromString('test@example.com'),
             HashedPassword::fromHash('$2y$04$dummyhashfortestingpurposesonly123456'),
             new \DateTimeImmutable(),

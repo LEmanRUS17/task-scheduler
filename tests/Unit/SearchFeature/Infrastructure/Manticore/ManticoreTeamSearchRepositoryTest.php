@@ -13,7 +13,7 @@ use Symfony\Component\HttpClient\Response\MockResponse;
 final class ManticoreTeamSearchRepositoryTest extends TestCase
 {
     /** @param array<string, mixed> $capturedBody */
-    private function buildRepository(array &$capturedBody, string $hitsJson = '{"hits":{"hits":[]}}'): ManticoreTeamSearchRepository
+    private function buildRepository(array &$capturedBody, string $hitsJson = '{"hits":{"hits":[],"total":0}}'): ManticoreTeamSearchRepository
     {
         $httpClient = new MockHttpClient(function (string $method, string $url, array $options) use (&$capturedBody, $hitsJson) {
             $capturedBody = json_decode($options['body'] ?? '{}', true);
@@ -26,7 +26,7 @@ final class ManticoreTeamSearchRepositoryTest extends TestCase
     public function testSearchMatchesTitleAndScopesByMembership(): void
     {
         $body = [];
-        $this->buildRepository($body)->search('backend', 'user-1', [], false);
+        $this->buildRepository($body)->search('backend', 'user-1', [], false, 10, 0);
 
         $must = $body['query']['bool']['must'];
         $this->assertSame('backend', $must[0]['match']['title']);
@@ -36,7 +36,7 @@ final class ManticoreTeamSearchRepositoryTest extends TestCase
     public function testSearchWithoutFiltersHasNoFilter(): void
     {
         $body = [];
-        $this->buildRepository($body)->search('backend', 'user-1', [], false);
+        $this->buildRepository($body)->search('backend', 'user-1', [], false, 10, 0);
 
         $this->assertArrayNotHasKey('filter', $body['query']['bool']);
     }
@@ -44,7 +44,7 @@ final class ManticoreTeamSearchRepositoryTest extends TestCase
     public function testSearchWithSingleStatusAddsInFilter(): void
     {
         $body = [];
-        $this->buildRepository($body)->search('backend', 'user-1', ['active'], false);
+        $this->buildRepository($body)->search('backend', 'user-1', ['active'], false, 10, 0);
 
         $filter = $body['query']['bool']['filter'];
         $this->assertCount(1, $filter);
@@ -54,7 +54,7 @@ final class ManticoreTeamSearchRepositoryTest extends TestCase
     public function testSearchWithMultipleStatusesAddsInFilter(): void
     {
         $body = [];
-        $this->buildRepository($body)->search('backend', 'user-1', ['active', 'archived'], false);
+        $this->buildRepository($body)->search('backend', 'user-1', ['active', 'archived'], false, 10, 0);
 
         $filter = $body['query']['bool']['filter'];
         $this->assertCount(1, $filter);
@@ -64,7 +64,7 @@ final class ManticoreTeamSearchRepositoryTest extends TestCase
     public function testSearchOwnedOnlyAddsCreatedByFilter(): void
     {
         $body = [];
-        $this->buildRepository($body)->search('backend', 'user-1', [], true);
+        $this->buildRepository($body)->search('backend', 'user-1', [], true, 10, 0);
 
         $filter = $body['query']['bool']['filter'];
         $this->assertCount(1, $filter);
@@ -74,7 +74,7 @@ final class ManticoreTeamSearchRepositoryTest extends TestCase
     public function testSearchOwnedOnlyWithStatusesAddsBothFilters(): void
     {
         $body = [];
-        $this->buildRepository($body)->search('backend', 'user-1', ['active'], true);
+        $this->buildRepository($body)->search('backend', 'user-1', ['active'], true, 10, 0);
 
         $filter = $body['query']['bool']['filter'];
         $this->assertCount(2, $filter);
@@ -82,10 +82,20 @@ final class ManticoreTeamSearchRepositoryTest extends TestCase
         $this->assertSame(['active'], $filter[1]['in']['status']);
     }
 
-    public function testSearchMapsHitsToResultArray(): void
+    public function testSearchForwardsLimitAndOffset(): void
+    {
+        $body = [];
+        $this->buildRepository($body)->search('backend', 'user-1', [], false, 20, 40);
+
+        $this->assertSame(20, $body['limit']);
+        $this->assertSame(40, $body['offset']);
+    }
+
+    public function testSearchMapsHitsToOrderedIdsWithTotal(): void
     {
         $hitsJson = json_encode([
             'hits' => [
+                'total' => 7,
                 'hits' => [
                     ['_source' => ['team_id' => 'team-1', 'title' => 'Backend',  'status' => 'active']],
                     ['_source' => ['team_id' => 'team-2', 'title' => 'Frontend', 'status' => 'active']],
@@ -94,27 +104,24 @@ final class ManticoreTeamSearchRepositoryTest extends TestCase
         ]);
 
         $body = [];
-        $results = $this->buildRepository($body, $hitsJson)->search('end', 'user-1', [], false);
+        $result = $this->buildRepository($body, $hitsJson)->search('end', 'user-1', [], false, 10, 0);
 
-        $this->assertCount(2, $results);
-        $this->assertSame('team-1', $results[0]['teamId']);
-        $this->assertSame('Backend', $results[0]['title']);
-        $this->assertSame('active', $results[0]['status']);
-        $this->assertSame('team-2', $results[1]['teamId']);
+        $this->assertSame(['team-1', 'team-2'], $result['ids']);
+        $this->assertSame(7, $result['total']);
     }
 
-    public function testSearchReturnsEmptyArrayWhenNoHits(): void
+    public function testSearchReturnsEmptyResultWhenNoHits(): void
     {
         $body = [];
-        $results = $this->buildRepository($body)->search('nothing', 'user-1', [], false);
+        $result = $this->buildRepository($body)->search('nothing', 'user-1', [], false, 10, 0);
 
-        $this->assertSame([], $results);
+        $this->assertSame(['ids' => [], 'total' => 0], $result);
     }
 
     public function testSearchPassesTableNameAsIndexInBody(): void
     {
         $body = [];
-        $this->buildRepository($body)->search('backend', 'user-1', [], false);
+        $this->buildRepository($body)->search('backend', 'user-1', [], false, 10, 0);
 
         $this->assertSame('teams', $body['index']);
     }
@@ -122,7 +129,7 @@ final class ManticoreTeamSearchRepositoryTest extends TestCase
     public function testSearchSortsByScoreThenCreatedAt(): void
     {
         $body = [];
-        $this->buildRepository($body)->search('backend', 'user-1', [], false);
+        $this->buildRepository($body)->search('backend', 'user-1', [], false, 10, 0);
 
         $this->assertSame(
             [['_score' => 'desc'], ['created_at' => 'desc']],

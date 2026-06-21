@@ -5,13 +5,11 @@ declare(strict_types=1);
 namespace App\SearchFeature\Application\ApiService;
 
 use App\SearchFeature\Application\DTOResponse\TaskSearchResult;
-use App\SearchFeature\Application\DTOResponse\TeamSearchResult;
 use App\SearchFeature\Domain\Port\TaskSearchRepositoryInterface;
 use App\SearchFeature\Domain\Port\TeamSearchRepositoryInterface;
 use App\SearchFeature\Domain\Port\WorkflowSearchRepositoryInterface;
 use App\SearchFeatureApi\Contract\SearchServiceInterface;
 use App\SearchFeatureApi\DTOResponse\TaskSearchResultInterface;
-use App\SearchFeatureApi\DTOResponse\TeamSearchResultInterface;
 
 final class SearchApiService implements SearchServiceInterface
 {
@@ -19,8 +17,7 @@ final class SearchApiService implements SearchServiceInterface
         private readonly TaskSearchRepositoryInterface $repository,
         private readonly TeamSearchRepositoryInterface $teamRepository,
         private readonly WorkflowSearchRepositoryInterface $workflowRepository,
-    ) {
-    }
+    ) {}
 
     /** @return TaskSearchResultInterface[] */
     public function searchTasks(string $query, string $userId, ?string $teamId = null, ?string $status = null): array
@@ -33,14 +30,17 @@ final class SearchApiService implements SearchServiceInterface
 
     /**
      * @param list<string> $statuses
-     * @return TeamSearchResultInterface[]
+     * @return array{ids: list<string>, total: int}
      */
-    public function searchTeams(string $query, string $userId, array $statuses = [], bool $ownedOnly = false): array
-    {
-        return array_map(
-            static fn(array $row) => new TeamSearchResult($row['teamId'], $row['title'], $row['status']),
-            $this->teamRepository->search($query, $userId, $statuses, $ownedOnly),
-        );
+    public function searchTeams(
+        string $query,
+        string $userId,
+        array $statuses = [],
+        bool $ownedOnly = false,
+        int $limit = 10,
+        int $offset = 0,
+    ): array {
+        return $this->teamRepository->search($query, $userId, $statuses, $ownedOnly, $limit, $offset);
     }
 
     /** @return array{ids: list<string>, total: int} */
