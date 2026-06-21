@@ -7,7 +7,16 @@ namespace App\SearchFeature\Domain\Port;
 interface TaskSearchRepositoryInterface
 {
     /**
-     * @return array<int, array{taskId: string, title: string, status: string}>
+     * Returns a page of matching task ids, ordered by relevance, plus the total match count.
+     *
+     * @return array{ids: list<string>, total: int}
      */
-    public function search(string $query, string $userId, ?string $teamId, ?string $status): array;
+    public function search(
+        string $query,
+        string $userId,
+        ?string $teamId,
+        ?string $status,
+        int $limit,
+        int $offset,
+    ): array;
 }

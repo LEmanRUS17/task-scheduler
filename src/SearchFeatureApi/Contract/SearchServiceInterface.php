@@ -4,12 +4,21 @@ declare(strict_types=1);
 
 namespace App\SearchFeatureApi\Contract;
 
-use App\SearchFeatureApi\DTOResponse\TaskSearchResultInterface;
-
 interface SearchServiceInterface
 {
-    /** @return TaskSearchResultInterface[] */
-    public function searchTasks(string $query, string $userId, ?string $teamId = null, ?string $status = null): array;
+    /**
+     * Returns a page of matching task ids, ordered by relevance, plus the total match count.
+     *
+     * @return array{ids: list<string>, total: int}
+     */
+    public function searchTasks(
+        string $query,
+        string $userId,
+        ?string $teamId = null,
+        ?string $status = null,
+        int $limit = 10,
+        int $offset = 0,
+    ): array;
 
     /**
      * Returns a page of matching team ids, ordered by relevance, plus the total match count.

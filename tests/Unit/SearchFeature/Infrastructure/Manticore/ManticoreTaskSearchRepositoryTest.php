@@ -13,7 +13,7 @@ use Symfony\Component\HttpClient\Response\MockResponse;
 final class ManticoreTaskSearchRepositoryTest extends TestCase
 {
     /** @param array<string, mixed> $capturedBody */
-    private function buildRepository(array &$capturedBody, string $hitsJson = '{"hits":{"hits":[]}}'): ManticoreTaskSearchRepository
+    private function buildRepository(array &$capturedBody, string $hitsJson = '{"hits":{"hits":[],"total":0}}'): ManticoreTaskSearchRepository
     {
         $httpClient = new MockHttpClient(function (string $method, string $url, array $options) use (&$capturedBody, $hitsJson) {
             $capturedBody = json_decode($options['body'] ?? '{}', true);
@@ -26,7 +26,7 @@ final class ManticoreTaskSearchRepositoryTest extends TestCase
     public function testSearchWithoutTeamIdFiltersbyUserId(): void
     {
         $body = [];
-        $this->buildRepository($body)->search('fix bug', 'user-1', null, null);
+        $this->buildRepository($body)->search('fix bug', 'user-1', null, null, 10, 0);
 
         $bool = $body['query']['bool'];
         $this->assertArrayHasKey('must', $bool);
@@ -38,7 +38,7 @@ final class ManticoreTaskSearchRepositoryTest extends TestCase
     public function testSearchWithTeamIdAddsTeamIdFilter(): void
     {
         $body = [];
-        $this->buildRepository($body)->search('fix bug', 'user-1', 'team-1', null);
+        $this->buildRepository($body)->search('fix bug', 'user-1', 'team-1', null, 10, 0);
 
         $filter = $body['query']['bool']['filter'];
         $this->assertCount(1, $filter);
@@ -48,7 +48,7 @@ final class ManticoreTaskSearchRepositoryTest extends TestCase
     public function testSearchWithTeamIdDoesNotFilterByUserId(): void
     {
         $body = [];
-        $this->buildRepository($body)->search('fix bug', 'user-1', 'team-1', null);
+        $this->buildRepository($body)->search('fix bug', 'user-1', 'team-1', null, 10, 0);
 
         $filterKeys = array_map(fn(array $f) => array_key_first($f['equals']), $body['query']['bool']['filter']);
         $this->assertNotContains('created_by', $filterKeys);
@@ -57,7 +57,7 @@ final class ManticoreTaskSearchRepositoryTest extends TestCase
     public function testSearchWithStatusAddsStatusFilter(): void
     {
         $body = [];
-        $this->buildRepository($body)->search('fix bug', 'user-1', null, 'open');
+        $this->buildRepository($body)->search('fix bug', 'user-1', null, 'open', 10, 0);
 
         $filter = $body['query']['bool']['filter'];
         $this->assertCount(2, $filter);
@@ -69,7 +69,7 @@ final class ManticoreTaskSearchRepositoryTest extends TestCase
     public function testSearchWithTeamIdAndStatusAddsBothFilters(): void
     {
         $body = [];
-        $this->buildRepository($body)->search('fix bug', 'user-1', 'team-1', 'open');
+        $this->buildRepository($body)->search('fix bug', 'user-1', 'team-1', 'open', 10, 0);
 
         $filter = $body['query']['bool']['filter'];
         $this->assertCount(2, $filter);
@@ -79,10 +79,20 @@ final class ManticoreTaskSearchRepositoryTest extends TestCase
         $this->assertContains('status', $filterKeys);
     }
 
-    public function testSearchMapsHitsToResultArray(): void
+    public function testSearchForwardsLimitAndOffset(): void
+    {
+        $body = [];
+        $this->buildRepository($body)->search('fix', 'user-1', null, null, 20, 40);
+
+        $this->assertSame(20, $body['limit']);
+        $this->assertSame(40, $body['offset']);
+    }
+
+    public function testSearchMapsHitsToOrderedIdsWithTotal(): void
     {
         $hitsJson = json_encode([
             'hits' => [
+                'total' => 7,
                 'hits' => [
                     ['_source' => ['task_id' => 'task-1', 'title' => 'Fix bug',   'status' => 'open']],
                     ['_source' => ['task_id' => 'task-2', 'title' => 'Add tests', 'status' => 'done']],
@@ -91,28 +101,33 @@ final class ManticoreTaskSearchRepositoryTest extends TestCase
         ]);
 
         $body = [];
-        $results = $this->buildRepository($body, $hitsJson)->search('fix', 'user-1', null, null);
+        $result = $this->buildRepository($body, $hitsJson)->search('fix', 'user-1', null, null, 10, 0);
 
-        $this->assertCount(2, $results);
-        $this->assertSame('task-1', $results[0]['taskId']);
-        $this->assertSame('Fix bug', $results[0]['title']);
-        $this->assertSame('open', $results[0]['status']);
-        $this->assertSame('task-2', $results[1]['taskId']);
+        $this->assertSame(['task-1', 'task-2'], $result['ids']);
+        $this->assertSame(7, $result['total']);
     }
 
-    public function testSearchReturnsEmptyArrayWhenNoHits(): void
+    public function testSearchReturnsEmptyResultWhenNoHits(): void
     {
         $body = [];
-        $results = $this->buildRepository($body)->search('nothing', 'user-1', null, null);
+        $result = $this->buildRepository($body)->search('nothing', 'user-1', null, null, 10, 0);
 
-        $this->assertSame([], $results);
+        $this->assertSame(['ids' => [], 'total' => 0], $result);
     }
 
     public function testSearchPassesTableNameAsIndexInBody(): void
     {
         $body = [];
-        $this->buildRepository($body)->search('fix', 'user-1', null, null);
+        $this->buildRepository($body)->search('fix', 'user-1', null, null, 10, 0);
 
         $this->assertSame('tasks', $body['index']);
+    }
+
+    public function testSearchSortsByScore(): void
+    {
+        $body = [];
+        $this->buildRepository($body)->search('fix', 'user-1', null, null, 10, 0);
+
+        $this->assertSame([['_score' => 'desc']], $body['sort']);
     }
 }
