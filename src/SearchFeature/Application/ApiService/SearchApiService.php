@@ -15,7 +15,8 @@ final class SearchApiService implements SearchServiceInterface
         private readonly TaskSearchRepositoryInterface $repository,
         private readonly TeamSearchRepositoryInterface $teamRepository,
         private readonly WorkflowSearchRepositoryInterface $workflowRepository,
-    ) {}
+    ) {
+    }
 
     /** @return array{ids: list<string>, total: int} */
     public function searchTasks(
