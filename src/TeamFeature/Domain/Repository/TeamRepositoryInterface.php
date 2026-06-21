@@ -20,6 +20,11 @@ interface TeamRepositoryInterface
     public function findByIds(array $ids): array;
 
     /** @return Team[] */
+    public function findPaginatedByMemberUserId(string $userId, int $limit, int $offset): array;
+
+    public function countByMemberUserId(string $userId): int;
+
+    /** @return Team[] */
     public function findAll(): array;
 
     public function delete(Team $team): void;

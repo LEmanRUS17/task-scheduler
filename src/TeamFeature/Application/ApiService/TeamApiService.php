@@ -41,10 +41,7 @@ final class TeamApiService implements TeamServiceInterface
     public function getList(): array
     {
         return array_map(
-            fn($team) => $this->dataMapper->teamToResponse(
-                $team,
-                $this->descriptions->get(Team::class, $team->id()->value()),
-            ),
+            fn($team) => $this->teamToFullResponse($team),
             $this->teams->findAll(),
         );
     }
@@ -56,12 +53,39 @@ final class TeamApiService implements TeamServiceInterface
         $teamIds = array_map(fn($member) => $member->teamId()->value(), $members);
 
         return array_map(
-            fn($team) => $this->dataMapper->teamToResponse(
-                $team,
-                $this->descriptions->get(Team::class, $team->id()->value()),
-            ),
+            fn($team) => $this->teamToFullResponse($team),
             $this->teams->findByIds($teamIds),
         );
+    }
+
+    public function getPage(string $userId, int $limit, int $offset): array
+    {
+        return array_map(
+            fn($team) => $this->teamToFullResponse($team),
+            $this->teams->findPaginatedByMemberUserId($userId, $limit, $offset),
+        );
+    }
+
+    public function countAll(string $userId): int
+    {
+        return $this->teams->countByMemberUserId($userId);
+    }
+
+    public function getByIds(array $ids): array
+    {
+        $byId = [];
+        foreach ($this->teams->findByIds($ids) as $team) {
+            $byId[$team->id()->value()] = $team;
+        }
+
+        $result = [];
+        foreach ($ids as $id) {
+            if (isset($byId[$id])) {
+                $result[] = $this->teamToFullResponse($byId[$id]);
+            }
+        }
+
+        return $result;
     }
 
     public function getById(string $id): ?TeamDataResponseInterface
@@ -144,5 +168,13 @@ final class TeamApiService implements TeamServiceInterface
     public function removeMember(string $teamId, string $userId): void
     {
         $this->removeMemberInteractor->remove(TeamId::fromString($teamId), $userId);
+    }
+
+    private function teamToFullResponse(Team $team): TeamDataResponseInterface
+    {
+        return $this->dataMapper->teamToResponse(
+            $team,
+            $this->descriptions->get(Team::class, $team->id()->value()),
+        );
     }
 }

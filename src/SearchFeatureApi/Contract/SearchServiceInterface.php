@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace App\SearchFeatureApi\Contract;
 
-use App\SearchFeatureApi\DTOResponse\TeamSearchResultInterface;
-
 interface SearchServiceInterface
 {
     /**
@@ -23,10 +21,19 @@ interface SearchServiceInterface
     ): array;
 
     /**
+     * Returns a page of matching team ids, ordered by relevance, plus the total match count.
+     *
      * @param list<string> $statuses
-     * @return TeamSearchResultInterface[]
+     * @return array{ids: list<string>, total: int}
      */
-    public function searchTeams(string $query, string $userId, array $statuses = [], bool $ownedOnly = false): array;
+    public function searchTeams(
+        string $query,
+        string $userId,
+        array $statuses = [],
+        bool $ownedOnly = false,
+        int $limit = 10,
+        int $offset = 0,
+    ): array;
 
     /**
      * Returns a page of matching workflow ids, ordered by relevance, plus the total match count.

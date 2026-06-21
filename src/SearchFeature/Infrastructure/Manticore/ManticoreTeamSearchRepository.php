@@ -13,11 +13,19 @@ final class ManticoreTeamSearchRepository implements TeamSearchRepositoryInterfa
     }
 
     /**
+     * Returns a page of matching team ids, ordered by relevance, plus the total match count.
+     *
      * @param list<string> $statuses
-     * @return array<int, array{teamId: string, title: string, status: string}>
+     * @return array{ids: list<string>, total: int}
      */
-    public function search(string $query, string $userId, array $statuses, bool $ownedOnly): array
-    {
+    public function search(
+        string $query,
+        string $userId,
+        array $statuses,
+        bool $ownedOnly,
+        int $limit,
+        int $offset,
+    ): array {
         $must = [
             [
                 'match' => [
@@ -61,17 +69,20 @@ final class ManticoreTeamSearchRepository implements TeamSearchRepositoryInterfa
                 ['_score' => 'desc'],
                 ['created_at' => 'desc'],
             ],
+            'limit' => $limit,
+            'offset' => $offset,
         ]);
 
         $hits = $result['hits']['hits'] ?? [];
 
-        return array_map(
-            static fn(array $hit) => [
-                'teamId' => $hit['_source']['team_id'],
-                'title'  => $hit['_source']['title'],
-                'status' => $hit['_source']['status'],
-            ],
+        $ids = array_values(array_map(
+            static fn(array $hit) => (string) $hit['_source']['team_id'],
             $hits,
-        );
+        ));
+
+        return [
+            'ids' => $ids,
+            'total' => (int) ($result['hits']['total'] ?? count($ids)),
+        ];
     }
 }

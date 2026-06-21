@@ -18,6 +18,23 @@ interface TeamServiceInterface
     /** @return ResponseDTO[] */
     public function getTeamsByUserId(string $userId): array;
 
+    /**
+     * Returns a single page of the user's teams ordered by creation date (newest first).
+     *
+     * @return ResponseDTO[]
+     */
+    public function getPage(string $userId, int $limit, int $offset): array;
+
+    public function countAll(string $userId): int;
+
+    /**
+     * Returns teams for the given ids, preserving the order of the ids.
+     *
+     * @param list<string> $ids
+     * @return ResponseDTO[]
+     */
+    public function getByIds(array $ids): array;
+
     public function getById(string $id): ?ResponseDTO;
 
     public function create(TeamCreateRequestInterface $dtoRequest, string $creatorUserId): ResponseDTO;
