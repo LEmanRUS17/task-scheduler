@@ -73,15 +73,39 @@ final class TaskApiService implements TaskServiceInterface
     public function getList(string $userId): array
     {
         return array_map(
-            fn($task) => $this->dataMapper->taskToResponse(
-                $task,
-                $this->loadAssigneeIds($task->id()),
-                $this->workflow->getEnabledTransitions($task),
-                $this->resolveStatusLabel($task),
-                $this->descriptions->get(Task::class, $task->id()->value()),
-            ),
+            fn($task) => $this->taskToFullResponse($task),
             $this->tasks->findByAssigneeUserId($userId),
         );
+    }
+
+    public function getPage(string $userId, int $limit, int $offset): array
+    {
+        return array_map(
+            fn($task) => $this->taskToFullResponse($task),
+            $this->tasks->findPaginatedByAssigneeUserId($userId, $limit, $offset),
+        );
+    }
+
+    public function countAll(string $userId): int
+    {
+        return $this->tasks->countByAssigneeUserId($userId);
+    }
+
+    public function getByIds(array $ids): array
+    {
+        $byId = [];
+        foreach ($this->tasks->findByIds($ids) as $task) {
+            $byId[$task->id()->value()] = $task;
+        }
+
+        $result = [];
+        foreach ($ids as $id) {
+            if (isset($byId[$id])) {
+                $result[] = $this->taskToFullResponse($byId[$id]);
+            }
+        }
+
+        return $result;
     }
 
     public function getListByTeam(string $teamId, string $userId): array
@@ -91,13 +115,7 @@ final class TaskApiService implements TaskServiceInterface
         }
 
         return array_map(
-            fn($task) => $this->dataMapper->taskToResponse(
-                $task,
-                $this->loadAssigneeIds($task->id()),
-                $this->workflow->getEnabledTransitions($task),
-                $this->resolveStatusLabel($task),
-                $this->descriptions->get(Task::class, $task->id()->value()),
-            ),
+            fn($task) => $this->taskToFullResponse($task),
             $this->tasks->findByTeamId($teamId),
         );
     }
@@ -261,6 +279,17 @@ final class TaskApiService implements TaskServiceInterface
         );
 
         return $status?->label()->value();
+    }
+
+    private function taskToFullResponse(Task $task): TaskDataResponseInterface
+    {
+        return $this->dataMapper->taskToResponse(
+            $task,
+            $this->loadAssigneeIds($task->id()),
+            $this->workflow->getEnabledTransitions($task),
+            $this->resolveStatusLabel($task),
+            $this->descriptions->get(Task::class, $task->id()->value()),
+        );
     }
 
     /** @return string[] */
