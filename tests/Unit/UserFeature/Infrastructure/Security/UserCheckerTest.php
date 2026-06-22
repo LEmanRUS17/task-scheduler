@@ -41,6 +41,16 @@ final class UserCheckerTest extends TestCase
         $this->checker->checkPreAuth(new SecurityUser($user));
     }
 
+    public function testRejectsPendingUser(): void
+    {
+        $user = $this->makeUser();
+        $this->setPrivate($user, 'status', UserStatus::PENDING);
+
+        $this->expectException(CustomUserMessageAccountStatusException::class);
+
+        $this->checker->checkPreAuth(new SecurityUser($user));
+    }
+
     public function testRejectsSoftDeletedUser(): void
     {
         $user = $this->makeUser();

@@ -6,9 +6,12 @@ namespace App\UserFeature\Application\ApiService;
 
 use App\UserFeature\Application\DataMapper\UserDataMapper;
 use App\UserFeature\Application\DTORequestValidator\UserValidatorInterface;
+use App\UserFeature\Domain\Interactor\ConfirmUserInteractor;
 use App\UserFeature\Domain\Interactor\RegisterUserInteractor;
 use App\UserFeature\Domain\Repository\UserRepositoryInterface;
+use App\UserFeature\Domain\ValueObject\Email;
 use App\UserFeature\Domain\ValueObject\UserId;
+use App\UserFeatureApi\DTORequest\ConfirmUserRequestInterface;
 use App\UserFeatureApi\DTORequest\RegisterUserRequestInterface;
 use App\UserFeatureApi\DTOResponse\UserDataResponseInterface;
 use App\UserFeatureApi\Service\UserServiceInterface;
@@ -17,6 +20,7 @@ final class UserApiService implements UserServiceInterface
 {
     public function __construct(
         private readonly RegisterUserInteractor $registerUserInteractor,
+        private readonly ConfirmUserInteractor $confirmUserInteractor,
         private readonly UserDataMapper $dataMapper,
         private readonly UserValidatorInterface $validator,
         private readonly UserRepositoryInterface $userRepository,
@@ -34,6 +38,14 @@ final class UserApiService implements UserServiceInterface
         $email = $this->dataMapper->requestToEmail($request);
 
         $this->registerUserInteractor->register($email, $request->getPlainPassword());
+    }
+
+    public function confirm(ConfirmUserRequestInterface $request): void
+    {
+        $this->confirmUserInteractor->confirm(
+            Email::fromString($request->getEmail()),
+            $request->getCode(),
+        );
     }
 
     public function findById(string $id): ?UserDataResponseInterface

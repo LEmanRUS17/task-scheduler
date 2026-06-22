@@ -30,6 +30,12 @@ final class UserChecker implements UserCheckerInterface
         if ($domainUser->status() === UserStatus::DELETED || $domainUser->deletedAt() !== null) {
             throw new CustomUserMessageAccountStatusException('Account is no longer active.');
         }
+
+        if ($domainUser->status() === UserStatus::PENDING) {
+            throw new CustomUserMessageAccountStatusException(
+                'Account is not confirmed yet. Please use the confirmation code sent to your email.',
+            );
+        }
     }
 
     public function checkPostAuth(UserInterface $user, ?TokenInterface $token = null): void

@@ -6,6 +6,7 @@ namespace App\UserFeature\Domain\ValueObject;
 
 enum UserStatus: string
 {
+    case PENDING = 'pending';
     case ACTIVE = 'active';
     case DELETED = 'deleted';
 }

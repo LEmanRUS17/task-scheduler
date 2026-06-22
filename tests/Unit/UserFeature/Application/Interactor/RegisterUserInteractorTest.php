@@ -7,6 +7,7 @@ namespace App\Tests\Unit\UserFeature\Application\Interactor;
 use App\UserFeature\Domain\Entity\User;
 use App\UserFeature\Domain\Interactor\RegisterUserInteractor;
 use App\UserFeature\Domain\Port\ClockInterface;
+use App\UserFeature\Domain\Port\ConfirmationCodeGeneratorInterface;
 use App\UserFeature\Domain\Port\DomainEventDispatcherInterface;
 use App\UserFeature\Domain\Port\PasswordHasherInterface;
 use App\UserFeature\Domain\Repository\UserRepositoryInterface;
@@ -19,6 +20,7 @@ final class RegisterUserInteractorTest extends TestCase
 {
     private PasswordHasherInterface $hasher;
     private ClockInterface $clock;
+    private ConfirmationCodeGeneratorInterface $codeGenerator;
 
     protected function setUp(): void
     {
@@ -27,6 +29,9 @@ final class RegisterUserInteractorTest extends TestCase
 
         $this->hasher = $this->createStub(PasswordHasherInterface::class);
         $this->hasher->method('hash')->willReturn(HashedPassword::fromHash('$2y$13$hashed'));
+
+        $this->codeGenerator = $this->createStub(ConfirmationCodeGeneratorInterface::class);
+        $this->codeGenerator->method('generate')->willReturn('123456');
     }
 
     private function buildInteractor(
@@ -39,6 +44,7 @@ final class RegisterUserInteractorTest extends TestCase
             $hasher ?? $this->hasher,
             $dispatcher ?? $this->createStub(DomainEventDispatcherInterface::class),
             $this->clock,
+            $this->codeGenerator,
         );
     }
 
