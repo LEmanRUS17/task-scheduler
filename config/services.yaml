@@ -27,6 +27,13 @@ services:
     App\UserFeatureApi\Service\UserServiceInterface:
         class: App\UserFeature\Application\ApiService\UserApiService
 
+    App\UserFeature\Domain\Port\ConfirmationCodeGeneratorInterface:
+        class: App\UserFeature\Infrastructure\Confirmation\NumericConfirmationCodeGenerator
+
+    App\UserFeature\Presentation\Controller\ConfirmUserController:
+        arguments:
+            $successHandler: '@lexik_jwt_authentication.handler.authentication_success'
+
     App\UserFeature\Domain\Port\ClockInterface:
         class: App\UserFeature\Infrastructure\Clock\SystemClock
 
@@ -121,6 +128,10 @@ services:
 
 
     App\NotificationFeature\Infrastructure\Messenger\EventSubscriber\TaskNotificationSubscriber:
+        arguments:
+            $defaultBus: '@messenger.bus.default'
+
+    App\NotificationFeature\Infrastructure\Messenger\EventSubscriber\UserNotificationSubscriber:
         arguments:
             $defaultBus: '@messenger.bus.default'
     App\SearchFeature\Infrastructure\Manticore\ManticoreClient:

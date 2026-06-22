@@ -6,6 +6,7 @@ namespace App\UserFeature\Domain\Interactor;
 
 use App\UserFeature\Domain\Entity\User;
 use App\UserFeature\Domain\Port\ClockInterface;
+use App\UserFeature\Domain\Port\ConfirmationCodeGeneratorInterface;
 use App\UserFeature\Domain\Port\DomainEventDispatcherInterface;
 use App\UserFeature\Domain\Port\PasswordHasherInterface;
 use App\UserFeature\Domain\Repository\UserRepositoryInterface;
@@ -14,13 +15,18 @@ use App\UserFeature\Domain\ValueObject\UserId;
 
 final class RegisterUserInteractor
 {
+    /**
+     * Code lifespan
+     */
+    private const string CODE_TTL = 'PT1H';
+
     public function __construct(
         private readonly UserRepositoryInterface $users,
         private readonly PasswordHasherInterface $passwordHasher,
         private readonly DomainEventDispatcherInterface $eventDispatcher,
         private readonly ClockInterface $clock,
-    ) {
-    }
+        private readonly ConfirmationCodeGeneratorInterface $codeGenerator,
+    ) {}
 
     public function register(Email $email, string $plainPassword): void
     {
@@ -30,7 +36,17 @@ final class RegisterUserInteractor
 
         $id = UserId::generate();
         $hashedPassword = $this->passwordHasher->hash($plainPassword);
-        $user = User::register($id, $email, $hashedPassword, $this->clock->now());
+        $now = $this->clock->now();
+        $code = $this->codeGenerator->generate();
+
+        $user = User::registerPending(
+            $id,
+            $email,
+            $hashedPassword,
+            $code,
+            $now->add(new \DateInterval(self::CODE_TTL)),
+            $now,
+        );
 
         $this->users->save($user);
 

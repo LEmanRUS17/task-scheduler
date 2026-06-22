@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\UserFeature\Domain\Entity;
 
+use App\UserFeature\Domain\Event\UserConfirmed;
 use App\UserFeature\Domain\Event\UserRegistered;
 use App\UserFeature\Domain\ValueObject\Email;
 use App\UserFeature\Domain\ValueObject\HashedPassword;
@@ -23,6 +24,8 @@ final class User implements AuditableInterface
     private ?\DateTimeImmutable $deletedAt = null;
     /** @phpstan-ignore property.unusedType */
     private ?\DateTimeImmutable $passwordUpdatedAt = null;
+    private ?string $confirmationCode = null;
+    private ?\DateTimeImmutable $codeExpiresAt = null;
 
     /**
      * @var string[]
@@ -47,6 +50,10 @@ final class User implements AuditableInterface
         $this->createdAt = $createdAt;
     }
 
+    /**
+     * Creates an already-active user. Used for reconstituting confirmed
+     * accounts; the real sign-up flow goes through {@see self::registerPending()}.
+     */
     public static function register(
         UserId $id,
         Email $email,
@@ -54,9 +61,58 @@ final class User implements AuditableInterface
         \DateTimeImmutable $createdAt,
     ): self {
         $user = new self($id, $email, $password, $createdAt, Role::User);
-        $user->recordEvent(new UserRegistered($id, $email));
+        $user->recordEvent(new UserRegistered($id, $email, ''));
 
         return $user;
+    }
+
+    /**
+     * Begins registration: the account stays PENDING until the one-time code
+     * is confirmed via {@see self::confirm()}. The code is carried on the
+     * UserRegistered event so it can be delivered to the user (e.g. by email).
+     */
+    public static function registerPending(
+        UserId $id,
+        Email $email,
+        HashedPassword $password,
+        string $confirmationCode,
+        \DateTimeImmutable $codeExpiresAt,
+        \DateTimeImmutable $createdAt,
+    ): self {
+        $user = new self($id, $email, $password, $createdAt, Role::User);
+        $user->status = UserStatus::PENDING;
+        $user->confirmationCode = $confirmationCode;
+        $user->codeExpiresAt = $codeExpiresAt;
+        $user->recordEvent(new UserRegistered($id, $email, $confirmationCode));
+
+        return $user;
+    }
+
+    /**
+     * Completes registration: validates the one-time code, activates the
+     * account and clears the code so it cannot be reused.
+     *
+     * @throws \DomainException when the user is already confirmed, the code
+     *                          does not match, or the code has expired.
+     */
+    public function confirm(string $code, \DateTimeImmutable $now): void
+    {
+        if ($this->status === UserStatus::ACTIVE) {
+            throw new \DomainException('User is already confirmed');
+        }
+
+        if ($this->confirmationCode === null || !hash_equals($this->confirmationCode, $code)) {
+            throw new \DomainException('Invalid confirmation code');
+        }
+
+        if ($this->codeExpiresAt !== null && $this->codeExpiresAt < $now) {
+            throw new \DomainException('Confirmation code has expired');
+        }
+
+        $this->status = UserStatus::ACTIVE;
+        $this->confirmationCode = null;
+        $this->codeExpiresAt = null;
+        $this->recordEvent(new UserConfirmed($this->id(), $this->email()));
     }
 
     public function id(): UserId
