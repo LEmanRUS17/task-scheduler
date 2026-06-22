@@ -6,6 +6,7 @@ namespace App;
 
 use App\AuditLogFeature\Infrastructure\Persistence\Doctrine\AuditLogMappingCompilerPass;
 use App\DescriptionFeature\Infrastructure\Persistence\Doctrine\DescriptionMappingCompilerPass;
+use App\FileFeature\Infrastructure\Persistence\Doctrine\FileMappingCompilerPass;
 use App\ProfileFeature\Infrastructure\Persistence\Doctrine\ProfileMappingCompilerPass;
 use App\SubscriptionFeature\Infrastructure\Persistence\Doctrine\SubscriptionMappingCompilerPass;
 use App\TaskFeature\Infrastructure\Persistence\Doctrine\TaskMappingCompilerPass;
@@ -30,5 +31,6 @@ class Kernel extends BaseKernel
         $container->addCompilerPass(new SubscriptionMappingCompilerPass());
         $container->addCompilerPass(new TaskMappingCompilerPass());
         $container->addCompilerPass(new DescriptionMappingCompilerPass());
+        $container->addCompilerPass(new FileMappingCompilerPass());
     }
 }
