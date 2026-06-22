@@ -23,6 +23,16 @@ interface FileServiceInterface
 
     public function getAvatar(string $entityClass, string $entityId): ?FileMetadataInterface;
 
+    /**
+     * Absolute filesystem path of the rendered avatar for the requested size,
+     * or null when the entity has no avatar. Defaults to the largest size.
+     */
+    public function avatarImagePath(
+        string $entityClass,
+        string $entityId,
+        ImageSize $size = ImageSize::Large,
+    ): ?string;
+
     public function deleteAvatar(string $entityClass, string $entityId): void;
 
     /**

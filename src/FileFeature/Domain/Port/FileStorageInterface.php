@@ -13,6 +13,13 @@ interface FileStorageInterface
      */
     public function store(string $tmpPath, string $relativePath): void;
 
+    /**
+     * Write raw bytes (e.g. a generated image variant) into storage.
+     *
+     * @throws \RuntimeException when the contents cannot be written
+     */
+    public function writeContents(string $contents, string $relativePath): void;
+
     public function delete(string $relativePath): void;
 
     public function absolutePath(string $relativePath): string;

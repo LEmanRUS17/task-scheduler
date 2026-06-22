@@ -5,9 +5,11 @@ declare(strict_types=1);
 namespace App\TeamFeature\Presentation\Controller\Team;
 
 use App\FileFeatureApi\Contract\FileServiceInterface;
+use App\FileFeatureApi\Contract\ImageSize;
 use App\TeamFeature\Domain\Entity\Team;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\ResponseHeaderBag;
 use Symfony\Component\HttpKernel\Attribute\AsController;
@@ -22,25 +24,24 @@ final class GetTeamAvatarController
     }
 
     #[Route('/team/{teamId}/avatar', name: 'team_avatar_get', methods: ['GET'])]
-    public function __invoke(string $teamId): Response
+    public function __invoke(string $teamId, Request $request): Response
     {
-        $metadata = $this->fileService->getAvatar(Team::class, $teamId);
-
-        if ($metadata === null) {
+        if ($this->fileService->getAvatar(Team::class, $teamId) === null) {
             return new JsonResponse(['message' => 'Avatar not found'], Response::HTTP_NOT_FOUND);
         }
 
-        $path = $this->fileService->absolutePath($metadata->getId());
+        $size = ImageSize::fromName($request->query->get('size'));
+        $path = $this->fileService->avatarImagePath(Team::class, $teamId, $size);
 
         if ($path === null || !is_file($path)) {
             return new JsonResponse(['message' => 'Avatar not found'], Response::HTTP_NOT_FOUND);
         }
 
         $response = new BinaryFileResponse($path);
-        $response->headers->set('Content-Type', $metadata->getMimeType());
+        $response->headers->set('Content-Type', 'image/webp');
         $response->setContentDisposition(
             ResponseHeaderBag::DISPOSITION_INLINE,
-            $metadata->getOriginalName(),
+            'avatar-' . $size->value . '.webp',
         );
 
         return $response;

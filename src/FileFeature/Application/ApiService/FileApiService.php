@@ -13,6 +13,7 @@ use App\FileFeature\Domain\Repository\FileRepositoryInterface;
 use App\FileFeature\Domain\ValueObject\FilePurpose;
 use App\FileFeatureApi\Contract\FileMetadataInterface;
 use App\FileFeatureApi\Contract\FileServiceInterface;
+use App\FileFeatureApi\Contract\ImageSize;
 
 final class FileApiService implements FileServiceInterface
 {
@@ -51,6 +52,20 @@ final class FileApiService implements FileServiceInterface
         $file = $this->files->findAvatar($entityClass, $entityId);
 
         return $file !== null ? FileMetadataResponse::fromEntity($file) : null;
+    }
+
+    public function avatarImagePath(
+        string $entityClass,
+        string $entityId,
+        ImageSize $size = ImageSize::Large,
+    ): ?string {
+        $file = $this->files->findAvatar($entityClass, $entityId);
+
+        if ($file === null) {
+            return null;
+        }
+
+        return $this->storage->absolutePath($file->storagePath() . '/' . $size->fileName());
     }
 
     public function deleteAvatar(string $entityClass, string $entityId): void

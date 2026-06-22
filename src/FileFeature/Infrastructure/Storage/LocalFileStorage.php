@@ -18,11 +18,7 @@ final class LocalFileStorage implements FileStorageInterface
     public function store(string $tmpPath, string $relativePath): void
     {
         $target = $this->absolutePath($relativePath);
-        $directory = dirname($target);
-
-        if (!is_dir($directory) && !mkdir($directory, 0775, true) && !is_dir($directory)) {
-            throw new \RuntimeException("Unable to create storage directory: {$directory}");
-        }
+        $this->ensureDirectory(dirname($target));
 
         // rename() also works for uploaded temp files and keeps the adapter testable
         // outside of an HTTP request (move_uploaded_file would reject non-uploaded files).
@@ -32,6 +28,16 @@ final class LocalFileStorage implements FileStorageInterface
             }
 
             @unlink($tmpPath);
+        }
+    }
+
+    public function writeContents(string $contents, string $relativePath): void
+    {
+        $target = $this->absolutePath($relativePath);
+        $this->ensureDirectory(dirname($target));
+
+        if (@file_put_contents($target, $contents) === false) {
+            throw new \RuntimeException("Unable to write file at: {$target}");
         }
     }
 
@@ -47,5 +53,12 @@ final class LocalFileStorage implements FileStorageInterface
     public function absolutePath(string $relativePath): string
     {
         return $this->basePath . '/' . ltrim($relativePath, '/');
+    }
+
+    private function ensureDirectory(string $directory): void
+    {
+        if (!is_dir($directory) && !mkdir($directory, 0775, true) && !is_dir($directory)) {
+            throw new \RuntimeException("Unable to create storage directory: {$directory}");
+        }
     }
 }
