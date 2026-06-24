@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\TaskFeatureApi\DTOResponse;
 
+use App\ProfileFeatureApi\DTOResponse\ProfileDataResponseInterface;
+
 interface TaskDataResponseInterface
 {
     public function getId(): string;
@@ -13,8 +15,12 @@ interface TaskDataResponseInterface
     public function getPriority(): string;
     public function getTeamId(): ?string;
     public function getCreatedBy(): string;
+    /** Profile (incl. avatar) of the task creator, or null when unavailable. */
+    public function getCreatedByProfile(): ?ProfileDataResponseInterface;
     /** @return string[] */
     public function getAssigneeIds(): array;
+    /** @return array<string, ProfileDataResponseInterface> assignee profiles keyed by user id */
+    public function getAssigneeProfiles(): array;
     public function getCreatedAt(): \DateTimeImmutable;
     public function getScheduledStart(): ?\DateTimeImmutable;
     public function getScheduledEnd(): ?\DateTimeImmutable;

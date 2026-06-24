@@ -26,6 +26,7 @@ use App\TaskFeatureApi\DTORequest\TaskUpdateRequestInterface;
 use App\TaskFeatureApi\DTOResponse\TaskDataResponseInterface;
 use App\TaskFeatureApi\Service\TaskServiceInterface;
 use App\DescriptionFeatureApi\Contract\DescriptionServiceInterface;
+use App\ProfileFeatureApi\DTOResponse\ProfileDataResponseInterface;
 use App\ProfileFeatureApi\Service\ProfileServiceInterface;
 use App\TaskFeature\Domain\Entity\Task;
 use App\WorkflowFeature\Domain\Repository\WorkflowStatusRepositoryInterface;
@@ -59,11 +60,9 @@ final class TaskApiService implements TaskServiceInterface
     public function getAll(): array
     {
         return array_map(
-            fn($task) => $this->dataMapper->taskToResponse(
+            fn($task) => $this->buildResponse(
                 $task,
-                $this->loadAssigneeIds($task->id()),
                 [],
-                $this->resolveStatusLabel($task),
                 $this->descriptions->get(Task::class, $task->id()->value()),
             ),
             $this->tasks->findAll(),
@@ -126,11 +125,9 @@ final class TaskApiService implements TaskServiceInterface
         $task = $this->tasks->findById($taskId);
 
         return $task !== null
-            ? $this->dataMapper->taskToResponse(
+            ? $this->buildResponse(
                 $task,
-                $this->loadAssigneeIds($taskId),
                 $this->workflow->getEnabledTransitions($task),
-                $this->resolveStatusLabel($task),
                 $this->descriptions->get(Task::class, $id),
             )
             : null;
@@ -161,11 +158,9 @@ final class TaskApiService implements TaskServiceInterface
             $this->descriptions->set(Task::class, $task->id()->value(), $description);
         }
 
-        return $this->dataMapper->taskToResponse(
+        return $this->buildResponse(
             $task,
-            $this->loadAssigneeIds($task->id()),
             $this->workflow->getEnabledTransitions($task),
-            $this->resolveStatusLabel($task),
             $description,
         );
     }
@@ -192,11 +187,9 @@ final class TaskApiService implements TaskServiceInterface
             $this->descriptions->set(Task::class, $id, $description);
         }
 
-        return $this->dataMapper->taskToResponse(
+        return $this->buildResponse(
             $task,
-            $this->loadAssigneeIds($task->id()),
             $this->workflow->getEnabledTransitions($task),
-            $this->resolveStatusLabel($task),
             $this->descriptions->get(Task::class, $id),
         );
     }
@@ -205,11 +198,9 @@ final class TaskApiService implements TaskServiceInterface
     {
         $task = $this->transitionInteractor->apply($id, $transition);
 
-        return $this->dataMapper->taskToResponse(
+        return $this->buildResponse(
             $task,
-            $this->loadAssigneeIds($task->id()),
             $this->workflow->getEnabledTransitions($task),
-            $this->resolveStatusLabel($task),
             $this->descriptions->get(Task::class, $id),
         );
     }
@@ -283,13 +274,51 @@ final class TaskApiService implements TaskServiceInterface
 
     private function taskToFullResponse(Task $task): TaskDataResponseInterface
     {
-        return $this->dataMapper->taskToResponse(
+        return $this->buildResponse(
             $task,
-            $this->loadAssigneeIds($task->id()),
             $this->workflow->getEnabledTransitions($task),
-            $this->resolveStatusLabel($task),
             $this->descriptions->get(Task::class, $task->id()->value()),
         );
+    }
+
+    /**
+     * Assembles a task response, enriching the creator and assignees with their
+     * profiles (which carry the avatar) resolved through ProfileFeatureApi.
+     *
+     * @param string[] $transitions
+     */
+    private function buildResponse(Task $task, array $transitions, ?string $description): TaskDataResponseInterface
+    {
+        $assigneeIds = $this->loadAssigneeIds($task->id());
+        $profiles = $this->resolveProfiles([$task->createdBy(), ...$assigneeIds]);
+
+        return $this->dataMapper->taskToResponse(
+            $task,
+            $assigneeIds,
+            $transitions,
+            $this->resolveStatusLabel($task),
+            $description,
+            $profiles[$task->createdBy()] ?? null,
+            array_intersect_key($profiles, array_flip($assigneeIds)),
+        );
+    }
+
+    /**
+     * @param string[] $userIds
+     * @return array<string, ProfileDataResponseInterface>
+     */
+    private function resolveProfiles(array $userIds): array
+    {
+        $profiles = [];
+
+        foreach (array_unique($userIds) as $userId) {
+            try {
+                $profiles[$userId] = $this->profiles->getByUserId($userId);
+            } catch (\DomainException) {
+            }
+        }
+
+        return $profiles;
     }
 
     /** @return string[] */
