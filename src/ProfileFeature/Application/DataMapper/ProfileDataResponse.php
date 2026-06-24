@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\ProfileFeature\Application\DataMapper;
 
+use App\ProfileFeatureApi\DTOResponse\AvatarReferenceInterface;
 use App\ProfileFeatureApi\DTOResponse\ProfileDataResponseInterface;
 
 final class ProfileDataResponse implements ProfileDataResponseInterface
@@ -16,6 +17,7 @@ final class ProfileDataResponse implements ProfileDataResponseInterface
         private readonly ?string $midlname,
         private readonly ?string $status,
         private readonly ?\DateTimeImmutable $lastLogin,
+        private readonly ?AvatarReferenceInterface $avatar = null,
     ) {
     }
 
@@ -52,5 +54,10 @@ final class ProfileDataResponse implements ProfileDataResponseInterface
     public function getLastLogin(): ?\DateTimeImmutable
     {
         return $this->lastLogin;
+    }
+
+    public function getAvatar(): ?AvatarReferenceInterface
+    {
+        return $this->avatar;
     }
 }

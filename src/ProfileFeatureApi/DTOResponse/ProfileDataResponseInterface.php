@@ -19,4 +19,7 @@ interface ProfileDataResponseInterface
     public function getStatus(): ?string;
 
     public function getLastLogin(): ?\DateTimeImmutable;
+
+    /** The profile's avatar, or null when none has been uploaded. */
+    public function getAvatar(): ?AvatarReferenceInterface;
 }
