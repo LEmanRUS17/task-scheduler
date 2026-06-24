@@ -14,7 +14,7 @@ use Symfony\Component\HttpKernel\Attribute\AsController;
 use Symfony\Component\Routing\Attribute\Route;
 
 #[AsController]
-final class ListTaskAttachmentsController
+final class ListTaskFilesController
 {
     public function __construct(
         private readonly FileServiceInterface $fileService,
@@ -22,18 +22,21 @@ final class ListTaskAttachmentsController
     ) {
     }
 
-    #[Route('/task/{taskId}/attachments', name: 'task_attachment_list', methods: ['GET'])]
+    #[Route('/task/{taskId}/files', name: 'task_file_list', methods: ['GET'])]
     public function __invoke(string $taskId): JsonResponse
     {
         if ($this->taskService->getById($taskId) === null) {
             return new JsonResponse(['message' => 'Task not found'], Response::HTTP_NOT_FOUND);
         }
 
-        $attachments = array_map(
+        $files = array_map(
             static fn ($metadata) => TaskAttachmentFormatter::format($taskId, $metadata),
-            $this->fileService->listAttachments(Task::class, $taskId),
+            $this->fileService->listImageAttachments(Task::class, $taskId),
         );
 
-        return new JsonResponse(['attachments' => $attachments], Response::HTTP_OK);
+        return new JsonResponse(
+            ['files' => $files, 'count' => count($files)],
+            Response::HTTP_OK,
+        );
     }
 }

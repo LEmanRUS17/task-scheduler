@@ -111,6 +111,14 @@ final class FileApiService implements FileServiceInterface
         );
     }
 
+    public function listImageAttachments(string $entityClass, string $entityId): array
+    {
+        return array_values(array_filter(
+            $this->listAttachments($entityClass, $entityId),
+            static fn (FileMetadataInterface $file) => str_starts_with($file->getMimeType(), 'image/'),
+        ));
+    }
+
     public function getFile(string $fileId): ?FileMetadataInterface
     {
         $file = $this->files->findById($fileId);

@@ -61,6 +61,13 @@ interface FileServiceInterface
     /** @return list<FileMetadataInterface> */
     public function listAttachments(string $entityClass, string $entityId): array;
 
+    /**
+     * Attachments whose content is an image (mime type "image/*").
+     *
+     * @return list<FileMetadataInterface>
+     */
+    public function listImageAttachments(string $entityClass, string $entityId): array;
+
     public function getFile(string $fileId): ?FileMetadataInterface;
 
     /** Absolute filesystem path for streaming, or null when the file is unknown. */

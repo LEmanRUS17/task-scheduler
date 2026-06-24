@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace App\TaskFeature\Presentation\Controller\Task;
 
+use App\FileFeatureApi\Contract\FileServiceInterface;
+use App\TaskFeature\Domain\Entity\Task;
+use App\TaskFeature\Presentation\Formatter\TaskAttachmentFormatter;
 use App\TaskFeature\Presentation\Formatter\TaskResponseFormatter;
 use App\TaskFeatureApi\Service\TaskServiceInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -16,6 +19,7 @@ final class GetTaskController
 {
     public function __construct(
         private readonly TaskServiceInterface $taskService,
+        private readonly FileServiceInterface $fileService,
     ) {
     }
 
@@ -34,9 +38,15 @@ final class GetTaskController
             );
         }
 
-        return new JsonResponse(
-            TaskResponseFormatter::format($task),
-            Response::HTTP_OK,
+        $files = array_map(
+            static fn ($metadata) => TaskAttachmentFormatter::format($id, $metadata),
+            $this->fileService->listImageAttachments(Task::class, $id),
         );
+
+        $payload = TaskResponseFormatter::format($task);
+        $payload['files'] = $files;
+        $payload['filesCount'] = count($files);
+
+        return new JsonResponse($payload, Response::HTTP_OK);
     }
 }

@@ -118,8 +118,8 @@ final class UploadTaskAttachmentController
     {
         return [
             'id' => $metadata->getId(),
-            'originalName' => $metadata->getOriginalName(),
-            'mimeType' => $metadata->getMimeType(),
+            'name' => $metadata->getOriginalName(),
+            'type' => $metadata->getMimeType(),
             'size' => $metadata->getSize(),
             'url' => '/task/' . $taskId . '/attachments/' . $metadata->getId(),
         ];

@@ -9,8 +9,10 @@ use App\FileFeature\Application\DTORequestValidator\FileUploadValidator;
 use App\FileFeature\Domain\Interactor\DeleteFileInteractor;
 use App\FileFeature\Domain\Interactor\UploadFileInteractor;
 use App\FileFeature\Domain\Port\FileStorageInterface;
+use App\FileFeature\Domain\Entity\StoredFile;
 use App\FileFeature\Domain\Port\ImageProcessorInterface;
 use App\FileFeature\Domain\Repository\FileRepositoryInterface;
+use App\FileFeature\Domain\ValueObject\FilePurpose;
 use PHPUnit\Framework\TestCase;
 
 final class FileApiServiceTest extends TestCase
@@ -94,6 +96,48 @@ final class FileApiServiceTest extends TestCase
 
         self::assertArrayHasKey('file', $violations);
         self::assertNotEmpty($violations['file']);
+    }
+
+    public function testListImageAttachmentsReturnsOnlyImages(): void
+    {
+        $repository = $this->createStub(FileRepositoryInterface::class);
+        $repository->method('findAttachments')->willReturn([
+            $this->makeStoredFile('f-1', 'a.png', 'image/png'),
+            $this->makeStoredFile('f-2', 'doc.pdf', 'application/pdf'),
+            $this->makeStoredFile('f-3', 'b.webp', 'image/webp'),
+        ]);
+
+        $storage = $this->createStub(FileStorageInterface::class);
+        $processor = $this->createStub(ImageProcessorInterface::class);
+
+        $service = new FileApiService(
+            new UploadFileInteractor($repository, $storage, $processor),
+            new DeleteFileInteractor($repository, $storage),
+            $repository,
+            $storage,
+            $this->validator(),
+        );
+
+        $images = $service->listImageAttachments('App\\Task', 't-1');
+
+        self::assertCount(2, $images);
+        self::assertSame(['f-1', 'f-3'], array_map(static fn ($f) => $f->getId(), $images));
+    }
+
+    private function makeStoredFile(string $id, string $name, string $mimeType): StoredFile
+    {
+        return StoredFile::create(
+            $id,
+            'App\\Task',
+            't-1',
+            FilePurpose::Attachment,
+            $name,
+            'attachment/2026/06/' . $id,
+            $mimeType,
+            128,
+            'user-1',
+            new \DateTimeImmutable('2026-06-24 10:00:00'),
+        );
     }
 
     public function testUploadThrowsWhenValidationFails(): void
