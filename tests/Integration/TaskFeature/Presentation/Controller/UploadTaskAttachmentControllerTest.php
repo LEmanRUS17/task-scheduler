@@ -54,6 +54,68 @@ final class UploadTaskAttachmentControllerTest extends WebTestCase
         $this->assertSame('/task/task-1/attachments/file-9', $body['url']);
     }
 
+    public function testCreatorCanUploadMultipleAttachmentsInOneRequest(): void
+    {
+        $user = $this->makeUser();
+        $client = static::createClient();
+        $this->stubUserRepository($user);
+
+        $this->stubTaskService(createdBy: self::USER_ID);
+
+        $first = $this->createStub(FileMetadataInterface::class);
+        $first->method('getId')->willReturn('file-1');
+        $first->method('getOriginalName')->willReturn('a.pdf');
+        $second = $this->createStub(FileMetadataInterface::class);
+        $second->method('getId')->willReturn('file-2');
+        $second->method('getOriginalName')->willReturn('b.pdf');
+
+        $fileService = $this->createMock(FileServiceInterface::class);
+        $fileService->expects($this->exactly(2))
+            ->method('attach')
+            ->willReturnOnConsecutiveCalls($first, $second);
+        static::getContainer()->set(FileServiceInterface::class, $fileService);
+
+        $client->request(
+            'POST',
+            '/task/task-1/attachments',
+            files: ['files' => [$this->makeUploadedFile(), $this->makeUploadedFile()]],
+            server: ['HTTP_AUTHORIZATION' => 'Bearer ' . $this->generateToken($user)],
+        );
+
+        $this->assertResponseStatusCodeSame(Response::HTTP_CREATED);
+        $body = json_decode((string) $client->getResponse()->getContent(), true);
+        $this->assertCount(2, $body['attachments']);
+        $this->assertSame('file-1', $body['attachments'][0]['id']);
+        $this->assertSame('/task/task-1/attachments/file-2', $body['attachments'][1]['url']);
+    }
+
+    public function testBatchIsAtomicWhenOneFileIsInvalid(): void
+    {
+        $user = $this->makeUser();
+        $client = static::createClient();
+        $this->stubUserRepository($user);
+
+        $this->stubTaskService(createdBy: self::USER_ID);
+
+        $fileService = $this->createMock(FileServiceInterface::class);
+        // First file valid, second invalid -> whole batch rejected, nothing stored.
+        $fileService->method('validateAttachment')
+            ->willReturnOnConsecutiveCalls([], ['file' => ['Files of type "x" are not allowed.']]);
+        $fileService->expects($this->never())->method('attach');
+        static::getContainer()->set(FileServiceInterface::class, $fileService);
+
+        $client->request(
+            'POST',
+            '/task/task-1/attachments',
+            files: ['files' => [$this->makeUploadedFile(), $this->makeUploadedFile()]],
+            server: ['HTTP_AUTHORIZATION' => 'Bearer ' . $this->generateToken($user)],
+        );
+
+        $this->assertResponseStatusCodeSame(Response::HTTP_UNPROCESSABLE_ENTITY);
+        $body = json_decode((string) $client->getResponse()->getContent(), true);
+        $this->assertSame('Validation failed', $body['message']);
+    }
+
     public function testNonMemberIsForbidden(): void
     {
         $user = $this->makeUser();

@@ -1,6 +1,7 @@
 FROM php:8.4-fpm
 
 RUN apt-get update && apt-get install -y \
+    gettext-base \
     libpq-dev \
     librabbitmq-dev \
     libpng-dev \
@@ -14,3 +15,14 @@ RUN apt-get update && apt-get install -y \
     && rm -rf /var/lib/apt/lists/*
 
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
+
+# Upload limits are rendered from UPLOAD_MAX_SIZE at container start.
+COPY uploads.ini.template /usr/local/etc/php/conf.d/uploads.ini.template
+COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
+RUN chmod +x /usr/local/bin/docker-entrypoint.sh
+
+ENTRYPOINT ["docker-entrypoint.sh"]
+CMD ["php-fpm"]
+
+# Raise upload limits above the framework default (2M/8M) to match the app.
+COPY uploads.ini /usr/local/etc/php/conf.d/uploads.ini

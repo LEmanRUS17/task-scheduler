@@ -25,6 +25,21 @@ final class FileApiServiceTest extends TestCase
         );
     }
 
+    private function buildService(?FileStorageInterface $storage = null): FileApiService
+    {
+        $repository = $this->createStub(FileRepositoryInterface::class);
+        $storage ??= $this->createStub(FileStorageInterface::class);
+        $processor = $this->createStub(ImageProcessorInterface::class);
+
+        return new FileApiService(
+            new UploadFileInteractor($repository, $storage, $processor),
+            new DeleteFileInteractor($repository, $storage),
+            $repository,
+            $storage,
+            $this->validator(),
+        );
+    }
+
     public function testUploadAvatarRendersVariantsAndReturnsMetadata(): void
     {
         $repository = $this->createStub(FileRepositoryInterface::class);
@@ -57,6 +72,28 @@ final class FileApiServiceTest extends TestCase
         self::assertNotSame('', $metadata->getId());
 
         @unlink($tmp);
+    }
+
+    public function testValidateAttachmentReturnsNoViolationsForAllowedFile(): void
+    {
+        $service = $this->buildService();
+
+        self::assertSame([], $service->validateAttachment('application/pdf', 500));
+    }
+
+    public function testValidateAttachmentReportsViolationsWithoutStoring(): void
+    {
+        $storage = $this->createMock(FileStorageInterface::class);
+        $storage->expects(self::never())->method('store');
+        $storage->expects(self::never())->method('writeContents');
+
+        $service = $this->buildService($storage);
+
+        // Disallowed mime + oversized -> violations, but nothing is written.
+        $violations = $service->validateAttachment('application/x-foo', 5000);
+
+        self::assertArrayHasKey('file', $violations);
+        self::assertNotEmpty($violations['file']);
     }
 
     public function testUploadThrowsWhenValidationFails(): void

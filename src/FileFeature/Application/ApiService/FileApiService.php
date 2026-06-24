@@ -98,6 +98,11 @@ final class FileApiService implements FileServiceInterface
         );
     }
 
+    public function validateAttachment(string $mimeType, int $size): array
+    {
+        return $this->validator->validate(FilePurpose::Attachment, $mimeType, $size);
+    }
+
     public function listAttachments(string $entityClass, string $entityId): array
     {
         return array_map(

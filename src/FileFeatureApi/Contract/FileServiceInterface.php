@@ -50,6 +50,14 @@ interface FileServiceInterface
         string $uploadedBy,
     ): FileMetadataInterface;
 
+    /**
+     * Validates an attachment candidate (mime/size) without storing it, so a
+     * batch upload can reject the whole request before writing any file.
+     *
+     * @return array<string, list<string>> violations keyed by field, empty when valid
+     */
+    public function validateAttachment(string $mimeType, int $size): array;
+
     /** @return list<FileMetadataInterface> */
     public function listAttachments(string $entityClass, string $entityId): array;
 

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\TaskFeature\Presentation\Controller\Task;
 
+use App\FileFeatureApi\Contract\FileMetadataInterface;
 use App\FileFeatureApi\Contract\FileServiceInterface;
 use App\TaskFeature\Domain\Entity\Task;
 use App\TaskFeature\Domain\ValueObject\TaskPermission;
@@ -27,6 +28,11 @@ final class UploadTaskAttachmentController
     ) {
     }
 
+    /**
+     * Accepts one file under `file` or several under `files[]`. A single `file`
+     * keeps the legacy single-object response; `files[]` returns an
+     * `attachments` list.
+     */
     #[Route('/task/{taskId}/attachments', name: 'task_attachment_upload', methods: ['POST'])]
     public function __invoke(string $taskId, Request $request): JsonResponse
     {
@@ -44,13 +50,48 @@ final class UploadTaskAttachmentController
         $securityUser = $this->security->getUser();
         $userId = $securityUser->getDomainUser()->id()->value();
 
-        $file = $request->files->get('file');
+        $batch = $request->files->get('files');
+        $files = is_array($batch) ? $batch : array_filter([$request->files->get('file')]);
 
-        if (!$file instanceof UploadedFile || !$file->isValid()) {
+        if ($files === []) {
             return new JsonResponse(['message' => 'No valid file uploaded'], Response::HTTP_BAD_REQUEST);
         }
 
-        try {
+        foreach ($files as $file) {
+            if (!$file instanceof UploadedFile || !$file->isValid()) {
+                return new JsonResponse(['message' => 'No valid file uploaded'], Response::HTTP_BAD_REQUEST);
+            }
+        }
+
+        // Validate every file up front so a single invalid file rejects the
+        // whole request before anything is written (atomic batch).
+        $violations = [];
+
+        foreach ($files as $file) {
+            $fileViolations = $this->fileService->validateAttachment(
+                (string) $file->getMimeType(),
+                (int) $file->getSize(),
+            );
+
+            if ($fileViolations !== []) {
+                $violations[] = ['file' => $file->getClientOriginalName(), 'errors' => $fileViolations];
+            }
+        }
+
+        if ($violations !== []) {
+            return new JsonResponse(
+                [
+                    'message' => 'Validation failed',
+                    // Single-file requests keep the legacy flat error shape.
+                    'errors' => is_array($batch) ? $violations : $violations[0]['errors'],
+                ],
+                Response::HTTP_UNPROCESSABLE_ENTITY,
+            );
+        }
+
+        $attachments = [];
+
+        foreach ($files as $file) {
             $metadata = $this->fileService->attach(
                 Task::class,
                 $taskId,
@@ -60,25 +101,27 @@ final class UploadTaskAttachmentController
                 (int) $file->getSize(),
                 $userId,
             );
-        } catch (\InvalidArgumentException $e) {
-            return new JsonResponse(
-                [
-                    'message' => 'Validation failed',
-                    'errors' => json_decode($e->getMessage(), true),
-                ],
-                Response::HTTP_UNPROCESSABLE_ENTITY,
-            );
+
+            $attachments[] = $this->toArray($taskId, $metadata);
         }
 
-        return new JsonResponse(
-            [
-                'id' => $metadata->getId(),
-                'originalName' => $metadata->getOriginalName(),
-                'mimeType' => $metadata->getMimeType(),
-                'size' => $metadata->getSize(),
-                'url' => '/task/' . $taskId . '/attachments/' . $metadata->getId(),
-            ],
-            Response::HTTP_CREATED,
-        );
+        // Legacy single-object response when a lone `file` field was used.
+        if (!is_array($batch)) {
+            return new JsonResponse($attachments[0], Response::HTTP_CREATED);
+        }
+
+        return new JsonResponse(['attachments' => $attachments], Response::HTTP_CREATED);
+    }
+
+    /** @return array<string, mixed> */
+    private function toArray(string $taskId, FileMetadataInterface $metadata): array
+    {
+        return [
+            'id' => $metadata->getId(),
+            'originalName' => $metadata->getOriginalName(),
+            'mimeType' => $metadata->getMimeType(),
+            'size' => $metadata->getSize(),
+            'url' => '/task/' . $taskId . '/attachments/' . $metadata->getId(),
+        ];
     }
 }
