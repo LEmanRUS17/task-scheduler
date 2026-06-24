@@ -34,12 +34,23 @@ final class AddTeamMemberController
             );
         }
 
+        $profile = $member->getProfile();
+
         return new JsonResponse(
             [
                 'teamId' => $member->getTeamId(),
                 'userId' => $member->getUserId(),
                 'role' => $member->getRole(),
                 'joinedAt' => $member->getJoinedAt()->format(\DateTimeInterface::ATOM),
+                'user' => $profile === null ? null : [
+                    'userId' => $profile->getUserId(),
+                    'username' => $profile->getUsername(),
+                    'firstname' => $profile->getFirstname(),
+                    'lastname' => $profile->getLastname(),
+                    'midlname' => $profile->getMidlname(),
+                    'status' => $profile->getStatus(),
+                    'avatar' => $profile->getAvatar()?->getUrl(),
+                ],
             ],
             Response::HTTP_CREATED,
         );

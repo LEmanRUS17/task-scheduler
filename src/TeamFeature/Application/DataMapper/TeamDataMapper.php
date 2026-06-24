@@ -9,6 +9,7 @@ use App\TeamFeature\Application\DTOResponse\TeamResponseDTO;
 use App\TeamFeature\Domain\Entity\Team;
 use App\TeamFeature\Domain\Entity\TeamMember;
 use App\TeamFeature\Domain\ValueObject\Title;
+use App\ProfileFeatureApi\DTOResponse\ProfileDataResponseInterface;
 use App\TeamFeatureApi\DTORequest\TeamCreateRequestInterface;
 
 final class TeamDataMapper
@@ -29,13 +30,16 @@ final class TeamDataMapper
         );
     }
 
-    public function memberToResponse(TeamMember $member): TeamMemberResponseDTO
-    {
+    public function memberToResponse(
+        TeamMember $member,
+        ?ProfileDataResponseInterface $profile = null,
+    ): TeamMemberResponseDTO {
         return new TeamMemberResponseDTO(
             $member->teamId()->value(),
             $member->userId(),
             $member->role()->value,
             $member->joinedAt(),
+            $profile,
         );
     }
 }
