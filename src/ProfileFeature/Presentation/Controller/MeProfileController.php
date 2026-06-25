@@ -29,7 +29,8 @@ final class MeProfileController
     public function __construct(
         private readonly ProfileServiceInterface $profileService,
         private readonly Security $security,
-    ) {}
+    ) {
+    }
 
     #[Route('/profile/me', name: 'profile_me', methods: ['GET'])]
     public function __invoke(): JsonResponse

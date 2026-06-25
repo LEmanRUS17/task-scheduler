@@ -20,7 +20,8 @@ final class UpdateProfileController
     public function __construct(
         private readonly ProfileServiceInterface $profileService,
         private readonly Security $security,
-    ) {}
+    ) {
+    }
 
     #[Route('/profile/me', name: 'profile_me_update', methods: ['PATCH'])]
     public function __invoke(
