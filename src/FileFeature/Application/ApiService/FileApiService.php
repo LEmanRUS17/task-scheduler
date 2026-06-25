@@ -119,6 +119,17 @@ final class FileApiService implements FileServiceInterface
         ));
     }
 
+    public function deleteAttachments(string $entityClass, string $entityId, ?string $fileId = null): void
+    {
+        foreach ($this->files->findAttachments($entityClass, $entityId) as $file) {
+            if ($fileId !== null && $file->id() !== $fileId) {
+                continue;
+            }
+
+            $this->deleteInteractor->delete($file);
+        }
+    }
+
     public function getFile(string $fileId): ?FileMetadataInterface
     {
         $file = $this->files->findById($fileId);

@@ -68,6 +68,13 @@ interface FileServiceInterface
      */
     public function listImageAttachments(string $entityClass, string $entityId): array;
 
+    /**
+     * Delete the attachments of an entity. When $fileId is given only that
+     * single attachment is removed (a no-op when it does not belong to the
+     * entity); otherwise every attachment of the entity is deleted.
+     */
+    public function deleteAttachments(string $entityClass, string $entityId, ?string $fileId = null): void;
+
     public function getFile(string $fileId): ?FileMetadataInterface;
 
     /** Absolute filesystem path for streaming, or null when the file is unknown. */

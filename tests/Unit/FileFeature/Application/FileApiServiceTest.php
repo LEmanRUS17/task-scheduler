@@ -124,6 +124,60 @@ final class FileApiServiceTest extends TestCase
         self::assertSame(['f-1', 'f-3'], array_map(static fn ($f) => $f->getId(), $images));
     }
 
+    public function testDeleteAttachmentsRemovesEveryAttachmentWhenNoFileId(): void
+    {
+        $repository = $this->createMock(FileRepositoryInterface::class);
+        $repository->method('findAttachments')->willReturn([
+            $this->makeStoredFile('f-1', 'a.png', 'image/png'),
+            $this->makeStoredFile('f-2', 'doc.pdf', 'application/pdf'),
+        ]);
+        $repository->expects(self::exactly(2))->method('delete');
+
+        $storage = $this->createStub(FileStorageInterface::class);
+        $processor = $this->createStub(ImageProcessorInterface::class);
+
+        $service = new FileApiService(
+            new UploadFileInteractor($repository, $storage, $processor),
+            new DeleteFileInteractor($repository, $storage),
+            $repository,
+            $storage,
+            $this->validator(),
+        );
+
+        $service->deleteAttachments('App\\Task', 't-1');
+    }
+
+    public function testDeleteAttachmentsRemovesOnlyTheGivenFile(): void
+    {
+        $repository = $this->createMock(FileRepositoryInterface::class);
+        $repository->method('findAttachments')->willReturn([
+            $this->makeStoredFile('f-1', 'a.png', 'image/png'),
+            $this->makeStoredFile('f-2', 'doc.pdf', 'application/pdf'),
+        ]);
+
+        $deleted = [];
+        $repository->expects(self::once())
+            ->method('delete')
+            ->willReturnCallback(static function (StoredFile $file) use (&$deleted): void {
+                $deleted[] = $file->id();
+            });
+
+        $storage = $this->createStub(FileStorageInterface::class);
+        $processor = $this->createStub(ImageProcessorInterface::class);
+
+        $service = new FileApiService(
+            new UploadFileInteractor($repository, $storage, $processor),
+            new DeleteFileInteractor($repository, $storage),
+            $repository,
+            $storage,
+            $this->validator(),
+        );
+
+        $service->deleteAttachments('App\\Task', 't-1', 'f-2');
+
+        self::assertSame(['f-2'], $deleted);
+    }
+
     private function makeStoredFile(string $id, string $name, string $mimeType): StoredFile
     {
         return StoredFile::create(
