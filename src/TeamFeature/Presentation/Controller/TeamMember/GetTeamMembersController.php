@@ -35,12 +35,25 @@ final class GetTeamMembersController
 
         return new JsonResponse([
             'members' => array_map(
-                fn($m) => [
-                    'teamId' => $m->getTeamId(),
-                    'userId' => $m->getUserId(),
-                    'role' => $m->getRole(),
-                    'joinedAt' => $m->getJoinedAt()->format(\DateTimeInterface::ATOM),
-                ],
+                function ($m) {
+                    $profile = $m->getProfile();
+
+                    return [
+                        'teamId' => $m->getTeamId(),
+                        'userId' => $m->getUserId(),
+                        'role' => $m->getRole(),
+                        'joinedAt' => $m->getJoinedAt()->format(\DateTimeInterface::ATOM),
+                        'user' => $profile === null ? null : [
+                            'userId' => $profile->getUserId(),
+                            'username' => $profile->getUsername(),
+                            'firstname' => $profile->getFirstname(),
+                            'lastname' => $profile->getLastname(),
+                            'midlname' => $profile->getMidlname(),
+                            'status' => $profile->getStatus(),
+                            'avatar' => $profile->getAvatar()?->getUrl(),
+                        ],
+                    ];
+                },
                 $members,
             ),
         ], Response::HTTP_OK);

@@ -4,6 +4,10 @@ declare(strict_types=1);
 
 namespace App\TaskFeature\Presentation\Controller\Task;
 
+use App\FileFeatureApi\Contract\FileServiceInterface;
+use App\TaskFeature\Domain\Entity\Task;
+use App\TaskFeature\Presentation\Formatter\TaskAttachmentFormatter;
+use App\TaskFeature\Presentation\Formatter\TaskResponseFormatter;
 use App\TaskFeatureApi\Service\TaskServiceInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Response;
@@ -15,6 +19,7 @@ final class GetTaskController
 {
     public function __construct(
         private readonly TaskServiceInterface $taskService,
+        private readonly FileServiceInterface $fileService,
     ) {
     }
 
@@ -33,25 +38,15 @@ final class GetTaskController
             );
         }
 
-        return new JsonResponse(
-            [
-                'id' => $task->getId(),
-                'title' => $task->getTitle(),
-                'status' => $task->getStatus(),
-                'status_id' => $task->getStatusId(),
-                'priority' => $task->getPriority(),
-                'teamId' => $task->getTeamId(),
-                'createdBy' => $task->getCreatedBy(),
-                'assigneeIds' => $task->getAssigneeIds(),
-                'scheduledStart' => $task->getScheduledStart()?->format(\DateTimeInterface::ATOM),
-                'scheduledEnd' => $task->getScheduledEnd()?->format(\DateTimeInterface::ATOM),
-                'estimatedTime' => $task->getEstimatedTime(),
-                'actualTime' => $task->getActualTime(),
-                'createdAt' => $task->getCreatedAt()->format(\DateTimeInterface::ATOM),
-                'availableTransitions' => $task->getAvailableTransitions(),
-                'description'          => $task->getDescription(),
-            ],
-            Response::HTTP_OK,
+        $files = array_map(
+            static fn ($metadata) => TaskAttachmentFormatter::format($id, $metadata),
+            $this->fileService->listImageAttachments(Task::class, $id),
         );
+
+        $payload = TaskResponseFormatter::format($task);
+        $payload['files'] = $files;
+        $payload['filesCount'] = count($files);
+
+        return new JsonResponse($payload, Response::HTTP_OK);
     }
 }

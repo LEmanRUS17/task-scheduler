@@ -46,13 +46,14 @@ final class GetProfileController
 
         return new JsonResponse(
             [
-                'userId'    => $profile->getUserId(),
-                'username'  => $profile->getUsername(),
+                'userId' => $profile->getUserId(),
+                'username' => $profile->getUsername(),
                 'firstname' => $profile->getFirstname(),
-                'lastname'  => $profile->getLastname(),
-                'midlname'  => $profile->getMidlname(),
-                'status'    => $profile->getStatus(),
+                'lastname' => $profile->getLastname(),
+                'midlname' => $profile->getMidlname(),
+                'status' => $profile->getStatus(),
                 'lastLogin' => $profile->getLastLogin()?->format(\DateTimeInterface::ATOM),
+                'avatar' => $profile->getAvatar()?->getUrl(),
             ],
             Response::HTTP_OK,
         );

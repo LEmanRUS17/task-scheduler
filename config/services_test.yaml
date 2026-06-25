@@ -1,3 +1,9 @@
 services:
     App\WorkflowFeature\Domain\Repository\WorkflowRepositoryInterface:
         class: App\Tests\Stub\NullWorkflowRepository
+
+    # Keep uploaded test files out of the repository working tree.
+    App\FileFeature\Domain\Port\FileStorageInterface:
+        class: App\FileFeature\Infrastructure\Storage\LocalFileStorage
+        arguments:
+            $basePath: '%kernel.cache_dir%/uploads'

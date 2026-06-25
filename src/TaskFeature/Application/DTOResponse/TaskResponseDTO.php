@@ -4,10 +4,16 @@ declare(strict_types=1);
 
 namespace App\TaskFeature\Application\DTOResponse;
 
+use App\ProfileFeatureApi\DTOResponse\ProfileDataResponseInterface;
 use App\TaskFeatureApi\DTOResponse\TaskDataResponseInterface;
 
 final class TaskResponseDTO implements TaskDataResponseInterface
 {
+    /**
+     * @param string[] $assigneeIds
+     * @param string[] $availableTransitions
+     * @param array<string, ProfileDataResponseInterface> $assigneeProfiles
+     */
     public function __construct(
         private readonly string $id,
         private readonly string $title,
@@ -16,16 +22,16 @@ final class TaskResponseDTO implements TaskDataResponseInterface
         private readonly string $priority,
         private readonly ?string $teamId,
         private readonly string $createdBy,
-        /** @var string[] */
         private readonly array $assigneeIds,
         private readonly \DateTimeImmutable $createdAt,
         private readonly ?\DateTimeImmutable $scheduledStart,
         private readonly ?\DateTimeImmutable $scheduledEnd,
         private readonly ?int $estimatedTime,
         private readonly ?int $actualTime,
-        /** @var string[] */
         private readonly array $availableTransitions,
-        private readonly ?string $description = null
+        private readonly ?string $description = null,
+        private readonly ?ProfileDataResponseInterface $createdByProfile = null,
+        private readonly array $assigneeProfiles = [],
     ) {
         return;
     }
@@ -65,9 +71,19 @@ final class TaskResponseDTO implements TaskDataResponseInterface
         return $this->createdBy;
     }
 
+    public function getCreatedByProfile(): ?ProfileDataResponseInterface
+    {
+        return $this->createdByProfile;
+    }
+
     public function getAssigneeIds(): array
     {
         return $this->assigneeIds;
+    }
+
+    public function getAssigneeProfiles(): array
+    {
+        return $this->assigneeProfiles;
     }
 
     public function getCreatedAt(): \DateTimeImmutable

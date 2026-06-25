@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\TaskFeature\Presentation\Controller\Task;
 
+use App\TaskFeature\Presentation\Formatter\TaskResponseFormatter;
 use App\TaskFeatureApi\Service\TaskServiceInterface;
 use App\UserFeature\Infrastructure\Security\SecurityUser;
 use Symfony\Bundle\SecurityBundle\Security;
@@ -40,23 +41,7 @@ final class GetTeamTaskListController
         return new JsonResponse(
             [
                 'tasks' => array_map(
-                    fn($task) => [
-                        'id' => $task->getId(),
-                        'title' => $task->getTitle(),
-                        'status' => $task->getStatus(),
-                        'status_id' => $task->getStatusId(),
-                        'priority' => $task->getPriority(),
-                        'teamId' => $task->getTeamId(),
-                        'createdBy' => $task->getCreatedBy(),
-                        'assigneeIds' => $task->getAssigneeIds(),
-                        'scheduledStart' => $task->getScheduledStart()?->format(\DateTimeInterface::ATOM),
-                        'scheduledEnd' => $task->getScheduledEnd()?->format(\DateTimeInterface::ATOM),
-                        'estimatedTime' => $task->getEstimatedTime(),
-                        'actualTime' => $task->getActualTime(),
-                        'createdAt' => $task->getCreatedAt()->format(\DateTimeInterface::ATOM),
-                        'availableTransitions' => $task->getAvailableTransitions(),
-                        'description' => $task->getDescription(),
-                    ],
+                    static fn($task) => TaskResponseFormatter::format($task),
                     $tasks,
                 ),
             ],

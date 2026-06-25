@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Tests\Unit\TeamFeature\Application\ApiService;
 
 use App\DescriptionFeatureApi\Contract\DescriptionServiceInterface;
+use App\ProfileFeatureApi\Service\ProfileServiceInterface;
 use App\TeamFeature\Application\ApiService\TeamApiService;
 use App\TeamFeature\Application\DataMapper\TeamDataMapper;
 use App\TeamFeature\Application\DTORequestValidator\TeamValidatorInterface;
@@ -124,6 +125,7 @@ final class TeamApiServiceTest extends TestCase
             new TeamDataMapper(),
             $this->createStub(TeamValidatorInterface::class),
             $this->createStub(DescriptionServiceInterface::class),
+            $this->createStub(ProfileServiceInterface::class),
         );
     }
 }

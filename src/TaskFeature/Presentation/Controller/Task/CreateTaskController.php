@@ -6,6 +6,7 @@ namespace App\TaskFeature\Presentation\Controller\Task;
 
 use App\TaskFeatureApi\Service\TaskServiceInterface;
 use App\TaskFeature\Application\DTORequest\TaskCreateRequestDTO;
+use App\TaskFeature\Presentation\Formatter\TaskResponseFormatter;
 use App\UserFeature\Infrastructure\Security\SecurityUser;
 use Symfony\Bundle\SecurityBundle\Security;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -49,23 +50,7 @@ final class CreateTaskController
         }
 
         return new JsonResponse(
-            [
-                'id' => $task->getId(),
-                'title' => $task->getTitle(),
-                'status' => $task->getStatus(),
-                'status_id' => $task->getStatusId(),
-                'priority' => $task->getPriority(),
-                'teamId' => $task->getTeamId(),
-                'createdBy' => $task->getCreatedBy(),
-                'assigneeIds' => $task->getAssigneeIds(),
-                'scheduledStart' => $task->getScheduledStart()?->format(\DateTimeInterface::ATOM),
-                'scheduledEnd' => $task->getScheduledEnd()?->format(\DateTimeInterface::ATOM),
-                'estimatedTime' => $task->getEstimatedTime(),
-                'actualTime' => $task->getActualTime(),
-                'createdAt' => $task->getCreatedAt()->format(\DateTimeInterface::ATOM),
-                'availableTransitions' => $task->getAvailableTransitions(),
-                'description' => $task->getDescription(),
-            ],
+            TaskResponseFormatter::format($task),
             Response::HTTP_CREATED,
         );
     }

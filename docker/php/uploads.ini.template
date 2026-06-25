@@ -1,0 +1,5 @@
+; Rendered from ${UPLOAD_MAX_SIZE} by docker-entrypoint.sh (envsubst) on start.
+; upload_max_filesize caps a single file; post_max_size caps the whole request
+; body (covers the combined size of files[] uploads).
+upload_max_filesize = ${UPLOAD_MAX_SIZE}
+post_max_size = ${UPLOAD_MAX_SIZE}

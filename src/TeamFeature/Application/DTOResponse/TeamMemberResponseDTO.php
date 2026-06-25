@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\TeamFeature\Application\DTOResponse;
 
+use App\ProfileFeatureApi\DTOResponse\ProfileDataResponseInterface;
 use App\TeamFeatureApi\DTOResponse\TeamMemberDataResponseInterface;
 
 final class TeamMemberResponseDTO implements TeamMemberDataResponseInterface
@@ -13,6 +14,7 @@ final class TeamMemberResponseDTO implements TeamMemberDataResponseInterface
         private readonly string $userId,
         private readonly string $role,
         private readonly \DateTimeImmutable $joinedAt,
+        private readonly ?ProfileDataResponseInterface $profile = null,
     ) {
     }
 
@@ -34,5 +36,10 @@ final class TeamMemberResponseDTO implements TeamMemberDataResponseInterface
     public function getJoinedAt(): \DateTimeImmutable
     {
         return $this->joinedAt;
+    }
+
+    public function getProfile(): ?ProfileDataResponseInterface
+    {
+        return $this->profile;
     }
 }

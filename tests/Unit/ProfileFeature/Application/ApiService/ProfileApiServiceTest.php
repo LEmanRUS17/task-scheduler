@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Tests\Unit\ProfileFeature\Application\ApiService;
 
+use App\FileFeatureApi\Contract\FileServiceInterface;
 use App\ProfileFeature\Application\ApiService\ProfileApiService;
 use App\ProfileFeature\Application\DataMapper\ProfileDataMapper;
 use App\ProfileFeature\Application\DTORequestValidator\ProfileValidatorInterface;
@@ -15,6 +16,7 @@ use App\ProfileFeature\Domain\Repository\ProfileRepositoryInterface;
 use App\ProfileFeature\Domain\ValueObject\Username;
 use App\ProfileFeatureApi\DTORequest\UpdateProfileRequestInterface;
 use PHPUnit\Framework\TestCase;
+use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 
 final class ProfileApiServiceTest extends TestCase
 {
@@ -26,11 +28,14 @@ final class ProfileApiServiceTest extends TestCase
         $clock = $this->createStub(ClockInterface::class);
         $clock->method('now')->willReturn(new \DateTimeImmutable('2024-01-01 12:00:00'));
 
+        $fileService = $this->createStub(FileServiceInterface::class);
+        $fileService->method('getAvatar')->willReturn(null);
+
         return new ProfileApiService(
             new CreateProfileInteractor($profiles, $clock),
             new UpdateProfileInteractor($profiles),
             $profiles,
-            new ProfileDataMapper(),
+            new ProfileDataMapper($fileService, $this->createStub(UrlGeneratorInterface::class)),
             $validator ?? $this->createStub(ProfileValidatorInterface::class),
         );
     }

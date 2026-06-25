@@ -30,6 +30,7 @@ final class TaskDataMapper
     /**
      * @param string[] $assigneeIds
      * @param string[] $availableTransitions
+     * @param array<string, ProfileDataResponseInterface> $assigneeProfiles
      */
     public function taskToResponse(
         Task $task,
@@ -37,6 +38,8 @@ final class TaskDataMapper
         array $availableTransitions,
         ?string $statusLabel = null,
         ?string $description = null,
+        ?ProfileDataResponseInterface $createdByProfile = null,
+        array $assigneeProfiles = [],
     ): TaskResponseDTO {
         return new TaskResponseDTO(
             $task->id()->value(),
@@ -54,6 +57,8 @@ final class TaskDataMapper
             $task->actualTime(),
             $availableTransitions,
             $description,
+            $createdByProfile,
+            $assigneeProfiles,
         );
     }
 

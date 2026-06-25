@@ -191,3 +191,28 @@ services:
 
     App\AnalyticsFeature\Domain\Port\AnalyticsQueryInterface:
         class: App\AnalyticsFeature\Infrastructure\ClickHouse\ClickHouseAnalyticsQuery
+
+    App\FileFeatureApi\Contract\FileServiceInterface:
+        class: App\FileFeature\Application\ApiService\FileApiService
+
+    App\FileFeature\Domain\Repository\FileRepositoryInterface:
+        class: App\FileFeature\Infrastructure\Persistence\DoctrineFileRepository
+
+    App\FileFeature\Domain\Port\FileStorageInterface:
+        class: App\FileFeature\Infrastructure\Storage\LocalFileStorage
+        arguments:
+            $basePath: '%kernel.project_dir%/var/storage/uploads'
+
+    # Image pipeline: WebP-encoding decorator wraps the GD resize/crop base.
+    App\FileFeature\Domain\Port\ImageProcessorInterface:
+        class: App\FileFeature\Infrastructure\Image\WebpImageProcessor
+        arguments:
+            $inner: '@App\FileFeature\Infrastructure\Image\GdImageProcessor'
+            $quality: '%env(int:FILE_AVATAR_WEBP_QUALITY)%'
+
+    App\FileFeature\Application\DTORequestValidator\FileUploadValidator:
+        arguments:
+            $avatarMaxSize: '%env(int:FILE_AVATAR_MAX_SIZE)%'
+            $avatarMimeTypes: '%env(csv:FILE_AVATAR_MIME_TYPES)%'
+            $attachmentMaxSize: '%env(int:FILE_ATTACHMENT_MAX_SIZE)%'
+            $attachmentMimeTypes: '%env(csv:FILE_ATTACHMENT_MIME_TYPES)%'

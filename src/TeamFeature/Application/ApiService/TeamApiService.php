@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace App\TeamFeature\Application\ApiService;
 
 use App\DescriptionFeatureApi\Contract\DescriptionServiceInterface;
+use App\ProfileFeatureApi\DTOResponse\ProfileDataResponseInterface;
+use App\ProfileFeatureApi\Service\ProfileServiceInterface;
 use App\TeamFeature\Application\DataMapper\TeamDataMapper;
 use App\TeamFeature\Domain\Entity\Team;
 use App\TeamFeature\Application\DTORequestValidator\TeamValidatorInterface;
@@ -35,6 +37,7 @@ final class TeamApiService implements TeamServiceInterface
         private readonly TeamDataMapper $dataMapper,
         private readonly TeamValidatorInterface $validator,
         private readonly DescriptionServiceInterface $descriptions,
+        private readonly ProfileServiceInterface $profiles,
     ) {
     }
 
@@ -149,7 +152,10 @@ final class TeamApiService implements TeamServiceInterface
     public function getMembers(string $teamId): array
     {
         return array_map(
-            fn($member) => $this->dataMapper->memberToResponse($member),
+            fn($member) => $this->dataMapper->memberToResponse(
+                $member,
+                $this->findProfile($member->userId()),
+            ),
             $this->members->findByTeamId(TeamId::fromString($teamId)),
         );
     }
@@ -162,7 +168,16 @@ final class TeamApiService implements TeamServiceInterface
             TeamMemberRole::from($request->getRole()),
         );
 
-        return $this->dataMapper->memberToResponse($member);
+        return $this->dataMapper->memberToResponse($member, $this->findProfile($member->userId()));
+    }
+
+    private function findProfile(string $userId): ?ProfileDataResponseInterface
+    {
+        try {
+            return $this->profiles->getByUserId($userId);
+        } catch (\DomainException) {
+            return null;
+        }
     }
 
     public function removeMember(string $teamId, string $userId): void
