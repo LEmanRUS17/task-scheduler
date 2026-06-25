@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\UserFeature\Domain\Entity;
 
+use App\UserFeature\Domain\Event\PasswordChanged;
 use App\UserFeature\Domain\Event\UserConfirmed;
 use App\UserFeature\Domain\Event\UserRegistered;
 use App\UserFeature\Domain\ValueObject\Email;
@@ -20,9 +21,7 @@ final class User implements AuditableInterface
     private string $password;
     private UserStatus $status;
     private \DateTimeImmutable $createdAt;
-    /** @phpstan-ignore property.unusedType */
     private ?\DateTimeImmutable $deletedAt = null;
-    /** @phpstan-ignore property.unusedType */
     private ?\DateTimeImmutable $passwordUpdatedAt = null;
     private ?string $confirmationCode = null;
     private ?\DateTimeImmutable $codeExpiresAt = null;
@@ -113,6 +112,18 @@ final class User implements AuditableInterface
         $this->confirmationCode = null;
         $this->codeExpiresAt = null;
         $this->recordEvent(new UserConfirmed($this->id(), $this->email()));
+    }
+
+    /**
+     * Replaces the current password with an already-hashed new one and stamps
+     * the change time. Verifying that the caller knows the current password is
+     * the interactor's responsibility, since the domain never touches plaintext.
+     */
+    public function changePassword(HashedPassword $newPassword, \DateTimeImmutable $now): void
+    {
+        $this->password = $newPassword->value();
+        $this->passwordUpdatedAt = $now;
+        $this->recordEvent(new PasswordChanged($this->id(), $this->email()));
     }
 
     public function id(): UserId

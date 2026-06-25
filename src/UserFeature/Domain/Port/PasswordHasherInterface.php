@@ -9,4 +9,6 @@ use App\UserFeature\Domain\ValueObject\HashedPassword;
 interface PasswordHasherInterface
 {
     public function hash(string $plainPassword): HashedPassword;
+
+    public function verify(HashedPassword $hashedPassword, string $plainPassword): bool;
 }
