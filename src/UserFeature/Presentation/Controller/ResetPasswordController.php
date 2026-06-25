@@ -25,7 +25,8 @@ final class ResetPasswordController
 {
     public function __construct(
         private readonly UserServiceInterface $userService,
-    ) {}
+    ) {
+    }
 
     #[Route('/auth/password/reset', name: 'user_password_reset', methods: ['POST'])]
     public function __invoke(

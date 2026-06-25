@@ -27,7 +27,8 @@ final class ChangePasswordController
     public function __construct(
         private readonly UserServiceInterface $userService,
         private readonly Security $security,
-    ) {}
+    ) {
+    }
 
     #[Route('/user/password', name: 'user_change_password', methods: ['PATCH'])]
     public function __invoke(
