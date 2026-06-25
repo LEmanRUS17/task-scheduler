@@ -23,4 +23,11 @@ final class SymfonyPasswordHasher implements PasswordHasherInterface
 
         return HashedPassword::fromHash($hash);
     }
+
+    public function verify(HashedPassword $hashedPassword, string $plainPassword): bool
+    {
+        return $this->factory
+            ->getPasswordHasher(SecurityUser::class)
+            ->verify($hashedPassword->value(), $plainPassword);
+    }
 }

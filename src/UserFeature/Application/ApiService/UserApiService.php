@@ -6,13 +6,19 @@ namespace App\UserFeature\Application\ApiService;
 
 use App\UserFeature\Application\DataMapper\UserDataMapper;
 use App\UserFeature\Application\DTORequestValidator\UserValidatorInterface;
+use App\UserFeature\Domain\Interactor\ChangePasswordInteractor;
 use App\UserFeature\Domain\Interactor\ConfirmUserInteractor;
 use App\UserFeature\Domain\Interactor\RegisterUserInteractor;
+use App\UserFeature\Domain\Interactor\RequestPasswordResetInteractor;
+use App\UserFeature\Domain\Interactor\ResetPasswordInteractor;
 use App\UserFeature\Domain\Repository\UserRepositoryInterface;
 use App\UserFeature\Domain\ValueObject\Email;
 use App\UserFeature\Domain\ValueObject\UserId;
+use App\UserFeatureApi\DTORequest\ChangePasswordRequestInterface;
 use App\UserFeatureApi\DTORequest\ConfirmUserRequestInterface;
 use App\UserFeatureApi\DTORequest\RegisterUserRequestInterface;
+use App\UserFeatureApi\DTORequest\RequestPasswordResetRequestInterface;
+use App\UserFeatureApi\DTORequest\ResetPasswordRequestInterface;
 use App\UserFeatureApi\DTOResponse\UserDataResponseInterface;
 use App\UserFeatureApi\Service\UserServiceInterface;
 
@@ -21,6 +27,9 @@ final class UserApiService implements UserServiceInterface
     public function __construct(
         private readonly RegisterUserInteractor $registerUserInteractor,
         private readonly ConfirmUserInteractor $confirmUserInteractor,
+        private readonly ChangePasswordInteractor $changePasswordInteractor,
+        private readonly RequestPasswordResetInteractor $requestPasswordResetInteractor,
+        private readonly ResetPasswordInteractor $resetPasswordInteractor,
         private readonly UserDataMapper $dataMapper,
         private readonly UserValidatorInterface $validator,
         private readonly UserRepositoryInterface $userRepository,
@@ -45,6 +54,31 @@ final class UserApiService implements UserServiceInterface
         $this->confirmUserInteractor->confirm(
             Email::fromString($request->getEmail()),
             $request->getCode(),
+        );
+    }
+
+    public function changePassword(string $userId, ChangePasswordRequestInterface $request): void
+    {
+        $this->changePasswordInteractor->changePassword(
+            UserId::fromString($userId),
+            $request->getCurrentPassword(),
+            $request->getNewPassword(),
+        );
+    }
+
+    public function requestPasswordReset(RequestPasswordResetRequestInterface $request): void
+    {
+        $this->requestPasswordResetInteractor->request(
+            Email::fromString($request->getEmail()),
+        );
+    }
+
+    public function resetPassword(ResetPasswordRequestInterface $request): void
+    {
+        $this->resetPasswordInteractor->reset(
+            Email::fromString($request->getEmail()),
+            $request->getCode(),
+            $request->getNewPassword(),
         );
     }
 

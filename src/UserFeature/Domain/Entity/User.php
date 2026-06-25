@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\UserFeature\Domain\Entity;
 
+use App\UserFeature\Domain\Event\PasswordChanged;
+use App\UserFeature\Domain\Event\PasswordResetRequested;
 use App\UserFeature\Domain\Event\UserConfirmed;
 use App\UserFeature\Domain\Event\UserRegistered;
 use App\UserFeature\Domain\ValueObject\Email;
@@ -22,10 +24,13 @@ final class User implements AuditableInterface
     private \DateTimeImmutable $createdAt;
     /** @phpstan-ignore property.unusedType */
     private ?\DateTimeImmutable $deletedAt = null;
-    /** @phpstan-ignore property.unusedType */
     private ?\DateTimeImmutable $passwordUpdatedAt = null;
+    // TODO: move to ephemeral store with TTL (Redis / Tarantool).
     private ?string $confirmationCode = null;
     private ?\DateTimeImmutable $codeExpiresAt = null;
+    // TODO: move to ephemeral store with TTL (Redis / Tarantool).
+    private ?string $passwordResetCode = null;
+    private ?\DateTimeImmutable $passwordResetExpiresAt = null;
 
     /**
      * @var string[]
@@ -113,6 +118,56 @@ final class User implements AuditableInterface
         $this->confirmationCode = null;
         $this->codeExpiresAt = null;
         $this->recordEvent(new UserConfirmed($this->id(), $this->email()));
+    }
+
+    /**
+     * Replaces the current password with an already-hashed new one and stamps
+     * the change time. Verifying that the caller knows the current password is
+     * the interactor's responsibility, since the domain never touches plaintext.
+     */
+    public function changePassword(HashedPassword $newPassword, \DateTimeImmutable $now): void
+    {
+        $this->password = $newPassword->value();
+        $this->passwordUpdatedAt = $now;
+        $this->recordEvent(new PasswordChanged($this->id(), $this->email()));
+    }
+
+    /**
+     * Starts a "forgot password" flow: stores a one-time reset code with an
+     * expiry and records {@see PasswordResetRequested} so the code can be
+     * delivered to the user (e.g. by email). Any previous code is overwritten.
+     */
+    public function requestPasswordReset(string $code, \DateTimeImmutable $expiresAt): void
+    {
+        $this->passwordResetCode = $code;
+        $this->passwordResetExpiresAt = $expiresAt;
+        $this->recordEvent(new PasswordResetRequested($this->id(), $this->email(), $code));
+    }
+
+    /**
+     * Completes the "forgot password" flow: validates the one-time code, sets
+     * the already-hashed new password and clears the code so it cannot be
+     * reused. As with {@see self::changePassword()}, hashing is the caller's
+     * responsibility — the domain never touches plaintext.
+     *
+     * @throws \DomainException when no reset was requested, the code does not
+     *                          match, or the code has expired.
+     */
+    public function resetPassword(string $code, HashedPassword $newPassword, \DateTimeImmutable $now): void
+    {
+        if ($this->passwordResetCode === null || !hash_equals($this->passwordResetCode, $code)) {
+            throw new \DomainException('Invalid reset code');
+        }
+
+        if ($this->passwordResetExpiresAt !== null && $this->passwordResetExpiresAt < $now) {
+            throw new \DomainException('Reset code has expired');
+        }
+
+        $this->password = $newPassword->value();
+        $this->passwordUpdatedAt = $now;
+        $this->passwordResetCode = null;
+        $this->passwordResetExpiresAt = null;
+        $this->recordEvent(new PasswordChanged($this->id(), $this->email()));
     }
 
     public function id(): UserId

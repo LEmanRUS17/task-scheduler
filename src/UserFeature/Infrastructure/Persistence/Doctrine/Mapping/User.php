@@ -30,4 +30,9 @@ $builder->addField('deletedAt', 'datetime_immutable', ['columnName' => 'deleted_
 $builder->addField('passwordUpdatedAt', 'datetime_immutable', ['columnName' => 'password_updated_at', 'nullable' => true]);
 $builder->addField('confirmationCode', 'string', ['columnName' => 'confirmation_code', 'nullable' => true]);
 $builder->addField('codeExpiresAt', 'datetime_immutable', ['columnName' => 'code_expires_at', 'nullable' => true]);
+$builder->addField('passwordResetCode', 'string', ['columnName' => 'password_reset_code', 'nullable' => true]);
+$builder->addField('passwordResetExpiresAt', 'datetime_immutable', [
+    'columnName' => 'password_reset_expires_at',
+    'nullable' => true,
+]);
 $builder->addField('roles', 'json');

@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace App\NotificationFeature\Infrastructure\Messenger\EventSubscriber;
 
+use App\NotificationFeature\Infrastructure\Messenger\Message\PasswordResetRequestedMessage;
 use App\NotificationFeature\Infrastructure\Messenger\Message\UserRegisteredMessage;
+use App\UserFeature\Domain\Event\PasswordResetRequested;
 use App\UserFeature\Domain\Event\UserRegistered;
 use Symfony\Component\Messenger\Attribute\AsMessageHandler;
 use Symfony\Component\Messenger\MessageBusInterface;
@@ -23,6 +25,16 @@ final class UserNotificationSubscriber
             userId: $event->userId->value(),
             email: $event->email->value(),
             confirmationCode: $event->confirmationCode,
+        ));
+    }
+
+    #[AsMessageHandler(bus: 'event.bus')]
+    public function onPasswordResetRequested(PasswordResetRequested $event): void
+    {
+        $this->defaultBus->dispatch(new PasswordResetRequestedMessage(
+            userId: $event->userId->value(),
+            email: $event->email->value(),
+            resetCode: $event->resetCode,
         ));
     }
 }
