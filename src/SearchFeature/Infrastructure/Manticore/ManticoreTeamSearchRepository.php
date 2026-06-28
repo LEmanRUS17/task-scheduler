@@ -29,7 +29,7 @@ final class ManticoreTeamSearchRepository implements TeamSearchRepositoryInterfa
         $must = [
             [
                 'match' => [
-                    'title' => $query
+                    'title,tags' => $query
                 ]
             ],
             [

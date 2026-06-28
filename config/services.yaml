@@ -216,3 +216,30 @@ services:
             $avatarMimeTypes: '%env(csv:FILE_AVATAR_MIME_TYPES)%'
             $attachmentMaxSize: '%env(int:FILE_ATTACHMENT_MAX_SIZE)%'
             $attachmentMimeTypes: '%env(csv:FILE_ATTACHMENT_MIME_TYPES)%'
+
+    App\TagFeatureApi\Contract\TagServiceInterface:
+        class: App\TagFeature\Application\ApiService\TagApiService
+
+    App\TagFeature\Domain\Port\ClockInterface:
+        class: App\TagFeature\Infrastructure\Clock\SystemClock
+
+    App\TagFeature\Domain\Port\DomainEventDispatcherInterface:
+        class: App\TagFeature\Infrastructure\Messenger\MessengerDomainEventDispatcher
+        arguments:
+            $eventBus: '@event.bus'
+
+    App\TagFeature\Domain\Repository\TagRepositoryInterface:
+        class: App\TagFeature\Infrastructure\Persistence\DoctrineTagRepository
+
+    App\TagFeature\Domain\Repository\TagAssignmentRepositoryInterface:
+        class: App\TagFeature\Infrastructure\Persistence\DoctrineTagAssignmentRepository
+
+    App\TagFeature\Application\DTORequestValidator\TagValidatorInterface:
+        class: App\TagFeature\Application\DTORequestValidator\TagValidator
+
+    App\TagFeature\Domain\Port\TeamMembershipInterface:
+        class: App\TagFeature\Infrastructure\Team\TagTeamMembershipChecker
+
+    App\SearchFeature\Infrastructure\Messenger\EventSubscriber\TagSearchIndexSubscriber:
+        arguments:
+            $defaultBus: '@messenger.bus.default'

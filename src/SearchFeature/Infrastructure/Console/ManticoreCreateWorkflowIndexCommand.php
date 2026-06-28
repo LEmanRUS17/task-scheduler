@@ -25,7 +25,7 @@ final class ManticoreCreateWorkflowIndexCommand extends Command
 
         try {
             $this->manticoreClient->sql(
-                "CREATE TABLE IF NOT EXISTS workflows (workflow_id string, title text, description text, created_by string, created_at timestamp) min_infix_len='2'"
+                "CREATE TABLE IF NOT EXISTS workflows (workflow_id string, title text, description text, created_by string, created_at timestamp, tags text) min_infix_len='2'"
             );
             $io->success('Index created');
 

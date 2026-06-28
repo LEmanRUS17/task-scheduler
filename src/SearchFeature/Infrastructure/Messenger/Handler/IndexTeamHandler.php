@@ -7,6 +7,7 @@ namespace App\SearchFeature\Infrastructure\Messenger\Handler;
 use App\SearchFeature\Domain\Port\TeamSearchIndexInterface;
 use App\SearchFeature\Infrastructure\Messenger\Message\IndexTeamMessage;
 use App\SearchFeature\Infrastructure\Indexing\TeamOwnerResolver;
+use App\TagFeatureApi\Contract\TagServiceInterface;
 use App\TeamFeatureApi\Service\TeamServiceInterface;
 use Symfony\Component\Messenger\Attribute\AsMessageHandler;
 
@@ -16,6 +17,7 @@ final class IndexTeamHandler
     public function __construct(
         private readonly TeamServiceInterface $teamService,
         private readonly TeamSearchIndexInterface $searchIndex,
+        private readonly TagServiceInterface $tagService,
     ) {
     }
 
@@ -34,6 +36,9 @@ final class IndexTeamHandler
             $members,
         ));
 
+        $tagNames = $this->tagService->getEntityTagNames(TagServiceInterface::TYPE_TEAM, $team->getId());
+        $tags = implode(' ', $tagNames);
+
         $this->searchIndex->index(
             $team->getId(),
             $team->getTitle(),
@@ -41,6 +46,7 @@ final class IndexTeamHandler
             TeamOwnerResolver::resolve($members),
             $team->getCreatedAt(),
             $memberIds,
+            $tags,
         );
     }
 }

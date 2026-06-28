@@ -7,12 +7,21 @@ namespace App\Tests\Unit\SearchFeature\Infrastructure\Messenger\Handler;
 use App\SearchFeature\Domain\Port\TaskSearchIndexInterface;
 use App\SearchFeature\Infrastructure\Messenger\Handler\IndexTaskHandler;
 use App\SearchFeature\Infrastructure\Messenger\Message\IndexTaskMessage;
+use App\TagFeatureApi\Contract\TagServiceInterface;
 use App\TaskFeatureApi\DTOResponse\TaskDataResponseInterface;
 use App\TaskFeatureApi\Service\TaskServiceInterface;
 use PHPUnit\Framework\TestCase;
 
 final class IndexTaskHandlerTest extends TestCase
 {
+    private function makeTagService(): TagServiceInterface
+    {
+        $tagService = $this->createStub(TagServiceInterface::class);
+        $tagService->method('getEntityTagNames')->willReturn([]);
+
+        return $tagService;
+    }
+
     private function makeTask(
         string $id = 'task-uuid',
         string $title = 'Fix bug',
@@ -40,9 +49,9 @@ final class IndexTaskHandlerTest extends TestCase
         $searchIndex = $this->createMock(TaskSearchIndexInterface::class);
         $searchIndex->expects($this->once())
             ->method('index')
-            ->with('task-uuid', 'Fix bug', 'normal', 'open', 'team-1', 'user-1');
+            ->with('task-uuid', 'Fix bug', 'normal', 'open', 'team-1', 'user-1', '');
 
-        (new IndexTaskHandler($taskService, $searchIndex))(new IndexTaskMessage('task-uuid'));
+        (new IndexTaskHandler($taskService, $searchIndex, $this->makeTagService()))(new IndexTaskMessage('task-uuid'));
     }
 
     public function testIndexesTaskWithNullTeamId(): void
@@ -53,9 +62,9 @@ final class IndexTaskHandlerTest extends TestCase
         $searchIndex = $this->createMock(TaskSearchIndexInterface::class);
         $searchIndex->expects($this->once())
             ->method('index')
-            ->with('task-uuid', 'Fix bug', 'normal', 'open', null, 'user-1');
+            ->with('task-uuid', 'Fix bug', 'normal', 'open', null, 'user-1', '');
 
-        (new IndexTaskHandler($taskService, $searchIndex))(new IndexTaskMessage('task-uuid'));
+        (new IndexTaskHandler($taskService, $searchIndex, $this->makeTagService()))(new IndexTaskMessage('task-uuid'));
     }
 
     public function testDoesNothingWhenTaskNotFound(): void
@@ -66,6 +75,6 @@ final class IndexTaskHandlerTest extends TestCase
         $searchIndex = $this->createMock(TaskSearchIndexInterface::class);
         $searchIndex->expects($this->never())->method('index');
 
-        (new IndexTaskHandler($taskService, $searchIndex))(new IndexTaskMessage('task-uuid'));
+        (new IndexTaskHandler($taskService, $searchIndex, $this->makeTagService()))(new IndexTaskMessage('task-uuid'));
     }
 }

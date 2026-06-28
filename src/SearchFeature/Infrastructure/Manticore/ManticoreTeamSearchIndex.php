@@ -20,6 +20,7 @@ final class ManticoreTeamSearchIndex implements TeamSearchIndexInterface
         string $createdBy,
         \DateTimeImmutable $createdAt,
         array $memberIds,
+        string $tags = '',
     ): void {
         $this->client->replace('teams', $this->numericId($teamId), [
             'team_id' => $teamId,
@@ -28,6 +29,7 @@ final class ManticoreTeamSearchIndex implements TeamSearchIndexInterface
             'created_by' => $createdBy,
             'created_at' => $createdAt->getTimestamp(),
             'member_ids' => implode(' ', $memberIds),
+            'tags' => $tags,
         ]);
     }
 

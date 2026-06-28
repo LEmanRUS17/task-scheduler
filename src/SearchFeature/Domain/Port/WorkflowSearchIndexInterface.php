@@ -12,6 +12,7 @@ interface WorkflowSearchIndexInterface
         string $description,
         string $createdBy,
         \DateTimeImmutable $createdAt,
+        string $tags = '',
     ): void;
 
     public function delete(string $workflowId): void;

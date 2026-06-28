@@ -31,7 +31,7 @@ final class ManticoreTaskSearchRepositoryTest extends TestCase
         $bool = $body['query']['bool'];
         $this->assertArrayHasKey('must', $bool);
         $this->assertArrayHasKey('filter', $bool);
-        $this->assertSame('fix bug', $bool['must'][0]['match']['title']);
+        $this->assertSame('fix bug', $bool['must'][0]['match']['title,tags']);
         $this->assertSame('user-1', $bool['filter'][0]['equals']['created_by']);
     }
 

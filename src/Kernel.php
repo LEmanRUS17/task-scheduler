@@ -9,6 +9,7 @@ use App\DescriptionFeature\Infrastructure\Persistence\Doctrine\DescriptionMappin
 use App\FileFeature\Infrastructure\Persistence\Doctrine\FileMappingCompilerPass;
 use App\ProfileFeature\Infrastructure\Persistence\Doctrine\ProfileMappingCompilerPass;
 use App\SubscriptionFeature\Infrastructure\Persistence\Doctrine\SubscriptionMappingCompilerPass;
+use App\TagFeature\Infrastructure\Persistence\Doctrine\TagMappingCompilerPass;
 use App\TaskFeature\Infrastructure\Persistence\Doctrine\TaskMappingCompilerPass;
 use App\TeamFeature\Infrastructure\Persistence\Doctrine\TeamMappingCompilerPass;
 use App\WorkflowFeature\Infrastructure\Persistence\Doctrine\WorkflowMappingCompilerPass;
@@ -32,5 +33,6 @@ class Kernel extends BaseKernel
         $container->addCompilerPass(new TaskMappingCompilerPass());
         $container->addCompilerPass(new DescriptionMappingCompilerPass());
         $container->addCompilerPass(new FileMappingCompilerPass());
+        $container->addCompilerPass(new TagMappingCompilerPass());
     }
 }

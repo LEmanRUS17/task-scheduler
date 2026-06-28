@@ -22,7 +22,7 @@ final class ManticoreWorkflowSearchRepository implements WorkflowSearchRepositor
         $must = [
             [
                 'match' => [
-                    'title,description' => $query
+                    'title,description,tags' => $query
                 ]
             ]
         ];

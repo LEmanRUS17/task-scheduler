@@ -6,6 +6,7 @@ namespace App\SearchFeature\Infrastructure\Messenger\Handler;
 
 use App\SearchFeature\Domain\Port\WorkflowSearchIndexInterface;
 use App\SearchFeature\Infrastructure\Messenger\Message\IndexWorkflowMessage;
+use App\TagFeatureApi\Contract\TagServiceInterface;
 use App\WorkflowFeatureApi\Service\WorkflowServiceInterface;
 use Symfony\Component\Messenger\Attribute\AsMessageHandler;
 
@@ -15,6 +16,7 @@ final class IndexWorkflowHandler
     public function __construct(
         private readonly WorkflowServiceInterface $workflowService,
         private readonly WorkflowSearchIndexInterface $searchIndex,
+        private readonly TagServiceInterface $tagService,
     ) {
     }
 
@@ -26,12 +28,16 @@ final class IndexWorkflowHandler
             return;
         }
 
+        $tagNames = $this->tagService->getEntityTagNames(TagServiceInterface::TYPE_WORKFLOW, $workflow->getId());
+        $tags = implode(' ', $tagNames);
+
         $this->searchIndex->index(
             $workflow->getId(),
             $workflow->getTitle(),
             $workflow->getDescription() ?? '',
             $workflow->getCreatedBy(),
             $workflow->getCreatedAt(),
+            $tags,
         );
     }
 }

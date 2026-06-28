@@ -9,9 +9,10 @@ use App\TeamFeature\Domain\Event\TeamCreated;
 use App\TeamFeature\Domain\ValueObject\TeamId;
 use App\TeamFeature\Domain\ValueObject\TeamStatus;
 use App\AuditLogFeatureApi\Contract\AuditableInterface;
+use App\TagFeatureApi\Contract\TaggableInterface;
 use App\TeamFeature\Domain\ValueObject\Title;
 
-final class Team implements AuditableInterface, DescribableInterface
+final class Team implements AuditableInterface, DescribableInterface, TaggableInterface
 {
     private string $id;
     private string $title;
