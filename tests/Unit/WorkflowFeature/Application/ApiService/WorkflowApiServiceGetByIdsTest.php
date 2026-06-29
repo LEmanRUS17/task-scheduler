@@ -5,8 +5,10 @@ declare(strict_types=1);
 namespace App\Tests\Unit\WorkflowFeature\Application\ApiService;
 
 use App\DescriptionFeatureApi\Contract\DescriptionServiceInterface;
+use App\TagFeatureApi\Contract\TagServiceInterface;
 use App\WorkflowFeature\Application\ApiService\WorkflowApiService;
 use App\WorkflowFeature\Application\DataMapper\WorkflowDataMapper;
+use App\WorkflowFeature\Application\DTORequest\CreateWorkflowRequestDTO;
 use App\WorkflowFeature\Application\DTORequestValidator\WorkflowValidatorInterface;
 use App\WorkflowFeature\Domain\Entity\Workflow;
 use App\WorkflowFeature\Domain\Interactor\AddWorkflowStatusInteractor;
@@ -105,14 +107,20 @@ final class WorkflowApiServiceGetByIdsTest extends TestCase
         );
     }
 
-    private function makeService(WorkflowRepositoryInterface $repository): WorkflowApiService
-    {
+    private function makeService(
+        WorkflowRepositoryInterface $repository,
+        ?WorkflowValidatorInterface $validator = null,
+        ?TagServiceInterface $tagService = null,
+        ?ClockInterface $clock = null,
+    ): WorkflowApiService {
         // Interactors are final and cannot be doubled; build real ones with stubbed ports.
         // getByIds() does not touch them, so their wiring is irrelevant here.
         $statuses = $this->createStub(WorkflowStatusRepositoryInterface::class);
         $transitions = $this->createStub(WorkflowTransitionRepositoryInterface::class);
         $dispatcher = $this->createStub(DomainEventDispatcherInterface::class);
-        $clock = $this->createStub(ClockInterface::class);
+        $clock ??= $this->createStub(ClockInterface::class);
+        $validator ??= $this->createStub(WorkflowValidatorInterface::class);
+        $tagService ??= $this->createStub(TagServiceInterface::class);
 
         return new WorkflowApiService(
             new CreateWorkflowInteractor($repository, $dispatcher, $clock),
@@ -125,8 +133,68 @@ final class WorkflowApiServiceGetByIdsTest extends TestCase
             $statuses,
             $transitions,
             new WorkflowDataMapper(),
-            $this->createStub(WorkflowValidatorInterface::class),
+            $validator,
             $this->createStub(DescriptionServiceInterface::class),
+            $tagService,
         );
+    }
+
+    public function testCreateAssignsEachProvidedTagToTheNewWorkflow(): void
+    {
+        $repository = $this->createStub(WorkflowRepositoryInterface::class);
+
+        $clock = $this->createStub(ClockInterface::class);
+        $clock->method('now')->willReturn(new \DateTimeImmutable('2026-01-01 12:00:00'));
+
+        $validator = $this->createStub(WorkflowValidatorInterface::class);
+        $validator->method('validate')->willReturn([]);
+
+        $tagService = $this->createMock(TagServiceInterface::class);
+        $tagService->method('filterExistingTagIds')->willReturn(['tag-1', 'tag-2']);
+
+        $assignedTagIds = [];
+        $tagService->expects($this->exactly(2))
+            ->method('assign')
+            ->willReturnCallback(
+                function (
+                    string $tagId,
+                    string $entityType,
+                    string $entityId,
+                    string $assignedBy,
+                ) use (&$assignedTagIds): void {
+                    $this->assertSame(TagServiceInterface::TYPE_WORKFLOW, $entityType);
+                    $this->assertSame('user-creator', $assignedBy);
+                    $this->assertNotSame('', $entityId);
+                    $assignedTagIds[] = $tagId;
+                },
+            );
+
+        $request = new CreateWorkflowRequestDTO(title: 'Tagged flow', tagIds: ['tag-1', 'tag-2']);
+
+        $this->makeService($repository, $validator, $tagService, $clock)->create($request, 'user-creator');
+
+        $this->assertSame(['tag-1', 'tag-2'], $assignedTagIds);
+    }
+
+    public function testCreateRejectsUnknownTagIdsAndDoesNotPersistWorkflow(): void
+    {
+        $repository = $this->createMock(WorkflowRepositoryInterface::class);
+        $repository->expects($this->never())->method('save');
+
+        $validator = $this->createStub(WorkflowValidatorInterface::class);
+        $validator->method('validate')->willReturn([]);
+
+        $tagService = $this->createMock(TagServiceInterface::class);
+        $tagService->method('filterExistingTagIds')->willReturn(['tag-1']);
+        $tagService->expects($this->never())->method('assign');
+
+        $request = new CreateWorkflowRequestDTO(title: 'Tagged flow', tagIds: ['tag-1', 'missing-tag']);
+
+        try {
+            $this->makeService($repository, $validator, $tagService)->create($request, 'user-creator');
+            $this->fail('Expected InvalidArgumentException was not thrown');
+        } catch (\InvalidArgumentException $e) {
+            $this->assertStringContainsString('missing-tag', $e->getMessage());
+        }
     }
 }
