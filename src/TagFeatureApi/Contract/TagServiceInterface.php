@@ -28,4 +28,17 @@ interface TagServiceInterface
      * @return array<string, list<TagResponseInterface>>
      */
     public function getEntityTagsByIds(string $entityType, array $entityIds): array;
+
+    /**
+     * Assigns the given tag to the given entity. The operation is idempotent.
+     */
+    public function assign(string $tagId, string $entityType, string $entityId, string $assignedBy): void;
+
+    /**
+     * Returns the subset of the given tag ids that correspond to an existing tag.
+     *
+     * @param list<string> $tagIds
+     * @return list<string>
+     */
+    public function filterExistingTagIds(array $tagIds): array;
 }

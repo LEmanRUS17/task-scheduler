@@ -23,6 +23,12 @@ final class TaskCreateRequestDTO implements TaskCreateRequestInterface
         private readonly ?string $teamId = null,
         /** @var string[] */
         private readonly array $assigneeIds = [],
+        /** @var string[] */
+        #[Assert\All([
+            new Assert\Type(type: 'string', message: 'Tag id must be a string'),
+            new Assert\NotBlank(message: 'Tag id must not be blank'),
+        ])]
+        private readonly array $tagIds = [],
         private readonly ?\DateTimeImmutable $scheduledStart = null,
         private readonly ?\DateTimeImmutable $scheduledEnd = null,
         #[Assert\PositiveOrZero(message: 'Estimated time must be a non-negative integer')]
@@ -54,6 +60,11 @@ final class TaskCreateRequestDTO implements TaskCreateRequestInterface
     public function getAssigneeIds(): array
     {
         return $this->assigneeIds;
+    }
+
+    public function getTagIds(): array
+    {
+        return $this->tagIds;
     }
 
     public function getScheduledStart(): ?\DateTimeImmutable

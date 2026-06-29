@@ -17,6 +17,9 @@ interface TaskCreateRequestInterface
     /** @return string[] */
     public function getAssigneeIds(): array;
 
+    /** @return string[] */
+    public function getTagIds(): array;
+
     public function getScheduledStart(): ?\DateTimeImmutable;
 
     public function getScheduledEnd(): ?\DateTimeImmutable;

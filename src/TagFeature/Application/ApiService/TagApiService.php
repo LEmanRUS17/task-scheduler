@@ -195,6 +195,19 @@ final class TagApiService implements TagServiceInterface
         ));
     }
 
+    /** @return list<string> */
+    public function filterExistingTagIds(array $tagIds): array
+    {
+        if ($tagIds === []) {
+            return [];
+        }
+
+        return array_values(array_map(
+            static fn(Tag $tag) => $tag->id()->value(),
+            $this->tags->findByIds(array_values(array_unique($tagIds))),
+        ));
+    }
+
     /** @return array<string, list<TagResponseInterface>> */
     public function getEntityTagsByIds(string $entityType, array $entityIds): array
     {
