@@ -6,8 +6,10 @@ namespace App\Tests\Unit\TeamFeature\Application\ApiService;
 
 use App\DescriptionFeatureApi\Contract\DescriptionServiceInterface;
 use App\ProfileFeatureApi\Service\ProfileServiceInterface;
+use App\TagFeatureApi\Contract\TagServiceInterface;
 use App\TeamFeature\Application\ApiService\TeamApiService;
 use App\TeamFeature\Application\DataMapper\TeamDataMapper;
+use App\TeamFeature\Application\DTORequest\TeamCreateRequestDTO;
 use App\TeamFeature\Application\DTORequestValidator\TeamValidatorInterface;
 use App\TeamFeature\Domain\Entity\Team;
 use App\TeamFeature\Domain\Interactor\AddTeamMemberInteractor;
@@ -107,13 +109,19 @@ final class TeamApiServiceTest extends TestCase
         );
     }
 
-    private function makeService(TeamRepositoryInterface $teams): TeamApiService
-    {
+    private function makeService(
+        TeamRepositoryInterface $teams,
+        ?TeamValidatorInterface $validator = null,
+        ?TagServiceInterface $tagService = null,
+        ?ClockInterface $clock = null,
+    ): TeamApiService {
         // Interactors are final and cannot be doubled; build real ones with stubbed ports.
         // The paginated/getByIds reads do not touch them, so their wiring is irrelevant here.
         $members = $this->createStub(TeamMemberRepositoryInterface::class);
         $dispatcher = $this->createStub(DomainEventDispatcherInterface::class);
-        $clock = $this->createStub(ClockInterface::class);
+        $clock ??= $this->createStub(ClockInterface::class);
+        $validator ??= $this->createStub(TeamValidatorInterface::class);
+        $tagService ??= $this->createStub(TagServiceInterface::class);
 
         return new TeamApiService(
             new TeamCreateInteractor($teams, $members, $dispatcher, $clock),
@@ -123,9 +131,71 @@ final class TeamApiServiceTest extends TestCase
             $teams,
             $members,
             new TeamDataMapper(),
-            $this->createStub(TeamValidatorInterface::class),
+            $validator,
             $this->createStub(DescriptionServiceInterface::class),
             $this->createStub(ProfileServiceInterface::class),
+            $tagService,
         );
+    }
+
+    // --- create with tags ---
+
+    public function testCreateAssignsEachProvidedTagToTheNewTeam(): void
+    {
+        $teams = $this->createStub(TeamRepositoryInterface::class);
+
+        $clock = $this->createStub(ClockInterface::class);
+        $clock->method('now')->willReturn(new \DateTimeImmutable('2026-01-01 12:00:00'));
+
+        $validator = $this->createStub(TeamValidatorInterface::class);
+        $validator->method('validate')->willReturn([]);
+
+        $tagService = $this->createMock(TagServiceInterface::class);
+        $tagService->method('filterExistingTagIds')->willReturn(['tag-1', 'tag-2']);
+
+        $assignedTagIds = [];
+        $tagService->expects($this->exactly(2))
+            ->method('assign')
+            ->willReturnCallback(
+                function (
+                    string $tagId,
+                    string $entityType,
+                    string $entityId,
+                    string $assignedBy,
+                ) use (&$assignedTagIds): void {
+                    $this->assertSame(TagServiceInterface::TYPE_TEAM, $entityType);
+                    $this->assertSame('user-creator', $assignedBy);
+                    $this->assertNotSame('', $entityId);
+                    $assignedTagIds[] = $tagId;
+                },
+            );
+
+        $request = new TeamCreateRequestDTO(title: 'Tagged team', tagIds: ['tag-1', 'tag-2']);
+
+        $this->makeService($teams, $validator, $tagService, $clock)->create($request, 'user-creator');
+
+        $this->assertSame(['tag-1', 'tag-2'], $assignedTagIds);
+    }
+
+    public function testCreateRejectsUnknownTagIdsAndDoesNotPersistTeam(): void
+    {
+        $teams = $this->createMock(TeamRepositoryInterface::class);
+        $teams->expects($this->never())->method('save');
+
+        $validator = $this->createStub(TeamValidatorInterface::class);
+        $validator->method('validate')->willReturn([]);
+
+        $tagService = $this->createMock(TagServiceInterface::class);
+        $tagService->method('filterExistingTagIds')->willReturn(['tag-1']);
+        $tagService->expects($this->never())->method('assign');
+
+        $request = new TeamCreateRequestDTO(title: 'Tagged team', tagIds: ['tag-1', 'missing-tag']);
+
+        try {
+            $this->makeService($teams, $validator, $tagService)->create($request, 'user-creator');
+            $this->fail('Expected InvalidArgumentException was not thrown');
+        } catch (\InvalidArgumentException $e) {
+            $this->assertStringContainsString('missing-tag', $e->getMessage());
+        }
     }
 }

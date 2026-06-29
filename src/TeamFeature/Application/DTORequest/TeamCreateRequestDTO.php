@@ -18,6 +18,12 @@ final class TeamCreateRequestDTO implements TeamCreateRequestInterface
         )]
         private readonly string $title,
         private readonly ?string $description = null,
+        /** @var string[] */
+        #[Assert\All([
+            new Assert\Type(type: 'string', message: 'Tag id must be a string'),
+            new Assert\NotBlank(message: 'Tag id must not be blank'),
+        ])]
+        private readonly array $tagIds = [],
     ) {
     }
 
@@ -33,5 +39,10 @@ final class TeamCreateRequestDTO implements TeamCreateRequestInterface
     public function getDescription(): ?string
     {
         return $this->description;
+    }
+
+    public function getTagIds(): array
+    {
+        return $this->tagIds;
     }
 }

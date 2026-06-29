@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\TeamFeature\Application\ApiService;
 
 use App\DescriptionFeatureApi\Contract\DescriptionServiceInterface;
+use App\TagFeatureApi\Contract\TagServiceInterface;
 use App\ProfileFeatureApi\DTOResponse\ProfileDataResponseInterface;
 use App\ProfileFeatureApi\Service\ProfileServiceInterface;
 use App\TeamFeature\Application\DataMapper\TeamDataMapper;
@@ -38,6 +39,7 @@ final class TeamApiService implements TeamServiceInterface
         private readonly TeamValidatorInterface $validator,
         private readonly DescriptionServiceInterface $descriptions,
         private readonly ProfileServiceInterface $profiles,
+        private readonly TagServiceInterface $tagService,
     ) {
     }
 
@@ -111,12 +113,24 @@ final class TeamApiService implements TeamServiceInterface
             throw new \InvalidArgumentException(json_encode($violations));
         }
 
+        $tagIds = array_values(array_unique($dtoRequest->getTagIds()));
+        $missingTagIds = array_values(array_diff($tagIds, $this->tagService->filterExistingTagIds($tagIds)));
+        if ($missingTagIds !== []) {
+            throw new \InvalidArgumentException(json_encode([
+                'tagIds' => sprintf('Unknown tag ids: %s', implode(', ', $missingTagIds)),
+            ]));
+        }
+
         $title = $this->dataMapper->requestToTitle($dtoRequest);
         $team = $this->createInteractor->create($title, $creatorUserId);
 
         $description = $dtoRequest->getDescription();
         if ($description !== null) {
             $this->descriptions->set(Team::class, $team->id()->value(), $description);
+        }
+
+        foreach ($tagIds as $tagId) {
+            $this->tagService->assign($tagId, TagServiceInterface::TYPE_TEAM, $team->id()->value(), $creatorUserId);
         }
 
         return $this->dataMapper->teamToResponse($team, $description);
