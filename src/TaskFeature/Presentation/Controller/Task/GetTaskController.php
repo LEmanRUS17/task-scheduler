@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\TaskFeature\Presentation\Controller\Task;
 
 use App\FileFeatureApi\Contract\FileServiceInterface;
+use App\TagFeatureApi\Contract\TagServiceInterface;
 use App\TaskFeature\Domain\Entity\Task;
 use App\TaskFeature\Presentation\Formatter\TaskAttachmentFormatter;
 use App\TaskFeature\Presentation\Formatter\TaskResponseFormatter;
@@ -20,6 +21,7 @@ final class GetTaskController
     public function __construct(
         private readonly TaskServiceInterface $taskService,
         private readonly FileServiceInterface $fileService,
+        private readonly TagServiceInterface $tagService,
     ) {
     }
 
@@ -43,7 +45,9 @@ final class GetTaskController
             $this->fileService->listImageAttachments(Task::class, $id),
         );
 
-        $payload = TaskResponseFormatter::format($task);
+        $tagsByTask = $this->tagService->getEntityTagsByIds(TagServiceInterface::TYPE_TASK, [$id]);
+
+        $payload = TaskResponseFormatter::format($task, $tagsByTask[$id] ?? []);
         $payload['files'] = $files;
         $payload['filesCount'] = count($files);
 

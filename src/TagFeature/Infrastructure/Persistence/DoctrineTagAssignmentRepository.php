@@ -73,6 +73,31 @@ final class DoctrineTagAssignmentRepository implements TagAssignmentRepositoryIn
         return array_map(static fn(array $row) => $row['tagId'], $rows);
     }
 
+    public function findTagIdsByEntityIdsGrouped(TaggableType $entityType, array $entityIds): array
+    {
+        if ($entityIds === []) {
+            return [];
+        }
+
+        /** @var list<array{entityId: string, tagId: string}> $rows */
+        $rows = $this->entityManager->createQueryBuilder()
+            ->select('a.entityId AS entityId', 'a.tagId AS tagId')
+            ->from(TagAssignment::class, 'a')
+            ->where('a.entityType = :type')
+            ->andWhere('a.entityId IN (:ids)')
+            ->setParameter('type', $entityType->value())
+            ->setParameter('ids', $entityIds)
+            ->getQuery()
+            ->getArrayResult();
+
+        $grouped = [];
+        foreach ($rows as $row) {
+            $grouped[$row['entityId']][] = $row['tagId'];
+        }
+
+        return $grouped;
+    }
+
     public function findEntityIdsByTag(TaggableType $entityType, TagId $tagId): array
     {
         /** @var list<array{entityId: string}> $rows */

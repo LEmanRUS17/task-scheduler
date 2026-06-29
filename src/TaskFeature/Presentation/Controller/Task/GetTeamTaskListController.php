@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace App\TaskFeature\Presentation\Controller\Task;
 
+use App\TagFeatureApi\Contract\TagServiceInterface;
 use App\TaskFeature\Presentation\Formatter\TaskResponseFormatter;
+use App\TaskFeatureApi\DTOResponse\TaskDataResponseInterface;
 use App\TaskFeatureApi\Service\TaskServiceInterface;
 use App\UserFeature\Infrastructure\Security\SecurityUser;
 use Symfony\Bundle\SecurityBundle\Security;
@@ -18,6 +20,7 @@ final class GetTeamTaskListController
 {
     public function __construct(
         private readonly TaskServiceInterface $taskService,
+        private readonly TagServiceInterface $tagService,
         private readonly Security $security,
     ) {
     }
@@ -38,10 +41,18 @@ final class GetTeamTaskListController
             );
         }
 
+        $tagsByTask = $this->tagService->getEntityTagsByIds(
+            TagServiceInterface::TYPE_TASK,
+            array_map(static fn(TaskDataResponseInterface $task) => $task->getId(), $tasks),
+        );
+
         return new JsonResponse(
             [
                 'tasks' => array_map(
-                    static fn($task) => TaskResponseFormatter::format($task),
+                    static fn(TaskDataResponseInterface $task) => TaskResponseFormatter::format(
+                        $task,
+                        $tagsByTask[$task->getId()] ?? [],
+                    ),
                     $tasks,
                 ),
             ],

@@ -31,6 +31,14 @@ interface TagAssignmentRepositoryInterface
     public function findTagIdsByEntityIds(TaggableType $entityType, array $entityIds): array;
 
     /**
+     * Returns the ids of tags assigned to each of the given entities, grouped by entity id.
+     *
+     * @param list<string> $entityIds
+     * @return array<string, list<string>>
+     */
+    public function findTagIdsByEntityIdsGrouped(TaggableType $entityType, array $entityIds): array;
+
+    /**
      * Returns the ids of entities of the given type that carry the given tag.
      *
      * @return list<string>

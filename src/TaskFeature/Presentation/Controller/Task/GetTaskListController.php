@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\TaskFeature\Presentation\Controller\Task;
 
 use App\SearchFeatureApi\Contract\SearchServiceInterface;
+use App\TagFeatureApi\Contract\TagServiceInterface;
 use App\TaskFeature\Presentation\Formatter\TaskResponseFormatter;
 use App\TaskFeatureApi\DTOResponse\TaskDataResponseInterface;
 use App\TaskFeatureApi\Service\TaskServiceInterface;
@@ -25,6 +26,7 @@ final class GetTaskListController
     public function __construct(
         private readonly TaskServiceInterface $taskService,
         private readonly SearchServiceInterface $searchService,
+        private readonly TagServiceInterface $tagService,
         private readonly Security $security,
     ) {
     }
@@ -49,9 +51,17 @@ final class GetTaskListController
             $count = $this->taskService->countAll($userId);
         }
 
+        $tagsByTask = $this->tagService->getEntityTagsByIds(
+            TagServiceInterface::TYPE_TASK,
+            array_map(static fn(TaskDataResponseInterface $task) => $task->getId(), $tasks),
+        );
+
         return new JsonResponse([
             'tasks' => array_map(
-                static fn(TaskDataResponseInterface $task) => TaskResponseFormatter::format($task),
+                static fn(TaskDataResponseInterface $task) => TaskResponseFormatter::format(
+                    $task,
+                    $tagsByTask[$task->getId()] ?? [],
+                ),
                 $tasks,
             ),
             'pagination' => [

@@ -195,6 +195,42 @@ final class TagApiService implements TagServiceInterface
         ));
     }
 
+    /** @return array<string, list<TagResponseInterface>> */
+    public function getEntityTagsByIds(string $entityType, array $entityIds): array
+    {
+        if ($entityIds === []) {
+            return [];
+        }
+
+        $grouped = $this->assignments->findTagIdsByEntityIdsGrouped(
+            TaggableType::fromString($entityType),
+            $entityIds,
+        );
+
+        if ($grouped === []) {
+            return [];
+        }
+
+        $tagsById = [];
+        foreach ($this->tags->findByIds(array_merge(...array_values($grouped))) as $tag) {
+            // Description is not part of the list payload, so it is not loaded here.
+            $tagsById[$tag->id()->value()] = $this->dataMapper->tagToResponse($tag, null);
+        }
+
+        $result = [];
+        foreach ($grouped as $entityId => $tagIds) {
+            $tags = [];
+            foreach ($tagIds as $tagId) {
+                if (isset($tagsById[$tagId])) {
+                    $tags[] = $tagsById[$tagId];
+                }
+            }
+            $result[$entityId] = $tags;
+        }
+
+        return $result;
+    }
+
     private function toResponse(Tag $tag): TagResponseInterface
     {
         return $this->dataMapper->tagToResponse(

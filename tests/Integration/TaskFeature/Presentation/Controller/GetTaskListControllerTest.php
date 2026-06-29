@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace App\Tests\Integration\TaskFeature\Presentation\Controller;
 
 use App\SearchFeatureApi\Contract\SearchServiceInterface;
+use App\TagFeatureApi\Contract\TagServiceInterface;
+use App\TagFeatureApi\DTOResponse\TagResponseInterface;
 use App\TaskFeatureApi\DTOResponse\TaskDataResponseInterface;
 use App\TaskFeatureApi\Service\TaskServiceInterface;
 use App\UserFeature\Domain\Entity\User;
@@ -49,6 +51,16 @@ final class GetTaskListControllerTest extends WebTestCase
         $search->expects($this->never())->method('searchTasks');
         static::getContainer()->set(SearchServiceInterface::class, $search);
 
+        $tagService = $this->createMock(TagServiceInterface::class);
+        $tagService->expects($this->once())
+            ->method('getEntityTagsByIds')
+            ->with(TagServiceInterface::TYPE_TASK, ['task-1'])
+            ->willReturn(['task-1' => [
+                $this->makeTag('tag-1', 'bug', '#ff0000'),
+                $this->makeTag('tag-2', 'urgent', '#00ff00'),
+            ]]);
+        static::getContainer()->set(TagServiceInterface::class, $tagService);
+
         $client->request('GET', '/task', server: [
             'HTTP_AUTHORIZATION' => 'Bearer ' . $this->generateToken($user),
         ]);
@@ -58,6 +70,13 @@ final class GetTaskListControllerTest extends WebTestCase
         $this->assertCount(1, $body['tasks']);
         $this->assertSame('task-1', $body['tasks'][0]['id']);
         $this->assertSame('Fix bug', $body['tasks'][0]['title']);
+        $this->assertSame(
+            [
+                ['id' => 'tag-1', 'name' => 'bug', 'color' => '#ff0000'],
+                ['id' => 'tag-2', 'name' => 'urgent', 'color' => '#00ff00'],
+            ],
+            $body['tasks'][0]['tags'],
+        );
         $this->assertSame(['page' => 1, 'limit' => 10, 'pages' => 1], $body['pagination']);
         $this->assertSame(1, $body['count']);
     }
@@ -197,6 +216,13 @@ final class GetTaskListControllerTest extends WebTestCase
             ]);
         static::getContainer()->set(TaskServiceInterface::class, $taskService);
 
+        $tagService = $this->createMock(TagServiceInterface::class);
+        $tagService->expects($this->once())
+            ->method('getEntityTagsByIds')
+            ->with(TagServiceInterface::TYPE_TASK, ['task-2', 'task-1'])
+            ->willReturn(['task-1' => [$this->makeTag('tag-9', 'fix', '#123456')]]);
+        static::getContainer()->set(TagServiceInterface::class, $tagService);
+
         $client->request('GET', '/task?q=fix', server: [
             'HTTP_AUTHORIZATION' => 'Bearer ' . $this->generateToken($user),
         ]);
@@ -204,6 +230,11 @@ final class GetTaskListControllerTest extends WebTestCase
         $this->assertResponseIsSuccessful();
         $body = json_decode($client->getResponse()->getContent(), true);
         $this->assertSame(['task-2', 'task-1'], array_column($body['tasks'], 'id'));
+        $this->assertSame([], $body['tasks'][0]['tags']);
+        $this->assertSame(
+            [['id' => 'tag-9', 'name' => 'fix', 'color' => '#123456']],
+            $body['tasks'][1]['tags'],
+        );
         $this->assertSame(2, $body['count']);
     }
 
@@ -254,6 +285,16 @@ final class GetTaskListControllerTest extends WebTestCase
         $task->method('getDescription')->willReturn(null);
 
         return $task;
+    }
+
+    private function makeTag(string $id, string $name, string $color): TagResponseInterface
+    {
+        $tag = $this->createStub(TagResponseInterface::class);
+        $tag->method('getId')->willReturn($id);
+        $tag->method('getName')->willReturn($name);
+        $tag->method('getColor')->willReturn($color);
+
+        return $tag;
     }
 
     private function makeUser(): User
