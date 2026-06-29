@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace App\WorkflowFeature\Presentation\Controller;
 
 use App\SearchFeatureApi\Contract\SearchServiceInterface;
+use App\TagFeatureApi\Contract\TagServiceInterface;
+use App\TagFeatureApi\DTOResponse\TagResponseInterface;
 use App\UserFeature\Infrastructure\Security\SecurityUser;
 use App\WorkflowFeatureApi\DTOResponse\WorkflowResponseInterface;
 use App\WorkflowFeatureApi\Service\WorkflowServiceInterface;
@@ -24,6 +26,7 @@ final class ListWorkflowsController
     public function __construct(
         private readonly WorkflowServiceInterface $workflowService,
         private readonly SearchServiceInterface $searchService,
+        private readonly TagServiceInterface $tagService,
         private readonly Security $security,
     ) {
     }
@@ -44,6 +47,11 @@ final class ListWorkflowsController
             $count = $this->workflowService->countAll();
         }
 
+        $tagsByWorkflow = $this->tagService->getEntityTagsByIds(
+            TagServiceInterface::TYPE_WORKFLOW,
+            array_map(static fn(WorkflowResponseInterface $w) => $w->getId(), $workflows),
+        );
+
         return new JsonResponse([
             'workflow' => array_map(
                 static fn(WorkflowResponseInterface $w) => [
@@ -51,6 +59,14 @@ final class ListWorkflowsController
                     'title' => $w->getTitle(),
                     'createdBy' => $w->getCreatedBy(),
                     'createdAt' => $w->getCreatedAt()->format(\DateTimeInterface::ATOM),
+                    'tags' => array_map(
+                        static fn(TagResponseInterface $tag): array => [
+                            'id' => $tag->getId(),
+                            'name' => $tag->getName(),
+                            'color' => $tag->getColor(),
+                        ],
+                        $tagsByWorkflow[$w->getId()] ?? [],
+                    ),
                 ],
                 $workflows,
             ),

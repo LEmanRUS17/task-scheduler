@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace App\Tests\Integration\WorkflowFeature\Presentation\Controller;
 
 use App\SearchFeatureApi\Contract\SearchServiceInterface;
+use App\TagFeatureApi\Contract\TagServiceInterface;
+use App\TagFeatureApi\DTOResponse\TagResponseInterface;
 use App\UserFeature\Domain\Entity\User;
 use App\UserFeature\Domain\Repository\UserRepositoryInterface;
 use App\UserFeature\Domain\ValueObject\Email;
@@ -49,6 +51,16 @@ final class ListWorkflowsControllerTest extends WebTestCase
         $search->expects($this->never())->method('searchWorkflows');
         static::getContainer()->set(SearchServiceInterface::class, $search);
 
+        $tagService = $this->createMock(TagServiceInterface::class);
+        $tagService->expects($this->once())
+            ->method('getEntityTagsByIds')
+            ->with(TagServiceInterface::TYPE_WORKFLOW, ['wf-1'])
+            ->willReturn(['wf-1' => [
+                $this->makeTag('tag-1', 'agile', '#ff0000'),
+                $this->makeTag('tag-2', 'kanban', '#00ff00'),
+            ]]);
+        static::getContainer()->set(TagServiceInterface::class, $tagService);
+
         $client->request('GET', '/workflows', server: [
             'HTTP_AUTHORIZATION' => 'Bearer ' . $this->generateToken($user),
         ]);
@@ -60,6 +72,13 @@ final class ListWorkflowsControllerTest extends WebTestCase
         $this->assertSame('wf-1', $body['workflow'][0]['id']);
         $this->assertSame('Bug flow', $body['workflow'][0]['title']);
         $this->assertArrayNotHasKey('description', $body['workflow'][0]);
+        $this->assertSame(
+            [
+                ['id' => 'tag-1', 'name' => 'agile', 'color' => '#ff0000'],
+                ['id' => 'tag-2', 'name' => 'kanban', 'color' => '#00ff00'],
+            ],
+            $body['workflow'][0]['tags'],
+        );
         $this->assertSame(['page' => 1, 'limit' => 10, 'pages' => 1], $body['pagination']);
         $this->assertSame(1, $body['count']);
     }
@@ -199,6 +218,13 @@ final class ListWorkflowsControllerTest extends WebTestCase
             ]);
         static::getContainer()->set(WorkflowServiceInterface::class, $workflowService);
 
+        $tagService = $this->createMock(TagServiceInterface::class);
+        $tagService->expects($this->once())
+            ->method('getEntityTagsByIds')
+            ->with(TagServiceInterface::TYPE_WORKFLOW, ['wf-2', 'wf-1'])
+            ->willReturn(['wf-1' => [$this->makeTag('tag-9', 'scrum', '#123456')]]);
+        static::getContainer()->set(TagServiceInterface::class, $tagService);
+
         $client->request('GET', '/workflows?q=flow', server: [
             'HTTP_AUTHORIZATION' => 'Bearer ' . $this->generateToken($user),
         ]);
@@ -206,6 +232,11 @@ final class ListWorkflowsControllerTest extends WebTestCase
         $this->assertResponseIsSuccessful();
         $body = json_decode($client->getResponse()->getContent(), true);
         $this->assertSame(['wf-2', 'wf-1'], array_column($body['workflow'], 'id'));
+        $this->assertSame([], $body['workflow'][0]['tags']);
+        $this->assertSame(
+            [['id' => 'tag-9', 'name' => 'scrum', 'color' => '#123456']],
+            $body['workflow'][1]['tags'],
+        );
         $this->assertSame(2, $body['count']);
     }
 
@@ -234,6 +265,16 @@ final class ListWorkflowsControllerTest extends WebTestCase
         $body = json_decode($client->getResponse()->getContent(), true);
         $this->assertSame(37, $body['count']);
         $this->assertSame(2, $body['pagination']['pages']); // ceil(37 / 20)
+    }
+
+    private function makeTag(string $id, string $name, string $color): TagResponseInterface
+    {
+        $tag = $this->createStub(TagResponseInterface::class);
+        $tag->method('getId')->willReturn($id);
+        $tag->method('getName')->willReturn($name);
+        $tag->method('getColor')->willReturn($color);
+
+        return $tag;
     }
 
     private function makeWorkflow(string $id, string $title): WorkflowResponseInterface
