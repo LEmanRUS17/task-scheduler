@@ -20,6 +20,9 @@ interface TagRepositoryInterface
     /** @return Tag[] */
     public function findByOwnerPaginated(string $ownerId, int $limit, int $offset): array;
 
+    /** @return Tag[] */
+    public function findAll(): array;
+
     public function countByOwner(string $ownerId): int;
 
     /**

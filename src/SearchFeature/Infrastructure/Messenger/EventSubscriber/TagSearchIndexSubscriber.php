@@ -4,12 +4,10 @@ declare(strict_types=1);
 
 namespace App\SearchFeature\Infrastructure\Messenger\EventSubscriber;
 
-use App\SearchFeature\Infrastructure\Messenger\Message\IndexTaskMessage;
-use App\SearchFeature\Infrastructure\Messenger\Message\IndexTeamMessage;
-use App\SearchFeature\Infrastructure\Messenger\Message\IndexWorkflowMessage;
-use App\TagFeature\Domain\Event\TagAssigned;
-use App\TagFeature\Domain\Event\TagUnassigned;
-use App\TagFeatureApi\Contract\TagServiceInterface;
+use App\SearchFeature\Infrastructure\Messenger\Message\IndexTagMessage;
+use App\TagFeature\Domain\Event\TagCreated;
+use App\TagFeature\Domain\Event\TagDeleted;
+use App\TagFeature\Domain\Event\TagUpdated;
 use Symfony\Component\Messenger\Attribute\AsMessageHandler;
 use Symfony\Component\Messenger\MessageBusInterface;
 
@@ -20,28 +18,20 @@ final class TagSearchIndexSubscriber
     }
 
     #[AsMessageHandler(bus: 'event.bus')]
-    public function onTagAssigned(TagAssigned $event): void
+    public function onTagCreated(TagCreated $event): void
     {
-        $this->reindex($event->entityType->value(), $event->entityId);
+        $this->defaultBus->dispatch(new IndexTagMessage($event->id->value()));
     }
 
     #[AsMessageHandler(bus: 'event.bus')]
-    public function onTagUnassigned(TagUnassigned $event): void
+    public function onTagUpdated(TagUpdated $event): void
     {
-        $this->reindex($event->entityType->value(), $event->entityId);
+        $this->defaultBus->dispatch(new IndexTagMessage($event->id->value()));
     }
 
-    private function reindex(string $entityType, string $entityId): void
+    #[AsMessageHandler(bus: 'event.bus')]
+    public function onTagDeleted(TagDeleted $event): void
     {
-        $message = match ($entityType) {
-            TagServiceInterface::TYPE_TASK => new IndexTaskMessage($entityId),
-            TagServiceInterface::TYPE_TEAM => new IndexTeamMessage($entityId),
-            TagServiceInterface::TYPE_WORKFLOW => new IndexWorkflowMessage($entityId),
-            default => null,
-        };
-
-        if ($message !== null) {
-            $this->defaultBus->dispatch($message);
-        }
+        $this->defaultBus->dispatch(new IndexTagMessage($event->id->value()));
     }
 }

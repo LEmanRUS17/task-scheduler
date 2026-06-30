@@ -13,6 +13,18 @@ interface TagServiceInterface
     public const TYPE_WORKFLOW = 'workflow';
 
     /**
+     * Returns the tag with the given id, or null when it does not exist.
+     */
+    public function getById(string $id): ?TagResponseInterface;
+
+    /**
+     * Returns every tag, regardless of owner.
+     *
+     * @return TagResponseInterface[]
+     */
+    public function getList(): array;
+
+    /**
      * Returns the names of the tags assigned to the given entity.
      *
      * @return list<string>

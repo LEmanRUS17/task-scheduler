@@ -121,6 +121,38 @@ final class TagApiService implements TagServiceInterface
         );
     }
 
+    /** @return TagResponseInterface[] */
+    public function getList(): array
+    {
+        return array_map(
+            fn(Tag $tag) => $this->toResponse($tag),
+            $this->tags->findAll(),
+        );
+    }
+
+    /**
+     * Returns tags for the given ids, preserving the order of the ids.
+     *
+     * @param list<string> $ids
+     * @return TagResponseInterface[]
+     */
+    public function getByIds(array $ids): array
+    {
+        $byId = [];
+        foreach ($this->tags->findByIds($ids) as $tag) {
+            $byId[$tag->id()->value()] = $tag;
+        }
+
+        $result = [];
+        foreach ($ids as $id) {
+            if (isset($byId[$id])) {
+                $result[] = $this->toResponse($byId[$id]);
+            }
+        }
+
+        return $result;
+    }
+
     public function countMyTags(string $ownerId): int
     {
         return $this->tags->countByOwner($ownerId);

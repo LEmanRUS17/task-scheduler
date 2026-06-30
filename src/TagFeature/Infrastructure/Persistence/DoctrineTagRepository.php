@@ -50,6 +50,11 @@ final class DoctrineTagRepository implements TagRepositoryInterface
         return $this->entityManager->getRepository(Tag::class)->count(['ownerId' => $ownerId]);
     }
 
+    public function findAll(): array
+    {
+        return $this->entityManager->getRepository(Tag::class)->findAll();
+    }
+
     public function findByIds(array $ids): array
     {
         if ($ids === []) {

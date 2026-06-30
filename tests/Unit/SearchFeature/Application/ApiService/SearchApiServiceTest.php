@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Tests\Unit\SearchFeature\Application\ApiService;
 
 use App\SearchFeature\Application\ApiService\SearchApiService;
+use App\SearchFeature\Domain\Port\TagSearchRepositoryInterface;
 use App\SearchFeature\Domain\Port\TaskSearchRepositoryInterface;
 use App\SearchFeature\Domain\Port\TeamSearchRepositoryInterface;
 use App\SearchFeature\Domain\Port\WorkflowSearchRepositoryInterface;
@@ -17,7 +18,7 @@ final class SearchApiServiceTest extends TestCase
         $repository = $this->createStub(TaskSearchRepositoryInterface::class);
         $repository->method('search')->willReturn(['ids' => ['task-1', 'task-2'], 'total' => 5]);
 
-        $service = new SearchApiService($repository, $this->teamRepositoryStub(), $this->workflowRepositoryStub());
+        $service = new SearchApiService($repository, $this->teamRepositoryStub(), $this->workflowRepositoryStub(), $this->tagRepositoryStub());
         $result = $service->searchTasks('fix', 'user-1');
 
         $this->assertSame(['ids' => ['task-1', 'task-2'], 'total' => 5], $result);
@@ -31,7 +32,7 @@ final class SearchApiServiceTest extends TestCase
             ->with('fix bug', 'user-1', 'team-1', 'open', 20, 40)
             ->willReturn(['ids' => [], 'total' => 0]);
 
-        $service = new SearchApiService($repository, $this->teamRepositoryStub(), $this->workflowRepositoryStub());
+        $service = new SearchApiService($repository, $this->teamRepositoryStub(), $this->workflowRepositoryStub(), $this->tagRepositoryStub());
         $service->searchTasks('fix bug', 'user-1', 'team-1', 'open', 20, 40);
     }
 
@@ -43,7 +44,7 @@ final class SearchApiServiceTest extends TestCase
             ->with('fix', 'user-1', null, null, 10, 0)
             ->willReturn(['ids' => [], 'total' => 0]);
 
-        (new SearchApiService($repository, $this->teamRepositoryStub(), $this->workflowRepositoryStub()))->searchTasks('fix', 'user-1');
+        (new SearchApiService($repository, $this->teamRepositoryStub(), $this->workflowRepositoryStub(), $this->tagRepositoryStub()))->searchTasks('fix', 'user-1');
     }
 
     public function testSearchTasksReturnsEmptyResultWhenRepositoryReturnsNothing(): void
@@ -51,7 +52,7 @@ final class SearchApiServiceTest extends TestCase
         $repository = $this->createStub(TaskSearchRepositoryInterface::class);
         $repository->method('search')->willReturn(['ids' => [], 'total' => 0]);
 
-        $service = new SearchApiService($repository, $this->teamRepositoryStub(), $this->workflowRepositoryStub());
+        $service = new SearchApiService($repository, $this->teamRepositoryStub(), $this->workflowRepositoryStub(), $this->tagRepositoryStub());
         $this->assertSame(['ids' => [], 'total' => 0], $service->searchTasks('nothing', 'user-1'));
     }
 
@@ -60,7 +61,7 @@ final class SearchApiServiceTest extends TestCase
         $teamRepository = $this->createStub(TeamSearchRepositoryInterface::class);
         $teamRepository->method('search')->willReturn(['ids' => ['team-1', 'team-2'], 'total' => 5]);
 
-        $service = new SearchApiService($this->taskRepositoryStub(), $teamRepository, $this->workflowRepositoryStub());
+        $service = new SearchApiService($this->taskRepositoryStub(), $teamRepository, $this->workflowRepositoryStub(), $this->tagRepositoryStub());
         $result = $service->searchTeams('end', 'user-1');
 
         $this->assertSame(['ids' => ['team-1', 'team-2'], 'total' => 5], $result);
@@ -74,7 +75,7 @@ final class SearchApiServiceTest extends TestCase
             ->with('backend', 'user-1', ['active', 'archived'], true, 20, 40)
             ->willReturn(['ids' => [], 'total' => 0]);
 
-        $service = new SearchApiService($this->taskRepositoryStub(), $teamRepository, $this->workflowRepositoryStub());
+        $service = new SearchApiService($this->taskRepositoryStub(), $teamRepository, $this->workflowRepositoryStub(), $this->tagRepositoryStub());
         $service->searchTeams('backend', 'user-1', ['active', 'archived'], true, 20, 40);
     }
 
@@ -86,7 +87,7 @@ final class SearchApiServiceTest extends TestCase
             ->with('backend', 'user-1', [], false, 10, 0)
             ->willReturn(['ids' => [], 'total' => 0]);
 
-        $service = new SearchApiService($this->taskRepositoryStub(), $teamRepository, $this->workflowRepositoryStub());
+        $service = new SearchApiService($this->taskRepositoryStub(), $teamRepository, $this->workflowRepositoryStub(), $this->tagRepositoryStub());
         $service->searchTeams('backend', 'user-1');
     }
 
@@ -95,7 +96,7 @@ final class SearchApiServiceTest extends TestCase
         $workflowRepository = $this->createStub(WorkflowSearchRepositoryInterface::class);
         $workflowRepository->method('search')->willReturn(['ids' => ['wf-1', 'wf-2'], 'total' => 5]);
 
-        $service = new SearchApiService($this->taskRepositoryStub(), $this->teamRepositoryStub(), $workflowRepository);
+        $service = new SearchApiService($this->taskRepositoryStub(), $this->teamRepositoryStub(), $workflowRepository, $this->tagRepositoryStub());
         $result = $service->searchWorkflows('flow', 'user-1');
 
         $this->assertSame(['ids' => ['wf-1', 'wf-2'], 'total' => 5], $result);
@@ -109,7 +110,7 @@ final class SearchApiServiceTest extends TestCase
             ->with('flow', 'user-1', true, 20, 40)
             ->willReturn(['ids' => [], 'total' => 0]);
 
-        $service = new SearchApiService($this->taskRepositoryStub(), $this->teamRepositoryStub(), $workflowRepository);
+        $service = new SearchApiService($this->taskRepositoryStub(), $this->teamRepositoryStub(), $workflowRepository, $this->tagRepositoryStub());
         $service->searchWorkflows('flow', 'user-1', true, 20, 40);
     }
 
@@ -121,8 +122,43 @@ final class SearchApiServiceTest extends TestCase
             ->with('flow', 'user-1', false, 10, 0)
             ->willReturn(['ids' => [], 'total' => 0]);
 
-        $service = new SearchApiService($this->taskRepositoryStub(), $this->teamRepositoryStub(), $workflowRepository);
+        $service = new SearchApiService($this->taskRepositoryStub(), $this->teamRepositoryStub(), $workflowRepository, $this->tagRepositoryStub());
         $service->searchWorkflows('flow', 'user-1');
+    }
+
+    public function testSearchTagsReturnsIdsAndTotalFromRepository(): void
+    {
+        $tagRepository = $this->createStub(TagSearchRepositoryInterface::class);
+        $tagRepository->method('search')->willReturn(['ids' => ['tag-1', 'tag-2'], 'total' => 5]);
+
+        $service = new SearchApiService($this->taskRepositoryStub(), $this->teamRepositoryStub(), $this->workflowRepositoryStub(), $tagRepository);
+        $result = $service->searchTags('urgent', 'user-1');
+
+        $this->assertSame(['ids' => ['tag-1', 'tag-2'], 'total' => 5], $result);
+    }
+
+    public function testSearchTagsPassesParametersToRepository(): void
+    {
+        $tagRepository = $this->createMock(TagSearchRepositoryInterface::class);
+        $tagRepository->expects($this->once())
+            ->method('search')
+            ->with('urgent', 'user-1', 20, 40)
+            ->willReturn(['ids' => [], 'total' => 0]);
+
+        $service = new SearchApiService($this->taskRepositoryStub(), $this->teamRepositoryStub(), $this->workflowRepositoryStub(), $tagRepository);
+        $service->searchTags('urgent', 'user-1', 20, 40);
+    }
+
+    public function testSearchTagsWithDefaultParameters(): void
+    {
+        $tagRepository = $this->createMock(TagSearchRepositoryInterface::class);
+        $tagRepository->expects($this->once())
+            ->method('search')
+            ->with('urgent', 'user-1', 10, 0)
+            ->willReturn(['ids' => [], 'total' => 0]);
+
+        $service = new SearchApiService($this->taskRepositoryStub(), $this->teamRepositoryStub(), $this->workflowRepositoryStub(), $tagRepository);
+        $service->searchTags('urgent', 'user-1');
     }
 
     private function taskRepositoryStub(): TaskSearchRepositoryInterface
@@ -145,6 +181,14 @@ final class SearchApiServiceTest extends TestCase
     {
         $repository = $this->createStub(WorkflowSearchRepositoryInterface::class);
         $repository->method('search')->willReturn([]);
+
+        return $repository;
+    }
+
+    private function tagRepositoryStub(): TagSearchRepositoryInterface
+    {
+        $repository = $this->createStub(TagSearchRepositoryInterface::class);
+        $repository->method('search')->willReturn(['ids' => [], 'total' => 0]);
 
         return $repository;
     }

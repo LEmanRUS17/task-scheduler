@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\TagFeature\Presentation\Controller;
 
+use App\SearchFeatureApi\Contract\SearchServiceInterface;
 use App\TagFeature\Application\ApiService\TagApiService;
 use App\UserFeature\Infrastructure\Security\SecurityUser;
 use Symfony\Bundle\SecurityBundle\Security;
@@ -15,11 +16,13 @@ use Symfony\Component\Routing\Attribute\Route;
 #[AsController]
 final class ListMyTagsController
 {
+    private const MIN_QUERY_LENGTH = 2;
     private const DEFAULT_LIMIT = 10;
     private const ALLOWED_LIMITS = [10, 20, 50];
 
     public function __construct(
         private readonly TagApiService $tagService,
+        private readonly SearchServiceInterface $searchService,
         private readonly Security $security,
     ) {
     }
@@ -35,8 +38,16 @@ final class ListMyTagsController
         $limit = $this->resolveLimit($request->query->getInt('limit', self::DEFAULT_LIMIT));
         $offset = ($page - 1) * $limit;
 
-        $tags = $this->tagService->getMyTagsPage($ownerId, $limit, $offset);
-        $count = $this->tagService->countMyTags($ownerId);
+        $query = trim((string) $request->query->get('q', ''));
+
+        if (strlen($query) >= self::MIN_QUERY_LENGTH) {
+            $result = $this->searchService->searchTags($query, $ownerId, $limit, $offset);
+            $tags = $this->tagService->getByIds($result['ids']);
+            $count = $result['total'];
+        } else {
+            $tags = $this->tagService->getMyTagsPage($ownerId, $limit, $offset);
+            $count = $this->tagService->countMyTags($ownerId);
+        }
 
         return new JsonResponse([
             'tags' => TagView::many($tags),
