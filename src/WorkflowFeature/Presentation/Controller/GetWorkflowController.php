@@ -50,6 +50,7 @@ final class GetWorkflowController
                         'id' => $s->getId(),
                         'label' => $s->getLabel(),
                         'isInitial' => $s->isInitial(),
+                        'isFinal' => $s->isFinal(),
                         'description' => $s->getDescription(),
                     ],
                     $this->workflowService->getStatuses($id),

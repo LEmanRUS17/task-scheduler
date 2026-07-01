@@ -47,6 +47,8 @@ final class TaskResponseFormatter
             'createdAt' => $task->getCreatedAt()->format(\DateTimeInterface::ATOM),
             'availableTransitions' => $task->getAvailableTransitions(),
             'description' => $task->getDescription(),
+            'isClosed' => $task->isClosed(),
+            'closedAt' => $task->getClosedAt()?->format(\DateTimeInterface::ATOM),
         ];
     }
 

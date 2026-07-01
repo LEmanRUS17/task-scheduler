@@ -6,6 +6,7 @@ namespace App\Tests\Unit\WorkflowFeature\Domain\Entity;
 
 use App\WorkflowFeature\Domain\Entity\WorkflowStatus;
 use App\WorkflowFeature\Domain\Event\WorkflowStatusAdded;
+use App\WorkflowFeature\Domain\Event\WorkflowStatusUpdated;
 use App\WorkflowFeature\Domain\ValueObject\StatusLabel;
 use App\WorkflowFeature\Domain\ValueObject\WorkflowId;
 use App\WorkflowFeature\Domain\ValueObject\WorkflowStatusId;
@@ -42,6 +43,43 @@ final class WorkflowStatusTest extends TestCase
         $status = WorkflowStatus::add($this->id, $this->workflowId, $this->label, false, $this->createdAt);
 
         $this->assertFalse($status->isInitial());
+    }
+
+    public function testAddDefaultsToNonFinal(): void
+    {
+        $status = WorkflowStatus::add($this->id, $this->workflowId, $this->label, true, $this->createdAt);
+
+        $this->assertFalse($status->isFinal());
+    }
+
+    public function testAddFinalStatus(): void
+    {
+        $status = WorkflowStatus::add($this->id, $this->workflowId, $this->label, false, $this->createdAt, true);
+
+        $this->assertTrue($status->isFinal());
+    }
+
+    public function testMarkFinalTogglesFlag(): void
+    {
+        $status = WorkflowStatus::add($this->id, $this->workflowId, $this->label, false, $this->createdAt);
+
+        $status->markFinal(true);
+        $this->assertTrue($status->isFinal());
+
+        $status->markFinal(false);
+        $this->assertFalse($status->isFinal());
+    }
+
+    public function testMarkFinalRecordsWorkflowStatusUpdatedEvent(): void
+    {
+        $status = WorkflowStatus::add($this->id, $this->workflowId, $this->label, false, $this->createdAt);
+        $status->pullDomainEvents();
+
+        $status->markFinal(true);
+        $events = $status->pullDomainEvents();
+
+        $this->assertCount(1, $events);
+        $this->assertInstanceOf(WorkflowStatusUpdated::class, $events[0]);
     }
 
     public function testAddRecordsWorkflowStatusAddedEvent(): void

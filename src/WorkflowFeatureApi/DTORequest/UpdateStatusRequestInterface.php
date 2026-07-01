@@ -8,5 +8,7 @@ interface UpdateStatusRequestInterface extends WorkflowRequestInterface
 {
     public function getLabel(): string;
 
+    public function isFinal(): ?bool;
+
     public function getDescription(): ?string;
 }

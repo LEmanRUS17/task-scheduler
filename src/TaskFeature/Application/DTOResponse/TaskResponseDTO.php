@@ -32,6 +32,8 @@ final class TaskResponseDTO implements TaskDataResponseInterface
         private readonly ?string $description = null,
         private readonly ?ProfileDataResponseInterface $createdByProfile = null,
         private readonly array $assigneeProfiles = [],
+        private readonly bool $isClosed = false,
+        private readonly ?\DateTimeImmutable $closedAt = null,
     ) {
         return;
     }
@@ -119,5 +121,15 @@ final class TaskResponseDTO implements TaskDataResponseInterface
     public function getDescription(): ?string
     {
         return $this->description;
+    }
+
+    public function isClosed(): bool
+    {
+        return $this->isClosed;
+    }
+
+    public function getClosedAt(): ?\DateTimeImmutable
+    {
+        return $this->closedAt;
     }
 }

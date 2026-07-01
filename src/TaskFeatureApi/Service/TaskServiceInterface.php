@@ -48,6 +48,10 @@ interface TaskServiceInterface
 
     public function applyTransition(string $id, string $transition): ResponseDTO;
 
+    public function close(string $id): ResponseDTO;
+
+    public function reopen(string $id): ResponseDTO;
+
     public function addAssignee(string $taskId, string $userId): void;
 
     public function removeAssignee(string $taskId, string $userId): void;

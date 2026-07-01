@@ -28,6 +28,7 @@ final class Task implements WorkflowSubjectInterface, AuditableInterface, Descri
     private ?\DateTimeImmutable $scheduledEnd;
     private ?int $estimatedTime;
     private ?int $actualTime;
+    private ?\DateTimeImmutable $closedAt;
 
     /** @var list<object> */
     private array $domainEvents = [];
@@ -55,6 +56,7 @@ final class Task implements WorkflowSubjectInterface, AuditableInterface, Descri
         $this->scheduledEnd = $scheduledEnd;
         $this->estimatedTime = $estimatedTime;
         $this->actualTime = null;
+        $this->closedAt = null;
     }
 
     public static function create(
@@ -181,6 +183,34 @@ final class Task implements WorkflowSubjectInterface, AuditableInterface, Descri
     public function getWorkflowDefinitionTitle(): string
     {
         return $this->workflowDefinitionTitle;
+    }
+
+    public function isClosed(): bool
+    {
+        return $this->closedAt !== null;
+    }
+
+    public function closedAt(): ?\DateTimeImmutable
+    {
+        return $this->closedAt;
+    }
+
+    public function close(\DateTimeImmutable $closedAt): void
+    {
+        if ($this->isClosed()) {
+            throw new \DomainException('Task is already closed');
+        }
+
+        $this->closedAt = $closedAt;
+    }
+
+    public function reopen(): void
+    {
+        if (!$this->isClosed()) {
+            throw new \DomainException('Task is not closed');
+        }
+
+        $this->closedAt = null;
     }
 
     private function recordEvent(object $event): void

@@ -99,6 +99,30 @@ final class AddWorkflowStatusInteractorTest extends TestCase
         $this->assertTrue($status->isInitial());
     }
 
+    public function testAddFinalStatus(): void
+    {
+        $statuses = $this->createStub(WorkflowStatusRepositoryInterface::class);
+        $statuses->method('findByLabel')->willReturn(null);
+        $statuses->method('hasInitial')->willReturn(false);
+
+        $status = $this->buildInteractor($this->workflowsWithFound(), $statuses)
+            ->add($this->workflowId, StatusLabel::fromString('done'), false, true);
+
+        $this->assertTrue($status->isFinal());
+    }
+
+    public function testAddDefaultsToNonFinal(): void
+    {
+        $statuses = $this->createStub(WorkflowStatusRepositoryInterface::class);
+        $statuses->method('findByLabel')->willReturn(null);
+        $statuses->method('hasInitial')->willReturn(false);
+
+        $status = $this->buildInteractor($this->workflowsWithFound(), $statuses)
+            ->add($this->workflowId, StatusLabel::fromString('open'), true);
+
+        $this->assertFalse($status->isFinal());
+    }
+
     public function testAddThrowsWhenWorkflowNotFound(): void
     {
         $workflows = $this->createStub(WorkflowRepositoryInterface::class);

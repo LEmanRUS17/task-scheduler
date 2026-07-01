@@ -10,5 +10,7 @@ interface AddStatusRequestInterface extends WorkflowRequestInterface
 
     public function isInitial(): bool;
 
+    public function isFinal(): bool;
+
     public function getDescription(): ?string;
 }

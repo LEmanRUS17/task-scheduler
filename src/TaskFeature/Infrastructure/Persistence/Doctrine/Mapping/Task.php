@@ -29,3 +29,4 @@ $builder->addField('scheduledStart', 'datetime_immutable', ['columnName' => 'sch
 $builder->addField('scheduledEnd', 'datetime_immutable', ['columnName' => 'scheduled_end', 'nullable' => true]);
 $builder->addField('estimatedTime', 'integer', ['columnName' => 'estimated_time', 'nullable' => true]);
 $builder->addField('actualTime', 'integer', ['columnName' => 'actual_time', 'nullable' => true]);
+$builder->addField('closedAt', 'datetime_immutable', ['columnName' => 'closed_at', 'nullable' => true]);

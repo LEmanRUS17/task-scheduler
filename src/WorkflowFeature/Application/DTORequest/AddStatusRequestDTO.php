@@ -15,6 +15,7 @@ final class AddStatusRequestDTO implements AddStatusRequestInterface
         #[Assert\Length(max: 100, maxMessage: 'Label must not exceed 100 characters')]
         private readonly string $label,
         private readonly bool $isInitial = false,
+        private readonly bool $isFinal = false,
         private readonly ?string $description = null,
     ) {
     }
@@ -27,6 +28,11 @@ final class AddStatusRequestDTO implements AddStatusRequestInterface
     public function isInitial(): bool
     {
         return $this->isInitial;
+    }
+
+    public function isFinal(): bool
+    {
+        return $this->isFinal;
     }
 
     public function getDescription(): ?string

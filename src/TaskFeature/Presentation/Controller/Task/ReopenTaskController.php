@@ -5,16 +5,16 @@ declare(strict_types=1);
 namespace App\TaskFeature\Presentation\Controller\Task;
 
 use App\TaskFeature\Domain\ValueObject\TaskPermission;
+use App\TaskFeature\Presentation\Formatter\TaskResponseFormatter;
 use App\TaskFeatureApi\Service\TaskServiceInterface;
 use Symfony\Bundle\SecurityBundle\Security;
 use Symfony\Component\HttpFoundation\JsonResponse;
-use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Attribute\AsController;
 use Symfony\Component\Routing\Attribute\Route;
 
 #[AsController]
-final class ApplyTaskTransitionController
+final class ReopenTaskController
 {
     public function __construct(
         private readonly TaskServiceInterface $taskService,
@@ -22,8 +22,8 @@ final class ApplyTaskTransitionController
     ) {
     }
 
-    #[Route('/task/{id}/transition', name: 'task_transition', methods: ['POST'])]
-    public function __invoke(string $id, Request $request): JsonResponse
+    #[Route('/task/{id}/reopen', name: 'task_reopen', methods: ['POST'])]
+    public function __invoke(string $id): JsonResponse
     {
         $task = $this->taskService->getById($id);
 
@@ -35,35 +35,17 @@ final class ApplyTaskTransitionController
             return new JsonResponse(['message' => 'Access denied'], Response::HTTP_FORBIDDEN);
         }
 
-        $body = json_decode($request->getContent(), true);
-        $transitionId = $body['transitionId'] ?? null;
-
-        if (empty($transitionId)) {
-            return new JsonResponse(
-                ['message' => 'Field "transitionId" is required'],
-                Response::HTTP_UNPROCESSABLE_ENTITY,
-            );
-        }
-
         try {
-            $task = $this->taskService->applyTransition($id, $transitionId);
+            $task = $this->taskService->reopen($id);
         } catch (\DomainException $e) {
             return new JsonResponse(
                 ['message' => $e->getMessage()],
-                Response::HTTP_BAD_REQUEST,
+                Response::HTTP_CONFLICT,
             );
         }
 
         return new JsonResponse(
-            [
-                'id' => $task->getId(),
-                'title' => $task->getTitle(),
-                'status' => $task->getStatus(),
-                'status_id' => $task->getStatusId(),
-                'createdAt' => $task->getCreatedAt()->format(\DateTimeInterface::ATOM),
-                'isClosed' => $task->isClosed(),
-                'closedAt' => $task->getClosedAt()?->format(\DateTimeInterface::ATOM),
-            ],
+            TaskResponseFormatter::format($task),
             Response::HTTP_OK,
         );
     }

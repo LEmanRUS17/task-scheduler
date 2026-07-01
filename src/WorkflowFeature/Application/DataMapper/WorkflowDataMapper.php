@@ -52,6 +52,7 @@ final class WorkflowDataMapper
             $status->workflowId()->value(),
             $status->label()->value(),
             $status->isInitial(),
+            $status->isFinal(),
             $status->createdAt(),
             $description,
         );

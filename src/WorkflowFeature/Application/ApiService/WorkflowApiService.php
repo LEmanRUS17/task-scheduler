@@ -177,6 +177,7 @@ final class WorkflowApiService implements WorkflowServiceInterface
             WorkflowId::fromString($workflowId),
             $label,
             $request->isInitial(),
+            $request->isFinal(),
         );
 
         $description = $request->getDescription();
@@ -202,6 +203,7 @@ final class WorkflowApiService implements WorkflowServiceInterface
             WorkflowId::fromString($workflowId),
             WorkflowStatusId::fromString($statusId),
             StatusLabel::fromString($request->getLabel()),
+            $request->isFinal(),
         );
 
         $description = $request->getDescription();

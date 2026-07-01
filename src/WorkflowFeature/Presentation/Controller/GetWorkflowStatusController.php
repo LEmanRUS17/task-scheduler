@@ -43,6 +43,7 @@ final class GetWorkflowStatusController
                 'workflowId' => $status->getWorkflowId(),
                 'label' => $status->getLabel(),
                 'isInitial' => $status->isInitial(),
+                'isFinal' => $status->isFinal(),
                 'createdAt' => $status->getCreatedAt()->format(\DateTimeInterface::ATOM),
                 'description' => $status->getDescription(),
             ],
