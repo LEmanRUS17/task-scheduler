@@ -48,3 +48,9 @@ analytics_controllers:
         path: ../src/AnalyticsFeature/Presentation/Controller/
         namespace: App\AnalyticsFeature\Presentation\Controller
     type: attribute
+
+tag_controllers:
+    resource:
+        path: ../src/TagFeature/Presentation/Controller/
+        namespace: App\TagFeature\Presentation\Controller
+    type: attribute

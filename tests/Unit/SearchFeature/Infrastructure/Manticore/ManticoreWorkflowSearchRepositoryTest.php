@@ -29,7 +29,7 @@ final class ManticoreWorkflowSearchRepositoryTest extends TestCase
         $this->buildRepository($body)->search('flow', 'user-1', false, 10, 0);
 
         $must = $body['query']['bool']['must'];
-        $this->assertSame('flow', $must[0]['match']['title,description']);
+        $this->assertSame('flow', $must[0]['match']['title,description,tags']);
     }
 
     public function testSearchWithoutFiltersHasNoFilter(): void

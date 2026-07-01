@@ -26,6 +26,7 @@ use App\TaskFeatureApi\DTORequest\TaskUpdateRequestInterface;
 use App\TaskFeatureApi\DTOResponse\TaskDataResponseInterface;
 use App\TaskFeatureApi\Service\TaskServiceInterface;
 use App\DescriptionFeatureApi\Contract\DescriptionServiceInterface;
+use App\TagFeatureApi\Contract\TagServiceInterface;
 use App\ProfileFeatureApi\DTOResponse\ProfileDataResponseInterface;
 use App\ProfileFeatureApi\Service\ProfileServiceInterface;
 use App\TaskFeature\Domain\Entity\Task;
@@ -54,6 +55,7 @@ final class TaskApiService implements TaskServiceInterface
         private readonly TaskWorkflowInterface $workflow,
         private readonly TeamMembershipInterface $teamMembership,
         private readonly DescriptionServiceInterface $descriptions,
+        private readonly TagServiceInterface $tagService,
     ) {
     }
 
@@ -141,6 +143,14 @@ final class TaskApiService implements TaskServiceInterface
             throw new \InvalidArgumentException(json_encode($violations));
         }
 
+        $tagIds = array_values(array_unique($dtoRequest->getTagIds()));
+        $missingTagIds = array_values(array_diff($tagIds, $this->tagService->filterExistingTagIds($tagIds)));
+        if ($missingTagIds !== []) {
+            throw new \InvalidArgumentException(json_encode([
+                'tagIds' => sprintf('Unknown tag ids: %s', implode(', ', $missingTagIds)),
+            ]));
+        }
+
         $task = $this->createInteractor->create(
             $this->dataMapper->requestToTitle($dtoRequest),
             $this->dataMapper->requestToPriority($dtoRequest),
@@ -156,6 +166,10 @@ final class TaskApiService implements TaskServiceInterface
         $description = $dtoRequest->getDescription();
         if ($description !== null) {
             $this->descriptions->set(Task::class, $task->id()->value(), $description);
+        }
+
+        foreach ($tagIds as $tagId) {
+            $this->tagService->assign($tagId, TagServiceInterface::TYPE_TASK, $task->id()->value(), $creatorUserId);
         }
 
         return $this->buildResponse(

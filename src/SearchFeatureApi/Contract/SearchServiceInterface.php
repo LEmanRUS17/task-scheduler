@@ -47,4 +47,17 @@ interface SearchServiceInterface
         int $limit = 10,
         int $offset = 0,
     ): array;
+
+    /**
+     * Returns a page of matching tag ids owned by the given user, ordered by relevance,
+     * plus the total match count.
+     *
+     * @return array{ids: list<string>, total: int}
+     */
+    public function searchTags(
+        string $query,
+        string $userId,
+        int $limit = 10,
+        int $offset = 0,
+    ): array;
 }

@@ -11,4 +11,7 @@ interface TeamCreateRequestInterface
     public function setTitle(string $title): void;
 
     public function getDescription(): ?string;
+
+    /** @return string[] */
+    public function getTagIds(): array;
 }

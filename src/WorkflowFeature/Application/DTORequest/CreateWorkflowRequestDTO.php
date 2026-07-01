@@ -14,6 +14,12 @@ final class CreateWorkflowRequestDTO implements CreateWorkflowRequestInterface
         #[Assert\Length(max: 255, maxMessage: 'Title must not exceed 255 characters')]
         private readonly string $title,
         private readonly ?string $description = null,
+        /** @var string[] */
+        #[Assert\All([
+            new Assert\Type(type: 'string', message: 'Tag id must be a string'),
+            new Assert\NotBlank(message: 'Tag id must not be blank'),
+        ])]
+        private readonly array $tagIds = [],
     ) {
     }
 
@@ -25,5 +31,10 @@ final class CreateWorkflowRequestDTO implements CreateWorkflowRequestInterface
     public function getDescription(): ?string
     {
         return $this->description;
+    }
+
+    public function getTagIds(): array
+    {
+        return $this->tagIds;
     }
 }

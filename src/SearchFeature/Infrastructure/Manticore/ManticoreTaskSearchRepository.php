@@ -28,7 +28,7 @@ final class ManticoreTaskSearchRepository implements TaskSearchRepositoryInterfa
         $must = [
             [
                 'match' => [
-                    'title' => $query
+                    'title,tags' => $query
                 ]
             ]
         ];

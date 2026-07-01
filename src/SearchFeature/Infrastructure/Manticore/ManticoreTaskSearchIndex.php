@@ -12,8 +12,15 @@ final class ManticoreTaskSearchIndex implements TaskSearchIndexInterface
     {
     }
 
-    public function index(string $taskId, string $title, string $priority, string $status, ?string $teamId, string $createdBy): void
-    {
+    public function index(
+        string $taskId,
+        string $title,
+        string $priority,
+        string $status,
+        ?string $teamId,
+        string $createdBy,
+        string $tags = '',
+    ): void {
         $this->client->replace('tasks', $this->numericId($taskId), [
             'task_id' => $taskId,
             'title' => $title,
@@ -21,6 +28,7 @@ final class ManticoreTaskSearchIndex implements TaskSearchIndexInterface
             'status' => $status,
             'team_id' => $teamId ?? '',
             'created_by' => $createdBy,
+            'tags' => $tags,
         ]);
     }
 

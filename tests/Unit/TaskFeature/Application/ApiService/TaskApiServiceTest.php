@@ -6,6 +6,7 @@ namespace App\Tests\Unit\TaskFeature\Application\ApiService;
 
 use App\TaskFeature\Application\ApiService\TaskApiService;
 use App\TaskFeature\Application\DataMapper\TaskDataMapper;
+use App\TaskFeature\Application\DTORequest\TaskCreateRequestDTO;
 use App\TaskFeature\Application\DTORequestValidator\TaskValidatorInterface;
 use App\TaskFeature\Domain\Entity\Task;
 use App\TaskFeature\Domain\Interactor\AddTaskAssigneeInteractor;
@@ -24,6 +25,7 @@ use App\TaskFeature\Domain\ValueObject\TaskId;
 use App\TaskFeature\Domain\ValueObject\TaskPriority;
 use App\TaskFeature\Domain\ValueObject\TaskTitle;
 use App\DescriptionFeatureApi\Contract\DescriptionServiceInterface;
+use App\TagFeatureApi\Contract\TagServiceInterface;
 use App\ProfileFeatureApi\Service\ProfileServiceInterface;
 use App\WorkflowFeature\Domain\Repository\WorkflowStatusRepositoryInterface;
 use App\WorkflowFeature\Domain\Repository\WorkflowTransitionRepositoryInterface;
@@ -36,10 +38,15 @@ final class TaskApiServiceTest extends TestCase
         TaskAssigneeRepositoryInterface $assignees,
         TeamMembershipInterface $teamMembership,
         ?TaskWorkflowInterface $workflow = null,
+        ?TaskValidatorInterface $validator = null,
+        ?TagServiceInterface $tagService = null,
+        ?ClockInterface $clock = null,
     ): TaskApiService {
         $dispatcher = $this->createStub(DomainEventDispatcherInterface::class);
-        $clock = $this->createStub(ClockInterface::class);
+        $clock ??= $this->createStub(ClockInterface::class);
         $workflow ??= $this->createStub(TaskWorkflowInterface::class);
+        $validator ??= $this->createStub(TaskValidatorInterface::class);
+        $tagService ??= $this->createStub(TagServiceInterface::class);
 
         return new TaskApiService(
             new CreateTaskInteractor($tasks, $assignees, $dispatcher, $clock, $workflow),
@@ -59,11 +66,12 @@ final class TaskApiServiceTest extends TestCase
             $this->createStub(WorkflowStatusRepositoryInterface::class),
             $this->createStub(ProfileServiceInterface::class),
             new TaskDataMapper(),
-            $this->createStub(TaskValidatorInterface::class),
+            $validator,
             $dispatcher,
             $workflow,
             $teamMembership,
             $this->createStub(DescriptionServiceInterface::class),
+            $tagService,
         );
     }
 
@@ -305,5 +313,94 @@ final class TaskApiServiceTest extends TestCase
             $this->createStub(TaskAssigneeRepositoryInterface::class),
             $teamMembership,
         )->getListByTeam('team-42', 'user-99');
+    }
+
+    // --- create with tags ---
+
+    public function testCreateAssignsEachProvidedTagToTheNewTask(): void
+    {
+        $tasks = $this->createStub(TaskRepositoryInterface::class);
+        $assignees = $this->createStub(TaskAssigneeRepositoryInterface::class);
+
+        $clock = $this->createStub(ClockInterface::class);
+        $clock->method('now')->willReturn(new \DateTimeImmutable('2026-01-01 12:00:00'));
+
+        $validator = $this->createStub(TaskValidatorInterface::class);
+        $validator->method('validate')->willReturn([]);
+
+        $tagService = $this->createMock(TagServiceInterface::class);
+        $tagService->method('filterExistingTagIds')->willReturn(['tag-1', 'tag-2']);
+
+        $assignedTagIds = [];
+        $tagService->expects($this->exactly(2))
+            ->method('assign')
+            ->willReturnCallback(
+                function (
+                    string $tagId,
+                    string $entityType,
+                    string $entityId,
+                    string $assignedBy,
+                ) use (&$assignedTagIds): void {
+                    $this->assertSame(TagServiceInterface::TYPE_TASK, $entityType);
+                    $this->assertSame('user-creator', $assignedBy);
+                    $this->assertNotSame('', $entityId);
+                    $assignedTagIds[] = $tagId;
+                },
+            );
+
+        $service = $this->buildService(
+            $tasks,
+            $assignees,
+            $this->createStub(TeamMembershipInterface::class),
+            null,
+            $validator,
+            $tagService,
+            $clock,
+        );
+
+        $request = new TaskCreateRequestDTO(
+            title: 'Tagged task',
+            workflow: 'default',
+            tagIds: ['tag-1', 'tag-2'],
+        );
+
+        $service->create($request, 'user-creator');
+
+        $this->assertSame(['tag-1', 'tag-2'], $assignedTagIds);
+    }
+
+    public function testCreateRejectsUnknownTagIdsAndDoesNotPersistTask(): void
+    {
+        $tasks = $this->createMock(TaskRepositoryInterface::class);
+        $tasks->expects($this->never())->method('save');
+
+        $validator = $this->createStub(TaskValidatorInterface::class);
+        $validator->method('validate')->willReturn([]);
+
+        $tagService = $this->createMock(TagServiceInterface::class);
+        $tagService->method('filterExistingTagIds')->willReturn(['tag-1']);
+        $tagService->expects($this->never())->method('assign');
+
+        $service = $this->buildService(
+            $tasks,
+            $this->createStub(TaskAssigneeRepositoryInterface::class),
+            $this->createStub(TeamMembershipInterface::class),
+            null,
+            $validator,
+            $tagService,
+        );
+
+        $request = new TaskCreateRequestDTO(
+            title: 'Tagged task',
+            workflow: 'default',
+            tagIds: ['tag-1', 'missing-tag'],
+        );
+
+        try {
+            $service->create($request, 'user-creator');
+            $this->fail('Expected InvalidArgumentException was not thrown');
+        } catch (\InvalidArgumentException $e) {
+            $this->assertStringContainsString('missing-tag', $e->getMessage());
+        }
     }
 }

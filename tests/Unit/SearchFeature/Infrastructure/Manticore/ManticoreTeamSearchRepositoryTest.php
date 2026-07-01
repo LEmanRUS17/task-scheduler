@@ -29,7 +29,7 @@ final class ManticoreTeamSearchRepositoryTest extends TestCase
         $this->buildRepository($body)->search('backend', 'user-1', [], false, 10, 0);
 
         $must = $body['query']['bool']['must'];
-        $this->assertSame('backend', $must[0]['match']['title']);
+        $this->assertSame('backend', $must[0]['match']['title,tags']);
         $this->assertSame('user-1', $must[1]['match']['member_ids']);
     }
 

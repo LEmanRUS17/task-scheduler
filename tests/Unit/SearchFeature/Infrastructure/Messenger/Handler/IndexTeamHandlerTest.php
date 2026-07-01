@@ -7,6 +7,7 @@ namespace App\Tests\Unit\SearchFeature\Infrastructure\Messenger\Handler;
 use App\SearchFeature\Domain\Port\TeamSearchIndexInterface;
 use App\SearchFeature\Infrastructure\Messenger\Handler\IndexTeamHandler;
 use App\SearchFeature\Infrastructure\Messenger\Message\IndexTeamMessage;
+use App\TagFeatureApi\Contract\TagServiceInterface;
 use App\TeamFeatureApi\DTOResponse\TeamDataResponseInterface;
 use App\TeamFeatureApi\DTOResponse\TeamMemberDataResponseInterface;
 use App\TeamFeatureApi\Service\TeamServiceInterface;
@@ -19,6 +20,14 @@ final class IndexTeamHandlerTest extends TestCase
     protected function setUp(): void
     {
         $this->createdAt = new \DateTimeImmutable('2024-01-01 13:00:00');
+    }
+
+    private function makeTagService(): TagServiceInterface
+    {
+        $tagService = $this->createStub(TagServiceInterface::class);
+        $tagService->method('getEntityTagNames')->willReturn([]);
+
+        return $tagService;
     }
 
     private function makeTeam(
@@ -56,9 +65,9 @@ final class IndexTeamHandlerTest extends TestCase
         $searchIndex = $this->createMock(TeamSearchIndexInterface::class);
         $searchIndex->expects($this->once())
             ->method('index')
-            ->with('team-uuid', 'Backend', 'active', 'user-1', $this->createdAt, ['user-1', 'user-2']);
+            ->with('team-uuid', 'Backend', 'active', 'user-1', $this->createdAt, ['user-1', 'user-2'], '');
 
-        (new IndexTeamHandler($teamService, $searchIndex))(new IndexTeamMessage('team-uuid'));
+        (new IndexTeamHandler($teamService, $searchIndex, $this->makeTagService()))(new IndexTeamMessage('team-uuid'));
     }
 
     public function testIndexesTeamWithEmptyOwnerWhenNoOwnerMember(): void
@@ -70,9 +79,9 @@ final class IndexTeamHandlerTest extends TestCase
         $searchIndex = $this->createMock(TeamSearchIndexInterface::class);
         $searchIndex->expects($this->once())
             ->method('index')
-            ->with('team-uuid', 'Backend', 'active', '', $this->createdAt, []);
+            ->with('team-uuid', 'Backend', 'active', '', $this->createdAt, [], '');
 
-        (new IndexTeamHandler($teamService, $searchIndex))(new IndexTeamMessage('team-uuid'));
+        (new IndexTeamHandler($teamService, $searchIndex, $this->makeTagService()))(new IndexTeamMessage('team-uuid'));
     }
 
     public function testDoesNothingWhenTeamNotFound(): void
@@ -83,6 +92,6 @@ final class IndexTeamHandlerTest extends TestCase
         $searchIndex = $this->createMock(TeamSearchIndexInterface::class);
         $searchIndex->expects($this->never())->method('index');
 
-        (new IndexTeamHandler($teamService, $searchIndex))(new IndexTeamMessage('team-uuid'));
+        (new IndexTeamHandler($teamService, $searchIndex, $this->makeTagService()))(new IndexTeamMessage('team-uuid'));
     }
 }

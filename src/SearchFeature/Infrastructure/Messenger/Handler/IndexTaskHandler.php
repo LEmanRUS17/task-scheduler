@@ -6,6 +6,7 @@ namespace App\SearchFeature\Infrastructure\Messenger\Handler;
 
 use App\SearchFeature\Domain\Port\TaskSearchIndexInterface;
 use App\SearchFeature\Infrastructure\Messenger\Message\IndexTaskMessage;
+use App\TagFeatureApi\Contract\TagServiceInterface;
 use App\TaskFeatureApi\Service\TaskServiceInterface;
 use Symfony\Component\Messenger\Attribute\AsMessageHandler;
 
@@ -15,6 +16,7 @@ final class IndexTaskHandler
     public function __construct(
         private readonly TaskServiceInterface $taskService,
         private readonly TaskSearchIndexInterface $searchIndex,
+        private readonly TagServiceInterface $tagService,
     ) {
     }
 
@@ -26,6 +28,9 @@ final class IndexTaskHandler
             return;
         }
 
+        $tagNames = $this->tagService->getEntityTagNames(TagServiceInterface::TYPE_TASK, $task->getId());
+        $tags = implode(' ', $tagNames);
+
         $this->searchIndex->index(
             $task->getId(),
             $task->getTitle(),
@@ -33,6 +38,7 @@ final class IndexTaskHandler
             $task->getStatus(),
             $task->getTeamId(),
             $task->getCreatedBy(),
+            $tags,
         );
     }
 }

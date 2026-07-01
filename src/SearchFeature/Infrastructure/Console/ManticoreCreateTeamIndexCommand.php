@@ -25,7 +25,7 @@ final class ManticoreCreateTeamIndexCommand extends Command
 
         try {
             $this->manticoreClient->sql(
-                "CREATE TABLE IF NOT EXISTS teams (team_id string, title text, status string, created_by string, created_at timestamp, member_ids text) min_infix_len='2'"
+                "CREATE TABLE IF NOT EXISTS teams (team_id string, title text, status string, created_by string, created_at timestamp, member_ids text, tags text) min_infix_len='2'"
             );
             $io->success('Index created');
 

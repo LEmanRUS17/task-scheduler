@@ -5,12 +5,13 @@ declare(strict_types=1);
 namespace App\WorkflowFeature\Domain\Entity;
 
 use App\DescriptionFeatureApi\Contract\DescribableInterface;
+use App\TagFeatureApi\Contract\TaggableInterface;
 use App\WorkflowFeature\Domain\Event\WorkflowCreated;
 use App\WorkflowFeature\Domain\Event\WorkflowUpdated;
 use App\WorkflowFeature\Domain\ValueObject\WorkflowId;
 use App\WorkflowFeature\Domain\ValueObject\WorkflowTitle;
 
-final class Workflow implements DescribableInterface
+final class Workflow implements DescribableInterface, TaggableInterface
 {
     private string $id;
     private string $title;

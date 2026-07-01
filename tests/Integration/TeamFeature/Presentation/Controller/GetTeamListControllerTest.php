@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace App\Tests\Integration\TeamFeature\Presentation\Controller;
 
 use App\SearchFeatureApi\Contract\SearchServiceInterface;
+use App\TagFeatureApi\Contract\TagServiceInterface;
+use App\TagFeatureApi\DTOResponse\TagResponseInterface;
 use App\TeamFeatureApi\DTOResponse\TeamDataResponseInterface;
 use App\TeamFeatureApi\Service\TeamServiceInterface;
 use App\UserFeature\Domain\Entity\User;
@@ -49,6 +51,16 @@ final class GetTeamListControllerTest extends WebTestCase
         $search->expects($this->never())->method('searchTeams');
         static::getContainer()->set(SearchServiceInterface::class, $search);
 
+        $tagService = $this->createMock(TagServiceInterface::class);
+        $tagService->expects($this->once())
+            ->method('getEntityTagsByIds')
+            ->with(TagServiceInterface::TYPE_TEAM, ['team-1'])
+            ->willReturn(['team-1' => [
+                $this->makeTag('tag-1', 'core', '#ff0000'),
+                $this->makeTag('tag-2', 'priority', '#00ff00'),
+            ]]);
+        static::getContainer()->set(TagServiceInterface::class, $tagService);
+
         $client->request('GET', '/team/list', server: [
             'HTTP_AUTHORIZATION' => 'Bearer ' . $this->generateToken($user),
         ]);
@@ -58,6 +70,13 @@ final class GetTeamListControllerTest extends WebTestCase
         $this->assertCount(1, $body['teams']);
         $this->assertSame('team-1', $body['teams'][0]['id']);
         $this->assertSame('Backend', $body['teams'][0]['title']);
+        $this->assertSame(
+            [
+                ['id' => 'tag-1', 'name' => 'core', 'color' => '#ff0000'],
+                ['id' => 'tag-2', 'name' => 'priority', 'color' => '#00ff00'],
+            ],
+            $body['teams'][0]['tags'],
+        );
         $this->assertSame(['page' => 1, 'limit' => 10, 'pages' => 1], $body['pagination']);
         $this->assertSame(1, $body['count']);
     }
@@ -197,6 +216,13 @@ final class GetTeamListControllerTest extends WebTestCase
             ]);
         static::getContainer()->set(TeamServiceInterface::class, $teamService);
 
+        $tagService = $this->createMock(TagServiceInterface::class);
+        $tagService->expects($this->once())
+            ->method('getEntityTagsByIds')
+            ->with(TagServiceInterface::TYPE_TEAM, ['team-2', 'team-1'])
+            ->willReturn(['team-1' => [$this->makeTag('tag-9', 'legacy', '#123456')]]);
+        static::getContainer()->set(TagServiceInterface::class, $tagService);
+
         $client->request('GET', '/team/list?q=end', server: [
             'HTTP_AUTHORIZATION' => 'Bearer ' . $this->generateToken($user),
         ]);
@@ -204,6 +230,11 @@ final class GetTeamListControllerTest extends WebTestCase
         $this->assertResponseIsSuccessful();
         $body = json_decode($client->getResponse()->getContent(), true);
         $this->assertSame(['team-2', 'team-1'], array_column($body['teams'], 'id'));
+        $this->assertSame([], $body['teams'][0]['tags']);
+        $this->assertSame(
+            [['id' => 'tag-9', 'name' => 'legacy', 'color' => '#123456']],
+            $body['teams'][1]['tags'],
+        );
         $this->assertSame(2, $body['count']);
     }
 
@@ -232,6 +263,16 @@ final class GetTeamListControllerTest extends WebTestCase
         $body = json_decode($client->getResponse()->getContent(), true);
         $this->assertSame(37, $body['count']);
         $this->assertSame(2, $body['pagination']['pages']); // ceil(37 / 20)
+    }
+
+    private function makeTag(string $id, string $name, string $color): TagResponseInterface
+    {
+        $tag = $this->createStub(TagResponseInterface::class);
+        $tag->method('getId')->willReturn($id);
+        $tag->method('getName')->willReturn($name);
+        $tag->method('getColor')->willReturn($color);
+
+        return $tag;
     }
 
     private function makeTeam(string $id, string $title): TeamDataResponseInterface

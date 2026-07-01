@@ -27,6 +27,7 @@ use App\WorkflowFeatureApi\DTORequest\UpdateWorkflowRequestInterface;
 use App\WorkflowFeature\Domain\ValueObject\WorkflowTransitionId;
 use App\WorkflowFeature\Domain\ValueObject\WorkflowTitle;
 use App\DescriptionFeatureApi\Contract\DescriptionServiceInterface;
+use App\TagFeatureApi\Contract\TagServiceInterface;
 use App\WorkflowFeature\Domain\Entity\Workflow;
 use App\WorkflowFeature\Domain\Entity\WorkflowStatus;
 use App\WorkflowFeature\Domain\Entity\WorkflowTransition;
@@ -51,6 +52,7 @@ final class WorkflowApiService implements WorkflowServiceInterface
         private readonly WorkflowDataMapper $dataMapper,
         private readonly WorkflowValidatorInterface $validator,
         private readonly DescriptionServiceInterface $descriptions,
+        private readonly TagServiceInterface $tagService,
     ) {
     }
 
@@ -62,12 +64,24 @@ final class WorkflowApiService implements WorkflowServiceInterface
             throw new \InvalidArgumentException(json_encode($violations) ?: '{}');
         }
 
+        $tagIds = array_values(array_unique($request->getTagIds()));
+        $missingTagIds = array_values(array_diff($tagIds, $this->tagService->filterExistingTagIds($tagIds)));
+        if ($missingTagIds !== []) {
+            throw new \InvalidArgumentException(json_encode([
+                'tagIds' => sprintf('Unknown tag ids: %s', implode(', ', $missingTagIds)),
+            ]) ?: '{}');
+        }
+
         $title = $this->dataMapper->requestToTitle($request);
         $workflow = $this->createInteractor->create($title, $createdBy);
 
         $description = $request->getDescription();
         if ($description !== null) {
             $this->descriptions->set(Workflow::class, $workflow->id()->value(), $description);
+        }
+
+        foreach ($tagIds as $tagId) {
+            $this->tagService->assign($tagId, TagServiceInterface::TYPE_WORKFLOW, $workflow->id()->value(), $createdBy);
         }
 
         return $this->dataMapper->workflowToResponse($workflow, $description);

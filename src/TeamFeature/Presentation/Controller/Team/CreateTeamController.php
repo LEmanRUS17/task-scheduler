@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\TeamFeature\Presentation\Controller\Team;
 
+use App\TagFeatureApi\Contract\TagServiceInterface;
+use App\TagFeatureApi\DTOResponse\TagResponseInterface;
 use App\TeamFeature\Application\DTORequest\TeamCreateRequestDTO;
 use App\TeamFeatureApi\Service\TeamServiceInterface;
 use App\UserFeature\Infrastructure\Security\SecurityUser;
@@ -19,6 +21,7 @@ final class CreateTeamController
 {
     public function __construct(
         private readonly TeamServiceInterface $teamService,
+        private readonly TagServiceInterface $tagService,
         private readonly Security $security,
     ) {
     }
@@ -43,12 +46,22 @@ final class CreateTeamController
             );
         }
 
+        $tagsByTeam = $this->tagService->getEntityTagsByIds(TagServiceInterface::TYPE_TEAM, [$team->getId()]);
+
         return new JsonResponse(
             [
                 'id' => $team->getId(),
                 'title' => $team->getTitle(),
                 'status' => $team->getStatus(),
                 'description' => $team->getDescription(),
+                'tags' => array_map(
+                    static fn(TagResponseInterface $tag): array => [
+                        'id' => $tag->getId(),
+                        'name' => $tag->getName(),
+                        'color' => $tag->getColor(),
+                    ],
+                    $tagsByTeam[$team->getId()] ?? [],
+                ),
             ],
             Response::HTTP_CREATED,
         );

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\SearchFeature\Application\ApiService;
 
+use App\SearchFeature\Domain\Port\TagSearchRepositoryInterface;
 use App\SearchFeature\Domain\Port\TaskSearchRepositoryInterface;
 use App\SearchFeature\Domain\Port\TeamSearchRepositoryInterface;
 use App\SearchFeature\Domain\Port\WorkflowSearchRepositoryInterface;
@@ -15,6 +16,7 @@ final class SearchApiService implements SearchServiceInterface
         private readonly TaskSearchRepositoryInterface $repository,
         private readonly TeamSearchRepositoryInterface $teamRepository,
         private readonly WorkflowSearchRepositoryInterface $workflowRepository,
+        private readonly TagSearchRepositoryInterface $tagRepository,
     ) {
     }
 
@@ -54,5 +56,15 @@ final class SearchApiService implements SearchServiceInterface
         int $offset = 0,
     ): array {
         return $this->workflowRepository->search($query, $userId, $ownedOnly, $limit, $offset);
+    }
+
+    /** @return array{ids: list<string>, total: int} */
+    public function searchTags(
+        string $query,
+        string $userId,
+        int $limit = 10,
+        int $offset = 0,
+    ): array {
+        return $this->tagRepository->search($query, $userId, $limit, $offset);
     }
 }

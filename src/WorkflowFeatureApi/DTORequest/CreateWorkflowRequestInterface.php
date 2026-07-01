@@ -9,4 +9,7 @@ interface CreateWorkflowRequestInterface extends WorkflowRequestInterface
     public function getTitle(): string;
 
     public function getDescription(): ?string;
+
+    /** @return string[] */
+    public function getTagIds(): array;
 }

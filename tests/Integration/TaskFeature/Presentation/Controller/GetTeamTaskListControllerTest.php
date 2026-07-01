@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Tests\Integration\TaskFeature\Presentation\Controller;
 
+use App\TagFeatureApi\Contract\TagServiceInterface;
+use App\TagFeatureApi\DTOResponse\TagResponseInterface;
 use App\TaskFeatureApi\DTOResponse\TaskDataResponseInterface;
 use App\TaskFeatureApi\Service\TaskServiceInterface;
 use App\UserFeature\Domain\Entity\User;
@@ -106,6 +108,18 @@ final class GetTeamTaskListControllerTest extends WebTestCase
             ->willReturn([$task]);
         static::getContainer()->set(TaskServiceInterface::class, $service);
 
+        $tag = $this->createStub(TagResponseInterface::class);
+        $tag->method('getId')->willReturn('f6a7b8c9-d0e1-4f2a-3b4c-5d6e7f8a9b0c');
+        $tag->method('getName')->willReturn('backend');
+        $tag->method('getColor')->willReturn('#abcdef');
+
+        $tagService = $this->createMock(TagServiceInterface::class);
+        $tagService->expects($this->once())
+            ->method('getEntityTagsByIds')
+            ->with(TagServiceInterface::TYPE_TASK, ['e5f6a7b8-c9d0-4e1f-2a3b-4c5d6e7f8a9b'])
+            ->willReturn(['e5f6a7b8-c9d0-4e1f-2a3b-4c5d6e7f8a9b' => [$tag]]);
+        static::getContainer()->set(TagServiceInterface::class, $tagService);
+
         $client->request('GET', '/team/' . self::TEAM_ID . '/task', server: [
             'HTTP_AUTHORIZATION' => 'Bearer ' . $this->generateToken($user),
         ]);
@@ -117,6 +131,10 @@ final class GetTeamTaskListControllerTest extends WebTestCase
         $this->assertSame('e5f6a7b8-c9d0-4e1f-2a3b-4c5d6e7f8a9b', $body['tasks'][0]['id']);
         $this->assertSame('Team Task', $body['tasks'][0]['title']);
         $this->assertSame(self::TEAM_ID, $body['tasks'][0]['teamId']);
+        $this->assertSame(
+            [['id' => 'f6a7b8c9-d0e1-4f2a-3b4c-5d6e7f8a9b0c', 'name' => 'backend', 'color' => '#abcdef']],
+            $body['tasks'][0]['tags'],
+        );
     }
 
     private function makeUser(string $userId): User

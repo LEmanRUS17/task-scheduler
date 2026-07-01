@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace App\TeamFeature\Presentation\Controller\Team;
 
 use App\SearchFeatureApi\Contract\SearchServiceInterface;
+use App\TagFeatureApi\Contract\TagServiceInterface;
+use App\TagFeatureApi\DTOResponse\TagResponseInterface;
 use App\TeamFeatureApi\DTOResponse\TeamDataResponseInterface;
 use App\TeamFeatureApi\Service\TeamServiceInterface;
 use App\UserFeature\Infrastructure\Security\SecurityUser;
@@ -24,6 +26,7 @@ final class GetTeamListController
     public function __construct(
         private readonly TeamServiceInterface $teamService,
         private readonly SearchServiceInterface $searchService,
+        private readonly TagServiceInterface $tagService,
         private readonly Security $security,
     ) {
     }
@@ -48,6 +51,11 @@ final class GetTeamListController
             $count = $this->teamService->countAll($userId);
         }
 
+        $tagsByTeam = $this->tagService->getEntityTagsByIds(
+            TagServiceInterface::TYPE_TEAM,
+            array_map(static fn(TeamDataResponseInterface $team) => $team->getId(), $teams),
+        );
+
         return new JsonResponse([
             'teams' => array_map(
                 static fn(TeamDataResponseInterface $team) => [
@@ -56,6 +64,14 @@ final class GetTeamListController
                     'status' => $team->getStatus(),
                     'createdAt' => $team->getCreatedAt()->format(\DateTimeInterface::ATOM),
                     'description' => $team->getDescription(),
+                    'tags' => array_map(
+                        static fn(TagResponseInterface $tag): array => [
+                            'id' => $tag->getId(),
+                            'name' => $tag->getName(),
+                            'color' => $tag->getColor(),
+                        ],
+                        $tagsByTeam[$team->getId()] ?? [],
+                    ),
                 ],
                 $teams,
             ),

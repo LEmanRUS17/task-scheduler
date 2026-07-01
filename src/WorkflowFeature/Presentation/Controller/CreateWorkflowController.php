@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\WorkflowFeature\Presentation\Controller;
 
+use App\TagFeatureApi\Contract\TagServiceInterface;
+use App\TagFeatureApi\DTOResponse\TagResponseInterface;
 use App\WorkflowFeature\Application\DTORequest\CreateWorkflowRequestDTO;
 use App\WorkflowFeatureApi\Service\WorkflowServiceInterface;
 use App\UserFeature\Infrastructure\Security\SecurityUser;
@@ -19,6 +21,7 @@ final class CreateWorkflowController
 {
     public function __construct(
         private readonly WorkflowServiceInterface $workflowService,
+        private readonly TagServiceInterface $tagService,
         private readonly Security $security,
     ) {
     }
@@ -48,6 +51,11 @@ final class CreateWorkflowController
             );
         }
 
+        $tagsByWorkflow = $this->tagService->getEntityTagsByIds(
+            TagServiceInterface::TYPE_WORKFLOW,
+            [$workflow->getId()],
+        );
+
         return new JsonResponse(
             [
                 'id' => $workflow->getId(),
@@ -55,6 +63,14 @@ final class CreateWorkflowController
                 'createdBy' => $workflow->getCreatedBy(),
                 'createdAt' => $workflow->getCreatedAt()->format(\DateTimeInterface::ATOM),
                 'description' => $workflow->getDescription(),
+                'tags' => array_map(
+                    static fn(TagResponseInterface $tag): array => [
+                        'id' => $tag->getId(),
+                        'name' => $tag->getName(),
+                        'color' => $tag->getColor(),
+                    ],
+                    $tagsByWorkflow[$workflow->getId()] ?? [],
+                ),
             ],
             Response::HTTP_CREATED,
         );

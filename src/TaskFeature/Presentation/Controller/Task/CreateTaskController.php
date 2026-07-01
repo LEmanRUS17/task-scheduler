@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\TaskFeature\Presentation\Controller\Task;
 
+use App\TagFeatureApi\Contract\TagServiceInterface;
 use App\TaskFeatureApi\Service\TaskServiceInterface;
 use App\TaskFeature\Application\DTORequest\TaskCreateRequestDTO;
 use App\TaskFeature\Presentation\Formatter\TaskResponseFormatter;
@@ -20,6 +21,7 @@ final class CreateTaskController
 {
     public function __construct(
         private readonly TaskServiceInterface $taskService,
+        private readonly TagServiceInterface $tagService,
         private readonly Security $security,
     ) {
     }
@@ -49,8 +51,10 @@ final class CreateTaskController
             );
         }
 
+        $tagsByTask = $this->tagService->getEntityTagsByIds(TagServiceInterface::TYPE_TASK, [$task->getId()]);
+
         return new JsonResponse(
-            TaskResponseFormatter::format($task),
+            TaskResponseFormatter::format($task, $tagsByTask[$task->getId()] ?? []),
             Response::HTTP_CREATED,
         );
     }

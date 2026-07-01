@@ -14,6 +14,7 @@ interface TeamSearchIndexInterface
         string $createdBy,
         \DateTimeImmutable $createdAt,
         array $memberIds,
+        string $tags = '',
     ): void;
 
     public function delete(string $teamId): void;

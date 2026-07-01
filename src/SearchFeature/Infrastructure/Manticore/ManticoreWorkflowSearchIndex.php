@@ -18,6 +18,7 @@ final class ManticoreWorkflowSearchIndex implements WorkflowSearchIndexInterface
         string $description,
         string $createdBy,
         \DateTimeImmutable $createdAt,
+        string $tags = '',
     ): void {
         $this->client->replace('workflows', $this->numericId($workflowId), [
             'workflow_id' => $workflowId,
@@ -25,6 +26,7 @@ final class ManticoreWorkflowSearchIndex implements WorkflowSearchIndexInterface
             'description' => $description,
             'created_by' => $createdBy,
             'created_at' => $createdAt->getTimestamp(),
+            'tags' => $tags,
         ]);
     }
 
