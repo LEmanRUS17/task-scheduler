@@ -12,6 +12,11 @@ use App\TaskFeature\Domain\Repository\TaskRepositoryInterface;
 use App\TaskFeature\Domain\ValueObject\TaskId;
 use App\TaskFeature\Domain\ValueObject\TaskPriority;
 use App\TaskFeature\Domain\ValueObject\TaskTitle;
+use App\WorkflowFeature\Domain\Entity\WorkflowStatus;
+use App\WorkflowFeature\Domain\Repository\WorkflowStatusRepositoryInterface;
+use App\WorkflowFeature\Domain\ValueObject\StatusLabel;
+use App\WorkflowFeature\Domain\ValueObject\WorkflowId;
+use App\WorkflowFeature\Domain\ValueObject\WorkflowStatusId;
 use PHPUnit\Framework\TestCase;
 
 final class ReopenTaskInteractorTest extends TestCase
@@ -36,11 +41,25 @@ final class ReopenTaskInteractorTest extends TestCase
 
     private function buildInteractor(
         TaskRepositoryInterface $tasks,
+        ?WorkflowStatusRepositoryInterface $statuses = null,
         ?DomainEventDispatcherInterface $dispatcher = null,
     ): ReopenTaskInteractor {
         return new ReopenTaskInteractor(
             $tasks,
+            $statuses ?? $this->createStub(WorkflowStatusRepositoryInterface::class),
             $dispatcher ?? $this->createStub(DomainEventDispatcherInterface::class),
+        );
+    }
+
+    private function makeStatus(bool $isFinal): WorkflowStatus
+    {
+        return WorkflowStatus::add(
+            WorkflowStatusId::generate(),
+            WorkflowId::generate(),
+            StatusLabel::fromString('some-status'),
+            false,
+            new \DateTimeImmutable(),
+            $isFinal,
         );
     }
 
@@ -73,7 +92,7 @@ final class ReopenTaskInteractorTest extends TestCase
             ->method('dispatch')
             ->with($this->isInstanceOf(TaskReopened::class));
 
-        $this->buildInteractor($tasks, $dispatcher)->reopen($this->taskId->value());
+        $this->buildInteractor($tasks, dispatcher: $dispatcher)->reopen($this->taskId->value());
     }
 
     public function testReopenThrowsWhenTaskNotFound(): void
@@ -104,5 +123,80 @@ final class ReopenTaskInteractorTest extends TestCase
         $this->expectException(\DomainException::class);
 
         $this->buildInteractor($tasks)->reopen($this->taskId->value());
+    }
+
+    public function testReopenThrowsWhenTaskStatusIsFinal(): void
+    {
+        $task = Task::create(
+            TaskId::generate(),
+            TaskTitle::fromString('Task'),
+            TaskPriority::NORMAL,
+            WorkflowId::generate()->value(),
+            null,
+            'user-1',
+            new \DateTimeImmutable(),
+        );
+        $task->close(new \DateTimeImmutable());
+
+        $tasks = $this->createStub(TaskRepositoryInterface::class);
+        $tasks->method('findById')->willReturn($task);
+
+        $statuses = $this->createStub(WorkflowStatusRepositoryInterface::class);
+        $statuses->method('findById')->willReturn($this->makeStatus(true));
+
+        $this->expectException(\DomainException::class);
+        $this->expectExceptionMessageMatches('/final status/');
+
+        $this->buildInteractor($tasks, $statuses)->reopen($task->id()->value());
+    }
+
+    public function testReopenDoesNotSaveTaskWhenStatusIsFinal(): void
+    {
+        $task = Task::create(
+            TaskId::generate(),
+            TaskTitle::fromString('Task'),
+            TaskPriority::NORMAL,
+            WorkflowId::generate()->value(),
+            null,
+            'user-1',
+            new \DateTimeImmutable(),
+        );
+        $task->close(new \DateTimeImmutable());
+
+        $tasks = $this->createMock(TaskRepositoryInterface::class);
+        $tasks->method('findById')->willReturn($task);
+        $tasks->expects($this->never())->method('save');
+
+        $statuses = $this->createStub(WorkflowStatusRepositoryInterface::class);
+        $statuses->method('findById')->willReturn($this->makeStatus(true));
+
+        try {
+            $this->buildInteractor($tasks, $statuses)->reopen($task->id()->value());
+        } catch (\DomainException) {
+        }
+    }
+
+    public function testReopenSucceedsWhenTaskStatusIsNotFinal(): void
+    {
+        $task = Task::create(
+            TaskId::generate(),
+            TaskTitle::fromString('Task'),
+            TaskPriority::NORMAL,
+            WorkflowId::generate()->value(),
+            null,
+            'user-1',
+            new \DateTimeImmutable(),
+        );
+        $task->close(new \DateTimeImmutable());
+
+        $tasks = $this->createStub(TaskRepositoryInterface::class);
+        $tasks->method('findById')->willReturn($task);
+
+        $statuses = $this->createStub(WorkflowStatusRepositoryInterface::class);
+        $statuses->method('findById')->willReturn($this->makeStatus(false));
+
+        $result = $this->buildInteractor($tasks, $statuses)->reopen($task->id()->value());
+
+        $this->assertFalse($result->isClosed());
     }
 }

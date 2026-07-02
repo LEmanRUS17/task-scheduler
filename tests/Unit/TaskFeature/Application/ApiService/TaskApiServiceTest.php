@@ -62,7 +62,7 @@ final class TaskApiServiceTest extends TestCase
                 $clock,
             ),
             new CloseTaskInteractor($tasks, $dispatcher, $clock),
-            new ReopenTaskInteractor($tasks, $dispatcher),
+            new ReopenTaskInteractor($tasks, $this->createStub(WorkflowStatusRepositoryInterface::class), $dispatcher),
             new AddTaskAssigneeInteractor($tasks, $assignees, $teamMembership, $dispatcher, $clock),
             new RemoveTaskAssigneeInteractor($tasks, $assignees, $dispatcher),
             $tasks,
