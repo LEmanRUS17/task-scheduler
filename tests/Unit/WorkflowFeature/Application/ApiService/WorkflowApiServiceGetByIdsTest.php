@@ -9,6 +9,8 @@ use App\TagFeatureApi\Contract\TagServiceInterface;
 use App\WorkflowFeature\Application\ApiService\WorkflowApiService;
 use App\WorkflowFeature\Application\DataMapper\WorkflowDataMapper;
 use App\WorkflowFeature\Application\DTORequest\CreateWorkflowRequestDTO;
+use App\WorkflowFeature\Application\DTORequest\CreateWorkflowStatusRequestDTO;
+use App\WorkflowFeature\Application\DTORequest\CreateWorkflowTransitionRequestDTO;
 use App\WorkflowFeature\Application\DTORequestValidator\WorkflowValidatorInterface;
 use App\WorkflowFeature\Domain\Entity\Workflow;
 use App\WorkflowFeature\Domain\Interactor\AddWorkflowStatusInteractor;
@@ -123,7 +125,7 @@ final class WorkflowApiServiceGetByIdsTest extends TestCase
         $tagService ??= $this->createStub(TagServiceInterface::class);
 
         return new WorkflowApiService(
-            new CreateWorkflowInteractor($repository, $dispatcher, $clock),
+            new CreateWorkflowInteractor($repository, $statuses, $transitions, $dispatcher, $clock),
             new UpdateWorkflowInteractor($repository, $dispatcher),
             new AddWorkflowStatusInteractor($repository, $statuses, $dispatcher, $clock),
             new UpdateWorkflowStatusInteractor($repository, $statuses, $dispatcher),
@@ -169,7 +171,17 @@ final class WorkflowApiServiceGetByIdsTest extends TestCase
                 },
             );
 
-        $request = new CreateWorkflowRequestDTO(title: 'Tagged flow', tagIds: ['tag-1', 'tag-2']);
+        $request = new CreateWorkflowRequestDTO(
+            title: 'Tagged flow',
+            statuses: [
+                new CreateWorkflowStatusRequestDTO('open', isInitial: true),
+                new CreateWorkflowStatusRequestDTO('done', isFinal: true),
+            ],
+            transitions: [
+                new CreateWorkflowTransitionRequestDTO('close', 'open', 'done'),
+            ],
+            tagIds: ['tag-1', 'tag-2'],
+        );
 
         $this->makeService($repository, $validator, $tagService, $clock)->create($request, 'user-creator');
 

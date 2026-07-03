@@ -59,6 +59,8 @@ final class TaskDataMapper
             $description,
             $createdByProfile,
             $assigneeProfiles,
+            $task->isClosed(),
+            $task->closedAt(),
         );
     }
 

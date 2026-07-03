@@ -12,4 +12,10 @@ interface CreateWorkflowRequestInterface extends WorkflowRequestInterface
 
     /** @return string[] */
     public function getTagIds(): array;
+
+    /** @return CreateWorkflowStatusRequestInterface[] */
+    public function getStatuses(): array;
+
+    /** @return CreateWorkflowTransitionRequestInterface[] */
+    public function getTransitions(): array;
 }

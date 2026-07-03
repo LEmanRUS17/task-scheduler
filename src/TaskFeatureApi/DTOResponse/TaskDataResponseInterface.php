@@ -29,4 +29,6 @@ interface TaskDataResponseInterface
     /** @return string[] */
     public function getAvailableTransitions(): array;
     public function getDescription(): ?string;
+    public function isClosed(): bool;
+    public function getClosedAt(): ?\DateTimeImmutable;
 }

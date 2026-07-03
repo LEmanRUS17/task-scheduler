@@ -100,6 +100,30 @@ final class UpdateWorkflowStatusInteractorTest extends TestCase
         $this->assertSame('open', $result->label()->value());
     }
 
+    public function testUpdateMarksStatusFinalWhenRequested(): void
+    {
+        $statuses = $this->createStub(WorkflowStatusRepositoryInterface::class);
+        $statuses->method('findById')->willReturn($this->makeStatus('open'));
+        $statuses->method('findByLabel')->willReturn(null);
+
+        $result = $this->buildInteractor($this->workflowsWithFound(), $statuses)
+            ->update($this->workflowId, $this->statusId, StatusLabel::fromString('open'), true);
+
+        $this->assertTrue($result->isFinal());
+    }
+
+    public function testUpdateLeavesFinalFlagUnchangedWhenNotProvided(): void
+    {
+        $statuses = $this->createStub(WorkflowStatusRepositoryInterface::class);
+        $statuses->method('findById')->willReturn($this->makeStatus('open'));
+        $statuses->method('findByLabel')->willReturn(null);
+
+        $result = $this->buildInteractor($this->workflowsWithFound(), $statuses)
+            ->update($this->workflowId, $this->statusId, StatusLabel::fromString('open'));
+
+        $this->assertFalse($result->isFinal());
+    }
+
     public function testUpdateThrowsWhenWorkflowNotFound(): void
     {
         $workflows = $this->createStub(WorkflowRepositoryInterface::class);

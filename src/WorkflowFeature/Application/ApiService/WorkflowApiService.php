@@ -73,7 +73,12 @@ final class WorkflowApiService implements WorkflowServiceInterface
         }
 
         $title = $this->dataMapper->requestToTitle($request);
-        $workflow = $this->createInteractor->create($title, $createdBy);
+        $workflow = $this->createInteractor->create(
+            $title,
+            $createdBy,
+            array_map($this->dataMapper->requestToNewStatus(...), $request->getStatuses()),
+            array_map($this->dataMapper->requestToNewTransition(...), $request->getTransitions()),
+        );
 
         $description = $request->getDescription();
         if ($description !== null) {
@@ -177,6 +182,7 @@ final class WorkflowApiService implements WorkflowServiceInterface
             WorkflowId::fromString($workflowId),
             $label,
             $request->isInitial(),
+            $request->isFinal(),
         );
 
         $description = $request->getDescription();
@@ -202,6 +208,7 @@ final class WorkflowApiService implements WorkflowServiceInterface
             WorkflowId::fromString($workflowId),
             WorkflowStatusId::fromString($statusId),
             StatusLabel::fromString($request->getLabel()),
+            $request->isFinal(),
         );
 
         $description = $request->getDescription();

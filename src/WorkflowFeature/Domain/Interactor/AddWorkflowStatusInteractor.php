@@ -23,8 +23,12 @@ final class AddWorkflowStatusInteractor
     ) {
     }
 
-    public function add(WorkflowId $workflowId, StatusLabel $label, bool $isInitial): WorkflowStatus
-    {
+    public function add(
+        WorkflowId $workflowId,
+        StatusLabel $label,
+        bool $isInitial,
+        bool $isFinal = false,
+    ): WorkflowStatus {
         if ($this->workflows->findById($workflowId) === null) {
             throw new \DomainException("Workflow \"{$workflowId->value()}\" not found");
         }
@@ -43,6 +47,7 @@ final class AddWorkflowStatusInteractor
             $label,
             $isInitial,
             $this->clock->now(),
+            $isFinal,
         );
 
         $this->statuses->save($status);

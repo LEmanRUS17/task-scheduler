@@ -146,4 +146,53 @@ final class TaskTest extends TestCase
         $this->assertNull($task->estimatedTime());
         $this->assertNull($task->actualTime());
     }
+
+    public function testTaskStartsNotClosed(): void
+    {
+        $task = $this->makeTask();
+
+        $this->assertFalse($task->isClosed());
+        $this->assertNull($task->closedAt());
+    }
+
+    public function testCloseMarksTaskClosed(): void
+    {
+        $task = $this->makeTask();
+        $closedAt = new \DateTimeImmutable('2024-05-01 10:00:00');
+
+        $task->close($closedAt);
+
+        $this->assertTrue($task->isClosed());
+        $this->assertSame($closedAt, $task->closedAt());
+    }
+
+    public function testCloseThrowsWhenAlreadyClosed(): void
+    {
+        $task = $this->makeTask();
+        $task->close(new \DateTimeImmutable());
+
+        $this->expectException(\DomainException::class);
+
+        $task->close(new \DateTimeImmutable());
+    }
+
+    public function testReopenClearsClosedAt(): void
+    {
+        $task = $this->makeTask();
+        $task->close(new \DateTimeImmutable());
+
+        $task->reopen();
+
+        $this->assertFalse($task->isClosed());
+        $this->assertNull($task->closedAt());
+    }
+
+    public function testReopenThrowsWhenNotClosed(): void
+    {
+        $task = $this->makeTask();
+
+        $this->expectException(\DomainException::class);
+
+        $task->reopen();
+    }
 }

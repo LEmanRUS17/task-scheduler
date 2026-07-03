@@ -11,8 +11,10 @@ use App\TaskFeature\Application\DTORequestValidator\TaskValidatorInterface;
 use App\TaskFeature\Domain\Entity\Task;
 use App\TaskFeature\Domain\Interactor\AddTaskAssigneeInteractor;
 use App\TaskFeature\Domain\Interactor\ApplyTaskTransitionInteractor;
+use App\TaskFeature\Domain\Interactor\CloseTaskInteractor;
 use App\TaskFeature\Domain\Interactor\CreateTaskInteractor;
 use App\TaskFeature\Domain\Interactor\RemoveTaskAssigneeInteractor;
+use App\TaskFeature\Domain\Interactor\ReopenTaskInteractor;
 use App\TaskFeature\Domain\Interactor\UpdateTaskInteractor;
 use App\TaskFeature\Domain\Port\ClockInterface;
 use App\TaskFeature\Domain\Port\DomainEventDispatcherInterface;
@@ -55,8 +57,12 @@ final class TaskApiServiceTest extends TestCase
                 $tasks,
                 $workflow,
                 $this->createStub(WorkflowTransitionRepositoryInterface::class),
+                $this->createStub(WorkflowStatusRepositoryInterface::class),
                 $dispatcher,
+                $clock,
             ),
+            new CloseTaskInteractor($tasks, $dispatcher, $clock),
+            new ReopenTaskInteractor($tasks, $this->createStub(WorkflowStatusRepositoryInterface::class), $dispatcher),
             new AddTaskAssigneeInteractor($tasks, $assignees, $teamMembership, $dispatcher, $clock),
             new RemoveTaskAssigneeInteractor($tasks, $assignees, $dispatcher),
             $tasks,

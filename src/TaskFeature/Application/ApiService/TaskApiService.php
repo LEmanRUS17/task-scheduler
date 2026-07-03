@@ -8,8 +8,10 @@ use App\TaskFeature\Application\DataMapper\TaskDataMapper;
 use App\TaskFeature\Application\DTORequestValidator\TaskValidatorInterface;
 use App\TaskFeature\Domain\Interactor\AddTaskAssigneeInteractor;
 use App\TaskFeature\Domain\Interactor\ApplyTaskTransitionInteractor;
+use App\TaskFeature\Domain\Interactor\CloseTaskInteractor;
 use App\TaskFeature\Domain\Interactor\CreateTaskInteractor;
 use App\TaskFeature\Domain\Interactor\RemoveTaskAssigneeInteractor;
+use App\TaskFeature\Domain\Interactor\ReopenTaskInteractor;
 use App\TaskFeature\Domain\Event\TaskDeleted;
 use App\TaskFeature\Domain\Interactor\UpdateTaskInteractor;
 use App\TaskFeature\Domain\Port\DomainEventDispatcherInterface;
@@ -41,6 +43,8 @@ final class TaskApiService implements TaskServiceInterface
         private readonly CreateTaskInteractor $createInteractor,
         private readonly UpdateTaskInteractor $updateInteractor,
         private readonly ApplyTaskTransitionInteractor $transitionInteractor,
+        private readonly CloseTaskInteractor $closeInteractor,
+        private readonly ReopenTaskInteractor $reopenInteractor,
         private readonly AddTaskAssigneeInteractor $addAssigneeInteractor,
         private readonly RemoveTaskAssigneeInteractor $removeAssigneeInteractor,
         private readonly TaskRepositoryInterface $tasks,
@@ -219,6 +223,28 @@ final class TaskApiService implements TaskServiceInterface
         );
     }
 
+    public function close(string $id): TaskDataResponseInterface
+    {
+        $task = $this->closeInteractor->close($id);
+
+        return $this->buildResponse(
+            $task,
+            $this->workflow->getEnabledTransitions($task),
+            $this->descriptions->get(Task::class, $id),
+        );
+    }
+
+    public function reopen(string $id): TaskDataResponseInterface
+    {
+        $task = $this->reopenInteractor->reopen($id);
+
+        return $this->buildResponse(
+            $task,
+            $this->workflow->getEnabledTransitions($task),
+            $this->descriptions->get(Task::class, $id),
+        );
+    }
+
     public function addAssignee(string $taskId, string $userId): void
     {
         $this->addAssigneeInteractor->add(TaskId::fromString($taskId), $userId);
@@ -309,7 +335,7 @@ final class TaskApiService implements TaskServiceInterface
         return $this->dataMapper->taskToResponse(
             $task,
             $assigneeIds,
-            $transitions,
+            $task->isClosed() ? [] : $transitions,
             $this->resolveStatusLabel($task),
             $description,
             $profiles[$task->createdBy()] ?? null,

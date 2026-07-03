@@ -21,8 +21,12 @@ final class UpdateWorkflowStatusInteractor
     ) {
     }
 
-    public function update(WorkflowId $workflowId, WorkflowStatusId $statusId, StatusLabel $label): WorkflowStatus
-    {
+    public function update(
+        WorkflowId $workflowId,
+        WorkflowStatusId $statusId,
+        StatusLabel $label,
+        ?bool $isFinal = null,
+    ): WorkflowStatus {
         if ($this->workflows->findById($workflowId) === null) {
             throw new \DomainException("Workflow \"{$workflowId->value()}\" not found");
         }
@@ -42,6 +46,10 @@ final class UpdateWorkflowStatusInteractor
         }
 
         $status->rename($label);
+
+        if ($isFinal !== null) {
+            $status->markFinal($isFinal);
+        }
 
         $this->statuses->save($status);
         $this->eventDispatcher->dispatch(...$status->pullDomainEvents());

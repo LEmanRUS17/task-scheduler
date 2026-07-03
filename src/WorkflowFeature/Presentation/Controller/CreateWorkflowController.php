@@ -71,6 +71,24 @@ final class CreateWorkflowController
                     ],
                     $tagsByWorkflow[$workflow->getId()] ?? [],
                 ),
+                'statuses' => array_map(
+                    static fn($s): array => [
+                        'id' => $s->getId(),
+                        'label' => $s->getLabel(),
+                        'isInitial' => $s->isInitial(),
+                        'isFinal' => $s->isFinal(),
+                    ],
+                    $this->workflowService->getStatuses($workflow->getId()),
+                ),
+                'transitions' => array_map(
+                    static fn($t): array => [
+                        'id' => $t->getId(),
+                        'name' => $t->getName(),
+                        'from' => $t->getFromStatusId(),
+                        'to' => $t->getToStatusId(),
+                    ],
+                    $this->workflowService->getTransitions($workflow->getId()),
+                ),
             ],
             Response::HTTP_CREATED,
         );
