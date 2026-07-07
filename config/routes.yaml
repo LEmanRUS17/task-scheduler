@@ -54,3 +54,9 @@ tag_controllers:
         path: ../src/TagFeature/Presentation/Controller/
         namespace: App\TagFeature\Presentation\Controller
     type: attribute
+
+comment_controllers:
+    resource:
+        path: ../src/CommentFeature/Presentation/Controller/
+        namespace: App\CommentFeature\Presentation\Controller
+    type: attribute

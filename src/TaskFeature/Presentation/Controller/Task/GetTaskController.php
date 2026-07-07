@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\TaskFeature\Presentation\Controller\Task;
 
+use App\CommentFeatureApi\Contract\CommentServiceInterface;
 use App\FileFeatureApi\Contract\FileServiceInterface;
 use App\TagFeatureApi\Contract\TagServiceInterface;
 use App\TaskFeature\Domain\Entity\Task;
@@ -22,6 +23,7 @@ final class GetTaskController
         private readonly TaskServiceInterface $taskService,
         private readonly FileServiceInterface $fileService,
         private readonly TagServiceInterface $tagService,
+        private readonly CommentServiceInterface $commentService,
     ) {
     }
 
@@ -50,6 +52,10 @@ final class GetTaskController
         $payload = TaskResponseFormatter::format($task, $tagsByTask[$id] ?? []);
         $payload['files'] = $files;
         $payload['filesCount'] = count($files);
+        $payload['commentsCount'] = $this->commentService->countEntityComments(
+            TaskServiceInterface::COMMENTABLE_TYPE,
+            $id,
+        );
 
         return new JsonResponse($payload, Response::HTTP_OK);
     }
