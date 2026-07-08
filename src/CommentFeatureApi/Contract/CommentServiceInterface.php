@@ -13,21 +13,15 @@ interface CommentServiceInterface
     /**
      * Adds a comment to the given entity. The entity type is a free-form
      * lowercase slug chosen by the calling feature (e.g. "task", "team").
+     *
+     * When the request carries a parent id, the new comment is created as a
+     * reply to that comment. The parent comment must belong to the same
+     * entity, otherwise a \DomainException is thrown. Replies can be nested
+     * to any depth and a comment can have any number of replies.
      */
     public function add(
         string $entityType,
         string $entityId,
-        string $authorId,
-        CreateCommentRequestInterface $request,
-    ): CommentResponseInterface;
-
-    /**
-     * Adds a reply to the given comment. The reply is attached to the same
-     * entity as the parent. Replies can be nested to any depth and a comment
-     * can have any number of replies.
-     */
-    public function reply(
-        string $parentId,
         string $authorId,
         CreateCommentRequestInterface $request,
     ): CommentResponseInterface;

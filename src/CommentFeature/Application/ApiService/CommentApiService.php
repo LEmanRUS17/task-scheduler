@@ -10,7 +10,6 @@ use App\CommentFeature\Domain\Entity\Comment;
 use App\CommentFeature\Domain\Interactor\AddCommentInteractor;
 use App\CommentFeature\Domain\Interactor\DeleteCommentInteractor;
 use App\CommentFeature\Domain\Interactor\EditCommentInteractor;
-use App\CommentFeature\Domain\Interactor\ReplyToCommentInteractor;
 use App\CommentFeature\Domain\Repository\CommentRepositoryInterface;
 use App\CommentFeature\Domain\ValueObject\CommentableType;
 use App\CommentFeature\Domain\ValueObject\CommentContent;
@@ -24,7 +23,6 @@ final class CommentApiService implements CommentServiceInterface
 {
     public function __construct(
         private readonly AddCommentInteractor $addInteractor,
-        private readonly ReplyToCommentInteractor $replyInteractor,
         private readonly EditCommentInteractor $editInteractor,
         private readonly DeleteCommentInteractor $deleteInteractor,
         private readonly CommentRepositoryInterface $comments,
@@ -41,27 +39,14 @@ final class CommentApiService implements CommentServiceInterface
     ): CommentResponseInterface {
         $this->guardValid($request);
 
+        $parentId = $request->getParentId();
+
         $comment = $this->addInteractor->add(
             CommentableType::fromString($entityType),
             $entityId,
             $authorId,
             CommentContent::fromString($request->getContent()),
-        );
-
-        return $this->dataMapper->commentToResponse($comment);
-    }
-
-    public function reply(
-        string $parentId,
-        string $authorId,
-        CreateCommentRequestInterface $request,
-    ): CommentResponseInterface {
-        $this->guardValid($request);
-
-        $comment = $this->replyInteractor->reply(
-            CommentId::fromString($parentId),
-            $authorId,
-            CommentContent::fromString($request->getContent()),
+            $parentId !== null ? CommentId::fromString($parentId) : null,
         );
 
         return $this->dataMapper->commentToResponse($comment);

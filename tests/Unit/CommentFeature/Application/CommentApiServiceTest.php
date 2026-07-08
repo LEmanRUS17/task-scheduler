@@ -12,7 +12,6 @@ use App\CommentFeature\Domain\Entity\Comment;
 use App\CommentFeature\Domain\Interactor\AddCommentInteractor;
 use App\CommentFeature\Domain\Interactor\DeleteCommentInteractor;
 use App\CommentFeature\Domain\Interactor\EditCommentInteractor;
-use App\CommentFeature\Domain\Interactor\ReplyToCommentInteractor;
 use App\CommentFeature\Domain\Port\ClockInterface;
 use App\CommentFeature\Domain\Port\DomainEventDispatcherInterface;
 use App\CommentFeature\Domain\Repository\CommentRepositoryInterface;
@@ -39,7 +38,6 @@ final class CommentApiServiceTest extends TestCase
 
         return new CommentApiService(
             new AddCommentInteractor($comments, $dispatcher, $clock),
-            new ReplyToCommentInteractor($comments, $dispatcher, $clock),
             new EditCommentInteractor($comments, $dispatcher, $clock),
             new DeleteCommentInteractor($comments, $dispatcher),
             $comments,
@@ -99,7 +97,7 @@ final class CommentApiServiceTest extends TestCase
         );
     }
 
-    public function testReplyReturnsResponseWithParentId(): void
+    public function testAddWithParentIdReturnsResponseWithParentId(): void
     {
         $parentId = CommentId::generate();
         $parent = Comment::create(
@@ -115,10 +113,11 @@ final class CommentApiServiceTest extends TestCase
         $comments->method('findById')->willReturn($parent);
         $comments->expects($this->once())->method('save');
 
-        $response = $this->buildService($comments)->reply(
-            $parentId->value(),
+        $response = $this->buildService($comments)->add(
+            'task',
+            'task-1',
             'author-2',
-            new CreateCommentRequestDTO('I agree'),
+            new CreateCommentRequestDTO('I agree', $parentId->value()),
         );
 
         $this->assertSame($parentId->value(), $response->getParentId());

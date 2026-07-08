@@ -46,6 +46,8 @@ final class AddTaskCommentController
                 $authorId,
                 $request,
             );
+        } catch (\DomainException $e) {
+            return new JsonResponse(['message' => $e->getMessage()], Response::HTTP_NOT_FOUND);
         } catch (\InvalidArgumentException $e) {
             return new JsonResponse(['message' => $e->getMessage()], Response::HTTP_UNPROCESSABLE_ENTITY);
         }
