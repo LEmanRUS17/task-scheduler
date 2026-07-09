@@ -11,6 +11,9 @@ use App\CommentFeature\Domain\ValueObject\CommentableType;
 use App\CommentFeature\Domain\ValueObject\CommentContent;
 use App\CommentFeature\Domain\ValueObject\CommentId;
 
+// TODO: comment activity is not tracked by the ClickHouse analytics. Add a
+//       subscriber in AnalyticsFeature for CommentAdded/CommentUpdated/CommentDeleted
+//       and record them the way task events already are.
 final class Comment
 {
     private string $id;

@@ -12,6 +12,9 @@ use App\TagFeature\Domain\ValueObject\TagColor;
 use App\TagFeature\Domain\ValueObject\TagId;
 use App\TagFeature\Domain\ValueObject\TagName;
 
+// TODO: tag activity is not tracked by the ClickHouse analytics. Add a subscriber
+//       in AnalyticsFeature for TagCreated/TagUpdated/TagDeleted (and tag
+//       assign/unassign) and record them the way task events already are.
 final class Tag implements DescribableInterface
 {
     private string $id;

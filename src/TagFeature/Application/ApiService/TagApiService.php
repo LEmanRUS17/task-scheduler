@@ -105,6 +105,8 @@ final class TagApiService implements TagServiceInterface
         return true;
     }
 
+    // TODO: a user must only have access to their own tags — restrict reads
+    //       (getById/getList) to the caller's tags, like update/delete already do.
     public function getById(string $id): ?TagResponseInterface
     {
         $tag = $this->tags->findById(TagId::fromString($id));
@@ -158,6 +160,11 @@ final class TagApiService implements TagServiceInterface
         return $this->tags->countByOwner($ownerId);
     }
 
+    // TODO: no permission checks here. A user may only assign their own tags;
+    //       inside a team also tags belonging to the team. Open question to settle
+    //       during implementation: whether a member may assign tags owned by other
+    //       members of the same team. Also verify the target entity exists and the
+    //       caller has access to it.
     public function assign(string $tagId, string $entityType, string $entityId, string $assignedBy): void
     {
         $this->assignInteractor->assign(
@@ -168,6 +175,9 @@ final class TagApiService implements TagServiceInterface
         );
     }
 
+    // TODO: no permission checks here. Inside a team any member may unassign any
+    //       tag (even one they do not own); outside a team only the caller's own
+    //       tags may be unassigned. The caller must have access to the entity.
     public function unassign(string $tagId, string $entityType, string $entityId): void
     {
         $this->unassignInteractor->unassign(

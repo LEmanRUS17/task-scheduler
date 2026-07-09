@@ -6,6 +6,9 @@ namespace App\FileFeature\Domain\Entity;
 
 use App\FileFeature\Domain\ValueObject\FilePurpose;
 
+// TODO: file activity (upload/delete) is not tracked by the ClickHouse analytics.
+//       FileFeature currently emits no domain events at all — introduce them and
+//       record them in AnalyticsFeature the way task events already are.
 final class StoredFile
 {
     private string $id;

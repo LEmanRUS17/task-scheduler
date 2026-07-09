@@ -38,6 +38,8 @@ security:
     access_control:
         - { path: ^/auth/token/refresh, roles: PUBLIC_ACCESS }
         - { path: ^/auth, roles: PUBLIC_ACCESS }
+        # TODO: analytics must not be public — require authentication and scope the
+        #       data per user (own actions only) / per team for team members.
         - { path: ^/analytics, roles: PUBLIC_ACCESS }
         - { path: ^/, roles: IS_AUTHENTICATED_FULLY }
 

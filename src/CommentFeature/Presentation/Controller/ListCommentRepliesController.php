@@ -10,6 +10,9 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Attribute\AsController;
 use Symfony\Component\Routing\Attribute\Route;
 
+// TODO: restrict reply listing the same way as task access: replies may only be
+//       read by users who can see the entity the root comment belongs to (own task
+//       or a task of a team the user is a member of).
 #[AsController]
 final class ListCommentRepliesController
 {
