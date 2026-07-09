@@ -6,6 +6,7 @@ namespace App\Tests\Unit\CommentFeature\Domain\Interactor;
 
 use App\CommentFeature\Domain\Entity\Comment;
 use App\CommentFeature\Domain\Event\CommentAdded;
+use App\CommentFeature\Domain\Exception\CommentDeletedException;
 use App\CommentFeature\Domain\Exception\CommentNotFoundException;
 use App\CommentFeature\Domain\Interactor\AddCommentInteractor;
 use App\CommentFeature\Domain\Port\ClockInterface;
@@ -129,6 +130,28 @@ final class AddCommentInteractorTest extends TestCase
         $this->buildInteractor($comments)->add(
             CommentableType::fromString('task'),
             'task-2',
+            'author-2',
+            CommentContent::fromString('I agree'),
+            $parentId,
+        );
+    }
+
+    public function testAddRejectsDeletedParent(): void
+    {
+        $parentId = CommentId::generate();
+        $parent = $this->existingComment($parentId);
+        $parent->markDeleted(new \DateTimeImmutable('2024-01-01 11:00:00'));
+        $parent->pullDomainEvents();
+
+        $comments = $this->createMock(CommentRepositoryInterface::class);
+        $comments->method('findById')->willReturn($parent);
+        $comments->expects($this->never())->method('save');
+
+        $this->expectException(CommentDeletedException::class);
+
+        $this->buildInteractor($comments)->add(
+            CommentableType::fromString('task'),
+            'task-1',
             'author-2',
             CommentContent::fromString('I agree'),
             $parentId,

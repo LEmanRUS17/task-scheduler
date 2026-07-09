@@ -39,7 +39,7 @@ final class CommentApiServiceTest extends TestCase
         return new CommentApiService(
             new AddCommentInteractor($comments, $dispatcher, $clock),
             new EditCommentInteractor($comments, $dispatcher, $clock),
-            new DeleteCommentInteractor($comments, $dispatcher),
+            new DeleteCommentInteractor($comments, $dispatcher, $clock),
             $comments,
             new CommentDataMapper(),
             $validator,
@@ -220,6 +220,55 @@ final class CommentApiServiceTest extends TestCase
             ],
             array_map(static fn($comment) => $comment->getId(), $result),
         );
+    }
+
+    public function testDeletedCommentIsMarkedAndItsContentIsHidden(): void
+    {
+        $comment = Comment::create(
+            CommentId::generate(),
+            CommentableType::fromString('task'),
+            'task-1',
+            'author-1',
+            CommentContent::fromString('Secret'),
+            new \DateTimeImmutable('2024-01-01 12:00:00'),
+        );
+        $comment->pullDomainEvents();
+        $comment->markDeleted(new \DateTimeImmutable('2024-01-02 09:00:00'));
+        $comment->pullDomainEvents();
+
+        $comments = $this->createStub(CommentRepositoryInterface::class);
+        $comments->method('findById')->willReturn($comment);
+
+        $response = $this->buildService($comments)->getById($comment->id()->value());
+
+        $this->assertNotNull($response);
+        $this->assertTrue($response->isDeleted());
+        $this->assertSame('', $response->getContent());
+        $this->assertSame('author-1', $response->getAuthorId());
+        $this->assertSame('2024-01-01 12:00:00', $response->getCreatedAt()->format('Y-m-d H:i:s'));
+    }
+
+    public function testDeleteMarksCommentDeletedWithoutRemovingIt(): void
+    {
+        $comment = Comment::create(
+            CommentId::generate(),
+            CommentableType::fromString('task'),
+            'task-1',
+            'author-1',
+            CommentContent::fromString('Bye'),
+            new \DateTimeImmutable('2024-01-01 12:00:00'),
+        );
+        $comment->pullDomainEvents();
+
+        $comments = $this->createMock(CommentRepositoryInterface::class);
+        $comments->method('findById')->willReturn($comment);
+        $comments->method('hasReplies')->willReturn(false);
+        $comments->expects($this->once())->method('save');
+        $comments->expects($this->never())->method('delete');
+
+        $this->buildService($comments)->delete($comment->id()->value(), 'author-1');
+
+        $this->assertTrue($comment->isDeleted());
     }
 
     public function testCountAllEntityCommentsDelegatesToRepository(): void

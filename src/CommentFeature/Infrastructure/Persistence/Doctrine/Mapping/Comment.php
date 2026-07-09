@@ -32,3 +32,4 @@ $builder->addField('content', 'text');
 $builder->addField('parentId', 'string', ['columnName' => 'parent_id', 'length' => 36, 'nullable' => true]);
 $builder->addField('createdAt', 'datetime_immutable', ['columnName' => 'created_at']);
 $builder->addField('editedAt', 'datetime_immutable', ['columnName' => 'edited_at', 'nullable' => true]);
+$builder->addField('deletedAt', 'datetime_immutable', ['columnName' => 'deleted_at', 'nullable' => true]);

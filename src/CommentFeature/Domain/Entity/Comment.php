@@ -21,6 +21,7 @@ final class Comment
     private ?string $parentId;
     private \DateTimeImmutable $createdAt;
     private ?\DateTimeImmutable $editedAt;
+    private ?\DateTimeImmutable $deletedAt;
 
     /** @var list<object> */
     private array $domainEvents = [];
@@ -42,6 +43,7 @@ final class Comment
         $this->parentId = $parentId?->value();
         $this->createdAt = $createdAt;
         $this->editedAt = null;
+        $this->deletedAt = null;
     }
 
     public static function create(
@@ -71,8 +73,9 @@ final class Comment
         ));
     }
 
-    public function markDeleted(): void
+    public function markDeleted(\DateTimeImmutable $deletedAt): void
     {
+        $this->deletedAt = $deletedAt;
         $this->recordEvent(new CommentDeleted(
             $this->id(),
             $this->entityType(),
@@ -129,6 +132,16 @@ final class Comment
     public function editedAt(): ?\DateTimeImmutable
     {
         return $this->editedAt;
+    }
+
+    public function deletedAt(): ?\DateTimeImmutable
+    {
+        return $this->deletedAt;
+    }
+
+    public function isDeleted(): bool
+    {
+        return $this->deletedAt !== null;
     }
 
     private function recordEvent(object $event): void

@@ -17,6 +17,7 @@ final class CommentResponseDTO implements CommentResponseInterface
         private readonly \DateTimeImmutable $createdAt,
         private readonly ?\DateTimeImmutable $editedAt = null,
         private readonly ?string $parentId = null,
+        private readonly bool $isDeleted = false,
     ) {
     }
 
@@ -43,6 +44,11 @@ final class CommentResponseDTO implements CommentResponseInterface
     public function getContent(): string
     {
         return $this->content;
+    }
+
+    public function isDeleted(): bool
+    {
+        return $this->isDeleted;
     }
 
     public function getCreatedAt(): \DateTimeImmutable

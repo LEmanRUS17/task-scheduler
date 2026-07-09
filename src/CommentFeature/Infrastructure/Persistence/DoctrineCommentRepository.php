@@ -43,6 +43,13 @@ final class DoctrineCommentRepository implements CommentRepositoryInterface
         );
     }
 
+    public function hasReplies(CommentId $parentId): bool
+    {
+        return $this->entityManager->getRepository(Comment::class)->count([
+            'parentId' => $parentId->value(),
+        ]) > 0;
+    }
+
     public function findByEntityPaginated(
         CommentableType $entityType,
         string $entityId,

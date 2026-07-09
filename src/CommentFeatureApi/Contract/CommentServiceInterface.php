@@ -16,8 +16,9 @@ interface CommentServiceInterface
      *
      * When the request carries a parent id, the new comment is created as a
      * reply to that comment. The parent comment must belong to the same
-     * entity, otherwise a \DomainException is thrown. Replies can be nested
-     * to any depth and a comment can have any number of replies.
+     * entity and must not be deleted, otherwise a \DomainException is thrown.
+     * Replies can be nested to any depth and a comment can have any number
+     * of replies.
      */
     public function add(
         string $entityType,
@@ -35,6 +36,7 @@ interface CommentServiceInterface
 
     /**
      * Updates the comment content. Only the author may edit a comment.
+     * A deleted comment cannot be edited.
      */
     public function update(
         string $id,
@@ -43,7 +45,11 @@ interface CommentServiceInterface
     ): CommentResponseInterface;
 
     /**
-     * Deletes the comment. Only the author may delete a comment.
+     * Soft-deletes the comment. Only the author may delete a comment, and
+     * only when the comment has no replies. The comment stays in storage and
+     * keeps appearing in listings as deleted (author and creation date are
+     * visible, the content is hidden). A deleted comment cannot be replied
+     * to, edited or deleted again; violations raise a \DomainException.
      */
     public function delete(string $id, string $authorId): void;
 

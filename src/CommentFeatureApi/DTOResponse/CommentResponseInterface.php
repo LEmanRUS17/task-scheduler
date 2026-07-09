@@ -14,7 +14,12 @@ interface CommentResponseInterface
 
     public function getAuthorId(): string;
 
+    /**
+     * The comment text. Empty for a deleted comment — its content is hidden.
+     */
     public function getContent(): string;
+
+    public function isDeleted(): bool;
 
     public function getParentId(): ?string;
 

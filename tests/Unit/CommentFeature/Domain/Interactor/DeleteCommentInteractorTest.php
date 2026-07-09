@@ -5,9 +5,13 @@ declare(strict_types=1);
 namespace App\Tests\Unit\CommentFeature\Domain\Interactor;
 
 use App\CommentFeature\Domain\Entity\Comment;
+use App\CommentFeature\Domain\Event\CommentDeleted;
 use App\CommentFeature\Domain\Exception\CommentAccessDeniedException;
+use App\CommentFeature\Domain\Exception\CommentDeletedException;
+use App\CommentFeature\Domain\Exception\CommentHasRepliesException;
 use App\CommentFeature\Domain\Exception\CommentNotFoundException;
 use App\CommentFeature\Domain\Interactor\DeleteCommentInteractor;
+use App\CommentFeature\Domain\Port\ClockInterface;
 use App\CommentFeature\Domain\Port\DomainEventDispatcherInterface;
 use App\CommentFeature\Domain\Repository\CommentRepositoryInterface;
 use App\CommentFeature\Domain\ValueObject\CommentableType;
@@ -18,10 +22,13 @@ use PHPUnit\Framework\TestCase;
 final class DeleteCommentInteractorTest extends TestCase
 {
     private CommentId $commentId;
+    private ClockInterface $clock;
 
     protected function setUp(): void
     {
         $this->commentId = CommentId::generate();
+        $this->clock = $this->createStub(ClockInterface::class);
+        $this->clock->method('now')->willReturn(new \DateTimeImmutable('2024-01-02 09:00:00'));
     }
 
     private function existingComment(): Comment
@@ -39,59 +46,63 @@ final class DeleteCommentInteractorTest extends TestCase
         return $comment;
     }
 
-    private function buildInteractor(CommentRepositoryInterface $comments): DeleteCommentInteractor
-    {
+    private function buildInteractor(
+        CommentRepositoryInterface $comments,
+        ?DomainEventDispatcherInterface $dispatcher = null,
+    ): DeleteCommentInteractor {
         return new DeleteCommentInteractor(
             $comments,
-            $this->createStub(DomainEventDispatcherInterface::class),
+            $dispatcher ?? $this->createStub(DomainEventDispatcherInterface::class),
+            $this->clock,
         );
     }
 
-    public function testDeleteRemovesComment(): void
+    public function testDeleteMarksCommentDeletedAndKeepsIt(): void
     {
+        $comment = $this->existingComment();
+
         $comments = $this->createMock(CommentRepositoryInterface::class);
-        $comments->method('findById')->willReturn($this->existingComment());
-        $comments->method('findByParent')->willReturn([]);
-        $comments->expects($this->once())->method('delete');
+        $comments->method('findById')->willReturn($comment);
+        $comments->method('hasReplies')->willReturn(false);
+        $comments->expects($this->once())->method('save')->with($comment);
+        $comments->expects($this->never())->method('delete');
+
+        $dispatcher = $this->createMock(DomainEventDispatcherInterface::class);
+        $dispatcher->expects($this->once())
+            ->method('dispatch')
+            ->with($this->isInstanceOf(CommentDeleted::class));
+
+        $this->buildInteractor($comments, $dispatcher)->delete($this->commentId, 'author-1');
+
+        $this->assertTrue($comment->isDeleted());
+        $this->assertSame('2024-01-02 09:00:00', $comment->deletedAt()?->format('Y-m-d H:i:s'));
+    }
+
+    public function testDeleteRejectsCommentWithReplies(): void
+    {
+        $comment = $this->existingComment();
+
+        $comments = $this->createMock(CommentRepositoryInterface::class);
+        $comments->method('findById')->willReturn($comment);
+        $comments->method('hasReplies')->willReturn(true);
+        $comments->expects($this->never())->method('save');
+
+        $this->expectException(CommentHasRepliesException::class);
 
         $this->buildInteractor($comments)->delete($this->commentId, 'author-1');
     }
 
-    public function testDeleteRemovesNestedRepliesTogetherWithComment(): void
+    public function testDeleteRejectsAlreadyDeletedComment(): void
     {
-        $reply = Comment::create(
-            CommentId::generate(),
-            CommentableType::fromString('task'),
-            'task-1',
-            'author-2',
-            CommentContent::fromString('A reply'),
-            new \DateTimeImmutable(),
-            $this->commentId,
-        );
-        $reply->pullDomainEvents();
-
-        $nestedReply = Comment::create(
-            CommentId::generate(),
-            CommentableType::fromString('task'),
-            'task-1',
-            'author-3',
-            CommentContent::fromString('A nested reply'),
-            new \DateTimeImmutable(),
-            $reply->id(),
-        );
-        $nestedReply->pullDomainEvents();
-
-        $repliesByParent = [
-            $this->commentId->value() => [$reply],
-            $reply->id()->value() => [$nestedReply],
-        ];
+        $comment = $this->existingComment();
+        $comment->markDeleted(new \DateTimeImmutable('2024-01-01 15:00:00'));
+        $comment->pullDomainEvents();
 
         $comments = $this->createMock(CommentRepositoryInterface::class);
-        $comments->method('findById')->willReturn($this->existingComment());
-        $comments->method('findByParent')->willReturnCallback(
-            static fn(CommentId $parentId) => $repliesByParent[$parentId->value()] ?? [],
-        );
-        $comments->expects($this->exactly(3))->method('delete');
+        $comments->method('findById')->willReturn($comment);
+        $comments->expects($this->never())->method('save');
+
+        $this->expectException(CommentDeletedException::class);
 
         $this->buildInteractor($comments)->delete($this->commentId, 'author-1');
     }
@@ -110,7 +121,7 @@ final class DeleteCommentInteractorTest extends TestCase
     {
         $comments = $this->createMock(CommentRepositoryInterface::class);
         $comments->method('findById')->willReturn($this->existingComment());
-        $comments->expects($this->never())->method('delete');
+        $comments->expects($this->never())->method('save');
 
         $this->expectException(CommentAccessDeniedException::class);
 

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\CommentFeature\Domain\Interactor;
 
 use App\CommentFeature\Domain\Entity\Comment;
+use App\CommentFeature\Domain\Exception\CommentDeletedException;
 use App\CommentFeature\Domain\Exception\CommentNotFoundException;
 use App\CommentFeature\Domain\Port\ClockInterface;
 use App\CommentFeature\Domain\Port\DomainEventDispatcherInterface;
@@ -62,6 +63,10 @@ final class AddCommentInteractor
             || $parent->entityId() !== $entityId
         ) {
             throw CommentNotFoundException::withId($parentId->value());
+        }
+
+        if ($parent->isDeleted()) {
+            throw CommentDeletedException::cannotReplyTo($parentId->value());
         }
     }
 }

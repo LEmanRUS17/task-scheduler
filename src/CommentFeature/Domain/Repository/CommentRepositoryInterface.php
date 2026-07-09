@@ -24,6 +24,11 @@ interface CommentRepositoryInterface
     public function findByParent(CommentId $parentId): array;
 
     /**
+     * Tells whether the given comment has at least one direct reply.
+     */
+    public function hasReplies(CommentId $parentId): bool;
+
+    /**
      * Returns the direct replies to all of the given comments, oldest first.
      *
      * @param list<string> $parentIds

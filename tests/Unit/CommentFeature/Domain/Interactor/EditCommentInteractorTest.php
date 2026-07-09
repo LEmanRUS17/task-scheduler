@@ -6,6 +6,7 @@ namespace App\Tests\Unit\CommentFeature\Domain\Interactor;
 
 use App\CommentFeature\Domain\Entity\Comment;
 use App\CommentFeature\Domain\Exception\CommentAccessDeniedException;
+use App\CommentFeature\Domain\Exception\CommentDeletedException;
 use App\CommentFeature\Domain\Exception\CommentNotFoundException;
 use App\CommentFeature\Domain\Interactor\EditCommentInteractor;
 use App\CommentFeature\Domain\Port\ClockInterface;
@@ -74,6 +75,25 @@ final class EditCommentInteractorTest extends TestCase
         $comments->method('findById')->willReturn(null);
 
         $this->expectException(CommentNotFoundException::class);
+
+        $this->buildInteractor($comments)->edit(
+            $this->commentId,
+            'author-1',
+            CommentContent::fromString('Edited'),
+        );
+    }
+
+    public function testEditRejectsDeletedComment(): void
+    {
+        $comment = $this->existingComment();
+        $comment->markDeleted(new \DateTimeImmutable('2024-01-01 15:00:00'));
+        $comment->pullDomainEvents();
+
+        $comments = $this->createMock(CommentRepositoryInterface::class);
+        $comments->method('findById')->willReturn($comment);
+        $comments->expects($this->never())->method('save');
+
+        $this->expectException(CommentDeletedException::class);
 
         $this->buildInteractor($comments)->edit(
             $this->commentId,

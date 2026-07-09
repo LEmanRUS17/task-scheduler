@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace App\CommentFeature\Domain\Interactor;
 
-use App\CommentFeature\Domain\Entity\Comment;
 use App\CommentFeature\Domain\Exception\CommentAccessDeniedException;
+use App\CommentFeature\Domain\Exception\CommentDeletedException;
+use App\CommentFeature\Domain\Exception\CommentHasRepliesException;
 use App\CommentFeature\Domain\Exception\CommentNotFoundException;
+use App\CommentFeature\Domain\Port\ClockInterface;
 use App\CommentFeature\Domain\Port\DomainEventDispatcherInterface;
 use App\CommentFeature\Domain\Repository\CommentRepositoryInterface;
 use App\CommentFeature\Domain\ValueObject\CommentableType;
@@ -17,9 +19,14 @@ final class DeleteCommentInteractor
     public function __construct(
         private readonly CommentRepositoryInterface $comments,
         private readonly DomainEventDispatcherInterface $eventDispatcher,
+        private readonly ClockInterface $clock,
     ) {
     }
 
+    /**
+     * Soft-deletes the comment: the row stays in storage, but the comment is
+     * marked as deleted. A comment with replies cannot be deleted.
+     */
     public function delete(CommentId $id, string $authorId): void
     {
         $comment = $this->comments->findById($id);
@@ -31,25 +38,24 @@ final class DeleteCommentInteractor
             throw CommentAccessDeniedException::notAuthor($id->value());
         }
 
-        $this->deleteWithReplies($comment);
-    }
-
-    private function deleteWithReplies(Comment $comment): void
-    {
-        foreach ($this->comments->findByParent($comment->id()) as $reply) {
-            $this->deleteWithReplies($reply);
+        if ($comment->isDeleted()) {
+            throw CommentDeletedException::alreadyDeleted($id->value());
         }
 
-        $comment->markDeleted();
+        if ($this->comments->hasReplies($id)) {
+            throw CommentHasRepliesException::withId($id->value());
+        }
 
-        $this->comments->delete($comment);
+        $comment->markDeleted($this->clock->now());
+
+        $this->comments->save($comment);
         $this->eventDispatcher->dispatch(...$comment->pullDomainEvents());
     }
 
     public function deleteAllForEntity(CommentableType $entityType, string $entityId): void
     {
         foreach ($this->comments->findByEntity($entityType, $entityId) as $comment) {
-            $comment->markDeleted();
+            $comment->markDeleted($this->clock->now());
 
             $this->comments->delete($comment);
             $this->eventDispatcher->dispatch(...$comment->pullDomainEvents());

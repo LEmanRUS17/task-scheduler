@@ -59,16 +59,28 @@ final class CommentTest extends TestCase
         $this->assertInstanceOf(CommentUpdated::class, $events[0]);
     }
 
-    public function testMarkDeletedRecordsEvent(): void
+    public function testMarkDeletedSetsDeletedAtAndRecordsEvent(): void
     {
         $comment = $this->makeComment();
         $comment->pullDomainEvents();
 
-        $comment->markDeleted();
+        $deletedAt = new \DateTimeImmutable('2024-01-03 08:00:00');
+        $comment->markDeleted($deletedAt);
+
+        $this->assertTrue($comment->isDeleted());
+        $this->assertSame($deletedAt, $comment->deletedAt());
 
         $events = $comment->pullDomainEvents();
         $this->assertCount(1, $events);
         $this->assertInstanceOf(CommentDeleted::class, $events[0]);
+    }
+
+    public function testFreshCommentIsNotDeleted(): void
+    {
+        $comment = $this->makeComment();
+
+        $this->assertFalse($comment->isDeleted());
+        $this->assertNull($comment->deletedAt());
     }
 
     public function testIsAuthoredBy(): void

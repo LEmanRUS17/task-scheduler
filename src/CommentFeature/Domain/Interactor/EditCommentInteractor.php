@@ -6,6 +6,7 @@ namespace App\CommentFeature\Domain\Interactor;
 
 use App\CommentFeature\Domain\Entity\Comment;
 use App\CommentFeature\Domain\Exception\CommentAccessDeniedException;
+use App\CommentFeature\Domain\Exception\CommentDeletedException;
 use App\CommentFeature\Domain\Exception\CommentNotFoundException;
 use App\CommentFeature\Domain\Port\ClockInterface;
 use App\CommentFeature\Domain\Port\DomainEventDispatcherInterface;
@@ -31,6 +32,10 @@ final class EditCommentInteractor
 
         if (!$comment->isAuthoredBy($authorId)) {
             throw CommentAccessDeniedException::notAuthor($id->value());
+        }
+
+        if ($comment->isDeleted()) {
+            throw CommentDeletedException::cannotEdit($id->value());
         }
 
         $comment->edit($content, $this->clock->now());

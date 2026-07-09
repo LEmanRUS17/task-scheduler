@@ -15,6 +15,7 @@ final class TaskCommentFormatter
             'id' => $comment->getId(),
             'authorId' => $comment->getAuthorId(),
             'content' => $comment->getContent(),
+            'isDeleted' => $comment->isDeleted(),
             'parentId' => $comment->getParentId(),
             'createdAt' => $comment->getCreatedAt()->format(\DateTimeInterface::ATOM),
             'editedAt' => $comment->getEditedAt()?->format(\DateTimeInterface::ATOM),

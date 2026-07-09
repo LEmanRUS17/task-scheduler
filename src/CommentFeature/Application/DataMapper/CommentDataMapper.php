@@ -16,10 +16,11 @@ final class CommentDataMapper
             $comment->entityType()->value(),
             $comment->entityId(),
             $comment->authorId(),
-            $comment->content()->value(),
+            $comment->isDeleted() ? '' : $comment->content()->value(),
             $comment->createdAt(),
             $comment->editedAt(),
             $comment->parentId()?->value(),
+            $comment->isDeleted(),
         );
     }
 }
