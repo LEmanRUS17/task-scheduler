@@ -151,6 +151,9 @@ final class TeamApiService implements TeamServiceInterface
         );
     }
 
+    // TODO: a team must not be hard-deleted. Replace with a soft delete: mark the
+    //       team with a "deleted" status and forbid every action on the team and
+    //       on objects related to it (tasks, members, tags, avatar, etc.).
     public function deleteById(string $id): void
     {
         $team = $this->teams->findById(TeamId::fromString($id));

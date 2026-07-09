@@ -24,6 +24,8 @@ final class IndexTaskHandler
     {
         $task = $this->taskService->getById($message->taskId);
 
+        // TODO: when the task no longer exists, remove it from the index instead
+        //       of returning (see IndexTagHandler for the same pattern).
         if ($task === null) {
             return;
         }

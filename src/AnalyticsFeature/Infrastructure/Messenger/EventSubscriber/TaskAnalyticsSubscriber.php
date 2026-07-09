@@ -95,6 +95,9 @@ final class TaskAnalyticsSubscriber
         );
     }
 
+    // TODO: subscribe to TaskClosed and TaskReopened and record the corresponding
+    //       analytics actions — the task lifecycle is incomplete without them.
+
     private function dispatchAction(string $taskId, string $action, string $actorId, string $metadata): void
     {
         $this->defaultBus->dispatch(new RecordTaskActionMessage(
