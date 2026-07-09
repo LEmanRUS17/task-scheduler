@@ -51,6 +51,10 @@ services:
     App\ProfileFeature\Domain\Port\ClockInterface:
         class: App\ProfileFeature\Infrastructure\Clock\SystemClock
 
+    App\ProfileFeature\Infrastructure\Persistence\Doctrine\ProfileForeignKeySchemaListener:
+        tags:
+            - { name: doctrine.event_listener, event: postGenerateSchema }
+
     App\TeamFeatureApi\Service\TeamServiceInterface:
         class: App\TeamFeature\Application\ApiService\TeamApiService
 
@@ -93,6 +97,10 @@ services:
 
     App\TaskFeature\Domain\Port\TeamMembershipInterface:
         class: App\TaskFeature\Infrastructure\Team\TeamMembershipChecker
+
+    App\TaskFeature\Infrastructure\Persistence\Doctrine\TaskForeignKeySchemaListener:
+        tags:
+            - { name: doctrine.event_listener, event: postGenerateSchema }
 
     Symfony\Component\Workflow\Registry: ~
 
@@ -249,6 +257,14 @@ services:
 
     App\TagFeature\Domain\Port\TeamMembershipInterface:
         class: App\TagFeature\Infrastructure\Team\TagTeamMembershipChecker
+
+    App\TagFeature\Infrastructure\Persistence\Doctrine\TagForeignKeySchemaListener:
+        tags:
+            - { name: doctrine.event_listener, event: postGenerateSchema }
+
+    App\SubscriptionFeature\Infrastructure\Persistence\Doctrine\SubscriptionForeignKeySchemaListener:
+        tags:
+            - { name: doctrine.event_listener, event: postGenerateSchema }
 
     App\SearchFeature\Infrastructure\Messenger\EventSubscriber\TagAssignmentSearchIndexSubscriber:
         arguments:

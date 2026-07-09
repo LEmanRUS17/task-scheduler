@@ -11,7 +11,7 @@ use Doctrine\ORM\Mapping\Builder\ClassMetadataBuilder;
 $metadata->table = [
     'name' => 'descriptions',
     'uniqueConstraints' => [
-        ['name' => 'uq_description_entity', 'columns' => ['entity_class', 'entity_id']],
+        'uq_description_entity' => ['columns' => ['entity_class', 'entity_id']],
     ],
 ];
 

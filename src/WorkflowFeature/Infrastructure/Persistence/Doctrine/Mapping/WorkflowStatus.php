@@ -20,5 +20,5 @@ $builder->createField('id', 'string')
 $builder->addField('workflowId', 'string', ['columnName' => 'workflow_id', 'length' => 36]);
 $builder->addField('label', 'string', ['length' => 100]);
 $builder->addField('isInitial', 'boolean', ['columnName' => 'is_initial']);
-$builder->addField('isFinal', 'boolean', ['columnName' => 'is_final']);
+$builder->addField('isFinal', 'boolean', ['columnName' => 'is_final', 'options' => ['default' => false]]);
 $builder->addField('createdAt', 'datetime_immutable', ['columnName' => 'created_at']);

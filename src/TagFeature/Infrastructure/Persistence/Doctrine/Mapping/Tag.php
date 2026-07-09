@@ -11,7 +11,7 @@ use Doctrine\ORM\Mapping\Builder\ClassMetadataBuilder;
 $metadata->table = [
     'name' => 'tags',
     'uniqueConstraints' => [
-        ['name' => 'uq_tag_owner_name', 'columns' => ['owner_id', 'name']],
+        'uq_tag_owner_name' => ['columns' => ['owner_id', 'name']],
     ],
 ];
 

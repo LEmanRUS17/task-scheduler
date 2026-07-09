@@ -11,9 +11,9 @@ use Doctrine\ORM\Mapping\Builder\ClassMetadataBuilder;
 $metadata->table = [
     'name' => 'comments',
     'indexes' => [
-        ['name' => 'idx_comment_entity', 'columns' => ['entity_type', 'entity_id', 'created_at']],
-        ['name' => 'idx_comment_author', 'columns' => ['author_id']],
-        ['name' => 'idx_comment_parent', 'columns' => ['parent_id']],
+        'idx_comment_entity' => ['columns' => ['entity_type', 'entity_id', 'created_at']],
+        'idx_comment_author' => ['columns' => ['author_id']],
+        'idx_comment_parent' => ['columns' => ['parent_id']],
     ],
 ];
 

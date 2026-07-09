@@ -11,11 +11,11 @@ use Doctrine\ORM\Mapping\Builder\ClassMetadataBuilder;
 $metadata->table = [
     'name' => 'tag_assignments',
     'uniqueConstraints' => [
-        ['name' => 'uq_tag_assignment', 'columns' => ['tag_id', 'entity_type', 'entity_id']],
+        'uq_tag_assignment' => ['columns' => ['tag_id', 'entity_type', 'entity_id']],
     ],
     'indexes' => [
-        ['name' => 'idx_tag_assignment_entity', 'columns' => ['entity_type', 'entity_id']],
-        ['name' => 'idx_tag_assignment_tag', 'columns' => ['tag_id']],
+        'idx_tag_assignment_entity' => ['columns' => ['entity_type', 'entity_id']],
+        'idx_tag_assignment_tag' => ['columns' => ['tag_id']],
     ],
 ];
 

@@ -19,8 +19,12 @@ $builder->createField('id', 'string')
     ->build();
 
 $builder->addField('title', 'string', ['length' => 255]);
-$builder->addField('priority', 'string', ['enumType' => TaskPriority::class]);
-$builder->addField('workflowStatus', 'string', ['columnName' => 'workflow_status', 'length' => 100]);
+$builder->addField('priority', 'string', ['enumType' => TaskPriority::class, 'length' => 20]);
+$builder->addField('workflowStatus', 'string', [
+    'columnName' => 'workflow_status',
+    'length' => 100,
+    'options' => ['default' => ''],
+]);
 $builder->addField('workflowDefinitionTitle', 'string', ['columnName' => 'workflow_definition_title', 'length' => 255]);
 $builder->addField('teamId', 'string', ['columnName' => 'team_id', 'length' => 36, 'nullable' => true]);
 $builder->addField('createdBy', 'string', ['columnName' => 'created_by', 'length' => 36]);
