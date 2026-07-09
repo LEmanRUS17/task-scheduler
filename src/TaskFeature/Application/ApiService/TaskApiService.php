@@ -27,6 +27,7 @@ use App\TaskFeatureApi\DTORequest\TaskCreateRequestInterface;
 use App\TaskFeatureApi\DTORequest\TaskUpdateRequestInterface;
 use App\TaskFeatureApi\DTOResponse\TaskDataResponseInterface;
 use App\TaskFeatureApi\Service\TaskServiceInterface;
+use App\CommentFeatureApi\Contract\CommentServiceInterface;
 use App\DescriptionFeatureApi\Contract\DescriptionServiceInterface;
 use App\TagFeatureApi\Contract\TagServiceInterface;
 use App\ProfileFeatureApi\DTOResponse\ProfileDataResponseInterface;
@@ -60,6 +61,7 @@ final class TaskApiService implements TaskServiceInterface
         private readonly TeamMembershipInterface $teamMembership,
         private readonly DescriptionServiceInterface $descriptions,
         private readonly TagServiceInterface $tagService,
+        private readonly CommentServiceInterface $comments,
     ) {
     }
 
@@ -267,6 +269,7 @@ final class TaskApiService implements TaskServiceInterface
         $this->assignees->deleteByTaskId($taskId);
         $this->tasks->delete($taskId);
         $this->descriptions->delete(Task::class, $id);
+        $this->comments->deleteEntityComments(self::COMMENTABLE_TYPE, $id);
         $this->eventDispatcher->dispatch(new TaskDeleted($id));
     }
 

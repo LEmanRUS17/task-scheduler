@@ -11,6 +11,11 @@ use App\TaskFeatureApi\DTOResponse\TaskStatusHistoryResponseInterface;
 
 interface TaskServiceInterface
 {
+    /**
+     * The commentable-type slug tasks are registered under in CommentFeature.
+     */
+    public const COMMENTABLE_TYPE = 'task';
+
     /** @return ResponseDTO[] */
     public function getAll(): array;
 

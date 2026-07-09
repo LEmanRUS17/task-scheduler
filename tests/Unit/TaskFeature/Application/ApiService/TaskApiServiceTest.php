@@ -26,6 +26,7 @@ use App\TaskFeature\Domain\Repository\TaskStatusHistoryRepositoryInterface;
 use App\TaskFeature\Domain\ValueObject\TaskId;
 use App\TaskFeature\Domain\ValueObject\TaskPriority;
 use App\TaskFeature\Domain\ValueObject\TaskTitle;
+use App\CommentFeatureApi\Contract\CommentServiceInterface;
 use App\DescriptionFeatureApi\Contract\DescriptionServiceInterface;
 use App\TagFeatureApi\Contract\TagServiceInterface;
 use App\ProfileFeatureApi\Service\ProfileServiceInterface;
@@ -43,6 +44,7 @@ final class TaskApiServiceTest extends TestCase
         ?TaskValidatorInterface $validator = null,
         ?TagServiceInterface $tagService = null,
         ?ClockInterface $clock = null,
+        ?CommentServiceInterface $commentService = null,
     ): TaskApiService {
         $dispatcher = $this->createStub(DomainEventDispatcherInterface::class);
         $clock ??= $this->createStub(ClockInterface::class);
@@ -78,6 +80,7 @@ final class TaskApiServiceTest extends TestCase
             $teamMembership,
             $this->createStub(DescriptionServiceInterface::class),
             $tagService,
+            $commentService ?? $this->createStub(CommentServiceInterface::class),
         );
     }
 
@@ -319,6 +322,32 @@ final class TaskApiServiceTest extends TestCase
             $this->createStub(TaskAssigneeRepositoryInterface::class),
             $teamMembership,
         )->getListByTeam('team-42', 'user-99');
+    }
+
+    // --- deleteById ---
+
+    public function testDeleteByIdRemovesTaskComments(): void
+    {
+        $task = $this->makeTask();
+
+        $tasks = $this->createStub(TaskRepositoryInterface::class);
+        $tasks->method('findById')->willReturn($task);
+
+        $commentService = $this->createMock(CommentServiceInterface::class);
+        $commentService->expects($this->once())
+            ->method('deleteEntityComments')
+            ->with('task', $task->id()->value());
+
+        $this->buildService(
+            $tasks,
+            $this->createStub(TaskAssigneeRepositoryInterface::class),
+            $this->createStub(TeamMembershipInterface::class),
+            null,
+            null,
+            null,
+            null,
+            $commentService,
+        )->deleteById($task->id()->value());
     }
 
     // --- create with tags ---

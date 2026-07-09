@@ -253,3 +253,20 @@ services:
     App\SearchFeature\Infrastructure\Messenger\EventSubscriber\TagAssignmentSearchIndexSubscriber:
         arguments:
             $defaultBus: '@messenger.bus.default'
+
+    App\CommentFeatureApi\Contract\CommentServiceInterface:
+        class: App\CommentFeature\Application\ApiService\CommentApiService
+
+    App\CommentFeature\Domain\Port\ClockInterface:
+        class: App\CommentFeature\Infrastructure\Clock\SystemClock
+
+    App\CommentFeature\Domain\Port\DomainEventDispatcherInterface:
+        class: App\CommentFeature\Infrastructure\Messenger\MessengerDomainEventDispatcher
+        arguments:
+            $eventBus: '@event.bus'
+
+    App\CommentFeature\Domain\Repository\CommentRepositoryInterface:
+        class: App\CommentFeature\Infrastructure\Persistence\DoctrineCommentRepository
+
+    App\CommentFeature\Application\DTORequestValidator\CommentValidatorInterface:
+        class: App\CommentFeature\Application\DTORequestValidator\CommentValidator
