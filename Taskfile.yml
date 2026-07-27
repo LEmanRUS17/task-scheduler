@@ -1,0 +1,34 @@
+version: '3'
+
+tasks:
+  up:
+    desc: Start all containers in the background
+    cmds:
+      - docker compose up -d
+
+  migration:generate:
+    desc: Generate a new Doctrine migration from entity changes
+    cmds:
+      - docker compose exec php bin/console doctrine:migrations:diff
+
+  migration:migrate:
+    desc: Apply pending Doctrine migrations (PostgreSQL)
+    cmds:
+      - docker compose exec php bin/console doctrine:migrations:migrate --no-interaction
+
+  clickhouse:migrate:
+    desc: Apply ClickHouse table migrations
+    cmds:
+      - docker compose exec php bin/console app:clickhouse:migrate
+
+  search:reindex:
+    desc: Recreate Manticore indexes and reindex all search data
+    cmds:
+      - docker compose exec php bin/console app:manticore:create-index
+      - docker compose exec php bin/console app:manticore:create-team-index
+      - docker compose exec php bin/console app:manticore:create-tag-index
+      - docker compose exec php bin/console app:manticore:create-workflow-index
+      - docker compose exec php bin/console app:manticore:reindex
+      - docker compose exec php bin/console app:manticore:reindex-teams
+      - docker compose exec php bin/console app:manticore:reindex-tags
+      - docker compose exec php bin/console app:manticore:reindex-workflows
