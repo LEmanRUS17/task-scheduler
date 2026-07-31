@@ -4,10 +4,13 @@ declare(strict_types=1);
 
 namespace App\TeamFeatureApi\Service;
 
+use App\TeamFeatureApi\DTORequest\TeamAcceptInvitationRequestInterface;
 use App\TeamFeatureApi\DTORequest\TeamAddMemberRequestInterface;
 use App\TeamFeatureApi\DTORequest\TeamCreateRequestInterface;
+use App\TeamFeatureApi\DTORequest\TeamInviteMemberRequestInterface;
 use App\TeamFeatureApi\DTORequest\TeamUpdateRequestInterface;
 use App\TeamFeatureApi\DTOResponse\TeamDataResponseInterface as ResponseDTO;
+use App\TeamFeatureApi\DTOResponse\TeamInvitationDataResponseInterface as InvitationResponseDTO;
 use App\TeamFeatureApi\DTOResponse\TeamMemberDataResponseInterface as MemberResponseDTO;
 
 interface TeamServiceInterface
@@ -49,4 +52,17 @@ interface TeamServiceInterface
     public function addMember(string $teamId, TeamAddMemberRequestInterface $request): MemberResponseDTO;
 
     public function removeMember(string $teamId, string $userId): void;
+
+    /**
+     * Invites a user (resolved by userId or email) to join the team. An email
+     * with the invitation token is sent asynchronously; the user becomes a
+     * member only after accepting via {@see self::acceptInvitation()}.
+     */
+    public function inviteMember(
+        string $teamId,
+        TeamInviteMemberRequestInterface $request,
+        string $invitedByUserId,
+    ): InvitationResponseDTO;
+
+    public function acceptInvitation(TeamAcceptInvitationRequestInterface $request, string $userId): MemberResponseDTO;
 }
