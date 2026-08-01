@@ -14,7 +14,6 @@ use App\TeamFeature\Domain\Repository\TeamInvitationRepositoryInterface;
 use App\TeamFeature\Domain\Repository\TeamMemberRepositoryInterface;
 use App\TeamFeature\Domain\Repository\TeamRepositoryInterface;
 use App\TeamFeature\Domain\ValueObject\TeamId;
-use App\TeamFeature\Domain\ValueObject\TeamInvitationId;
 use App\TeamFeature\Domain\ValueObject\TeamMemberRole;
 use App\TeamFeature\Domain\ValueObject\Title;
 use PHPUnit\Framework\TestCase;
@@ -63,7 +62,7 @@ final class InviteTeamMemberInteractorTest extends TestCase
         $members->method('findByTeamAndUser')->willReturn(null);
 
         $invitations = $this->createMock(TeamInvitationRepositoryInterface::class);
-        $invitations->method('findPendingByTeamAndUser')->willReturn(null);
+        $invitations->method('hasPendingInvitation')->willReturn(false);
         $invitations->expects($this->once())->method('save');
 
         $dispatcher = $this->createMock(DomainEventDispatcherInterface::class);
@@ -114,20 +113,8 @@ final class InviteTeamMemberInteractorTest extends TestCase
         $members = $this->createStub(TeamMemberRepositoryInterface::class);
         $members->method('findByTeamAndUser')->willReturn(null);
 
-        $existingInvitation = TeamInvitation::create(
-            TeamInvitationId::generate(),
-            $this->teamId,
-            'Backend',
-            'user-1',
-            'invitee@example.com',
-            'owner-1',
-            TeamMemberRole::MEMBER,
-            'existing-token',
-            new \DateTimeImmutable('2024-01-01 12:00:00'),
-            new \DateTimeImmutable('2024-01-08 12:00:00'),
-        );
         $invitations = $this->createStub(TeamInvitationRepositoryInterface::class);
-        $invitations->method('findPendingByTeamAndUser')->willReturn($existingInvitation);
+        $invitations->method('hasPendingInvitation')->willReturn(true);
 
         $this->expectException(\DomainException::class);
 

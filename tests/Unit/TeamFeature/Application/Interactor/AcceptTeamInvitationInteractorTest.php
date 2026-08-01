@@ -4,15 +4,14 @@ declare(strict_types=1);
 
 namespace App\Tests\Unit\TeamFeature\Application\Interactor;
 
-use App\TeamFeature\Domain\Entity\TeamInvitation;
 use App\TeamFeature\Domain\Entity\TeamMember;
 use App\TeamFeature\Domain\Interactor\AcceptTeamInvitationInteractor;
 use App\TeamFeature\Domain\Port\ClockInterface;
 use App\TeamFeature\Domain\Port\DomainEventDispatcherInterface;
 use App\TeamFeature\Domain\Repository\TeamInvitationRepositoryInterface;
 use App\TeamFeature\Domain\Repository\TeamMemberRepositoryInterface;
+use App\TeamFeature\Domain\ValueObject\PendingTeamInvitation;
 use App\TeamFeature\Domain\ValueObject\TeamId;
-use App\TeamFeature\Domain\ValueObject\TeamInvitationId;
 use App\TeamFeature\Domain\ValueObject\TeamMemberRole;
 use PHPUnit\Framework\TestCase;
 
@@ -29,23 +28,9 @@ final class AcceptTeamInvitationInteractorTest extends TestCase
         $this->teamId = TeamId::generate();
     }
 
-    private function makeInvitation(
-        string $token = 'valid-token',
-        string $invitedUserId = 'user-1',
-        \DateTimeImmutable $expiresAt = new \DateTimeImmutable('2024-01-08 12:00:00'),
-    ): TeamInvitation {
-        return TeamInvitation::create(
-            TeamInvitationId::generate(),
-            $this->teamId,
-            'Backend',
-            $invitedUserId,
-            'invitee@example.com',
-            'owner-1',
-            TeamMemberRole::MEMBER,
-            $token,
-            new \DateTimeImmutable('2024-01-01 12:00:00'),
-            $expiresAt,
-        );
+    private function makePendingInvitation(string $invitedUserId = 'user-1'): PendingTeamInvitation
+    {
+        return new PendingTeamInvitation($this->teamId, $invitedUserId, TeamMemberRole::MEMBER);
     }
 
     private function buildInteractor(
@@ -61,13 +46,11 @@ final class AcceptTeamInvitationInteractorTest extends TestCase
         );
     }
 
-    public function testAcceptCreatesMemberAndDispatchesEvent(): void
+    public function testAcceptCreatesMemberAndDeletesInvitation(): void
     {
-        $invitation = $this->makeInvitation();
-
         $invitations = $this->createMock(TeamInvitationRepositoryInterface::class);
-        $invitations->method('findByToken')->willReturn($invitation);
-        $invitations->expects($this->once())->method('save');
+        $invitations->method('findByToken')->willReturn($this->makePendingInvitation());
+        $invitations->expects($this->once())->method('delete')->with('valid-token', $this->teamId, 'user-1');
 
         $members = $this->createMock(TeamMemberRepositoryInterface::class);
         $members->method('findByTeamAndUser')->willReturn(null);
@@ -87,8 +70,9 @@ final class AcceptTeamInvitationInteractorTest extends TestCase
 
     public function testAcceptThrowsWhenInvitationNotFound(): void
     {
-        $invitations = $this->createStub(TeamInvitationRepositoryInterface::class);
+        $invitations = $this->createMock(TeamInvitationRepositoryInterface::class);
         $invitations->method('findByToken')->willReturn(null);
+        $invitations->expects($this->never())->method('delete');
 
         $this->expectException(\DomainException::class);
 
@@ -98,10 +82,9 @@ final class AcceptTeamInvitationInteractorTest extends TestCase
 
     public function testAcceptThrowsWhenInvitationBelongsToAnotherUser(): void
     {
-        $invitation = $this->makeInvitation(invitedUserId: 'user-1');
-
-        $invitations = $this->createStub(TeamInvitationRepositoryInterface::class);
-        $invitations->method('findByToken')->willReturn($invitation);
+        $invitations = $this->createMock(TeamInvitationRepositoryInterface::class);
+        $invitations->method('findByToken')->willReturn($this->makePendingInvitation(invitedUserId: 'user-1'));
+        $invitations->expects($this->never())->method('delete');
 
         $this->expectException(\DomainException::class);
 
@@ -111,29 +94,14 @@ final class AcceptTeamInvitationInteractorTest extends TestCase
 
     public function testAcceptThrowsWhenAlreadyMember(): void
     {
-        $invitation = $this->makeInvitation();
         $existingMember = TeamMember::add($this->teamId, 'user-1', TeamMemberRole::MEMBER, new \DateTimeImmutable());
 
-        $invitations = $this->createStub(TeamInvitationRepositoryInterface::class);
-        $invitations->method('findByToken')->willReturn($invitation);
+        $invitations = $this->createMock(TeamInvitationRepositoryInterface::class);
+        $invitations->method('findByToken')->willReturn($this->makePendingInvitation());
+        $invitations->expects($this->never())->method('delete');
 
         $members = $this->createStub(TeamMemberRepositoryInterface::class);
         $members->method('findByTeamAndUser')->willReturn($existingMember);
-
-        $this->expectException(\DomainException::class);
-
-        $this->buildInteractor($invitations, $members)->accept('valid-token', 'user-1');
-    }
-
-    public function testAcceptThrowsWhenExpired(): void
-    {
-        $invitation = $this->makeInvitation(expiresAt: new \DateTimeImmutable('2024-01-01 13:00:00'));
-
-        $invitations = $this->createStub(TeamInvitationRepositoryInterface::class);
-        $invitations->method('findByToken')->willReturn($invitation);
-
-        $members = $this->createStub(TeamMemberRepositoryInterface::class);
-        $members->method('findByTeamAndUser')->willReturn(null);
 
         $this->expectException(\DomainException::class);
 

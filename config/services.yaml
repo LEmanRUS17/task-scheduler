@@ -79,7 +79,7 @@ services:
         class: App\TeamFeature\Infrastructure\Persistence\DoctrineTeamMemberRepository
 
     App\TeamFeature\Domain\Repository\TeamInvitationRepositoryInterface:
-        class: App\TeamFeature\Infrastructure\Persistence\DoctrineTeamInvitationRepository
+        class: App\TeamFeature\Infrastructure\Persistence\RedisTeamInvitationRepository
 
     App\TaskFeatureApi\Service\TaskServiceInterface:
         class: App\TaskFeature\Application\ApiService\TaskApiService

@@ -28,20 +28,17 @@ final class AcceptTeamInvitationInteractor
             throw new \DomainException('Invitation not found');
         }
 
-        if ($invitation->invitedUserId() !== $userId) {
+        if ($invitation->invitedUserId !== $userId) {
             throw new \DomainException('This invitation does not belong to you');
         }
 
-        if ($this->members->findByTeamAndUser($invitation->teamId(), $userId) !== null) {
-            throw new \DomainException("User {$userId} is already a member of team {$invitation->teamId()->value()}");
+        if ($this->members->findByTeamAndUser($invitation->teamId, $userId) !== null) {
+            throw new \DomainException("User {$userId} is already a member of team {$invitation->teamId->value()}");
         }
 
-        $now = $this->clock->now();
-        $invitation->accept($token, $now);
-        $this->invitations->save($invitation);
-
-        $member = TeamMember::add($invitation->teamId(), $userId, $invitation->role(), $now);
+        $member = TeamMember::add($invitation->teamId, $userId, $invitation->role, $this->clock->now());
         $this->members->save($member);
+        $this->invitations->delete($token, $invitation->teamId, $userId);
         $this->eventDispatcher->dispatch(...$member->pullDomainEvents());
 
         return $member;

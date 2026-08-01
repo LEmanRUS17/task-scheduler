@@ -7,5 +7,4 @@ namespace App\TeamFeature\Domain\ValueObject;
 enum TeamInvitationStatus: string
 {
     case PENDING = 'pending';
-    case ACCEPTED = 'accepted';
 }

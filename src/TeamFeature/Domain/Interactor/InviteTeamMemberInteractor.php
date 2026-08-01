@@ -47,7 +47,7 @@ final class InviteTeamMemberInteractor
             throw new \DomainException("User {$invitedUserId} is already a member of team {$teamId->value()}");
         }
 
-        if ($this->invitations->findPendingByTeamAndUser($teamId, $invitedUserId) !== null) {
+        if ($this->invitations->hasPendingInvitation($teamId, $invitedUserId)) {
             throw new \DomainException(
                 "User {$invitedUserId} already has a pending invitation to team {$teamId->value()}",
             );
