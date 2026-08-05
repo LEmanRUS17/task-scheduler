@@ -37,16 +37,6 @@ final class GetTeamController
 
         $team = $this->teamService->getById($id);
 
-        if ($team === null) {
-            return new JsonResponse(
-                [
-                    'success' => false,
-                    'message' => 'Team not found'
-                ],
-                Response::HTTP_NOT_FOUND,
-            );
-        }
-
         $tagsByTask = $this->tagService->getEntityTagsByIds(TagServiceInterface::TYPE_TEAM, [$id]);
 
         $team = TeamResponseFormatter::format($team, $tagsByTask[$id] ?? []);

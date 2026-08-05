@@ -286,6 +286,10 @@ final class TagApiService implements TagServiceInterface
     {
         $tags = $this->getEntityTagsByIds($entityType, [$entityId]);
 
+        if (empty($tags)) {
+            return $tags;
+        }
+
         return $tags[$entityId];
     }
 
