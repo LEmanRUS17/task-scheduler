@@ -5,10 +5,12 @@ declare(strict_types=1);
 namespace App\TeamFeature\Presentation\Controller\Team;
 
 use App\TagFeatureApi\Contract\TagServiceInterface;
+use App\TeamFeature\Domain\Interactor\TeamGetInteractor;
 use App\TeamFeature\Presentation\Formatter\TeamMemberFormatter;
 use App\TeamFeature\Presentation\Formatter\TeamResponseFormatter;
 use App\TeamFeature\Presentation\Formatter\TeamTagFormatter;
 use App\TeamFeatureApi\Service\TeamServiceInterface;
+use Symfony\Bundle\SecurityBundle\Security;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpKernel\Attribute\AsController;
 use Symfony\Component\Routing\Attribute\Route;
@@ -18,13 +20,21 @@ use Symfony\Component\HttpFoundation\Response;
 final class GetTeamController
 {
     public function __construct(
+        private readonly TeamGetInteractor $getInteractor,
         private readonly TeamServiceInterface $teamService,
         private readonly TagServiceInterface $tagService,
+        private readonly Security $security,
     ) {}
 
     #[Route('/team/{id}', name: 'team_get', methods: ['GET'])]
     public function __invoke(string $id): JsonResponse
     {
+        /** @var SecurityUser $securityUser */
+        $securityUser = $this->security->getUser();
+        $userId = $securityUser->getDomainUser()->id()->value();
+
+        $this->getInteractor->get($id, $userId);
+
         $team = $this->teamService->getById($id);
 
         if ($team === null) {
