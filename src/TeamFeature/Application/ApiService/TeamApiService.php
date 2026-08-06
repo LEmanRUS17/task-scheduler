@@ -16,6 +16,8 @@ use App\TeamFeature\Domain\Interactor\AddTeamMemberInteractor;
 use App\TeamFeature\Domain\Interactor\InviteTeamMemberInteractor;
 use App\TeamFeature\Domain\Interactor\RemoveTeamMemberInteractor;
 use App\TeamFeature\Domain\Interactor\TeamCreateInteractor;
+use App\TeamFeature\Domain\Interactor\TeamDeleteInteractor;
+use App\TeamFeature\Domain\Interactor\TeamGetInteractor;
 use App\TeamFeature\Domain\Interactor\TeamUpdateInteractor;
 use App\TeamFeature\Domain\Repository\TeamMemberRepositoryInterface;
 use App\TeamFeature\Domain\Repository\TeamRepositoryInterface;
@@ -37,6 +39,8 @@ final class TeamApiService implements TeamServiceInterface
     public function __construct(
         private readonly TeamCreateInteractor $createInteractor,
         private readonly TeamUpdateInteractor $updateInteractor,
+        private readonly TeamGetInteractor $getInteractor,
+        private readonly TeamDeleteInteractor $deleteInteractor,
         private readonly AddTeamMemberInteractor $addMemberInteractor,
         private readonly RemoveTeamMemberInteractor $removeMemberInteractor,
         private readonly InviteTeamMemberInteractor $inviteMemberInteractor,
@@ -114,6 +118,13 @@ final class TeamApiService implements TeamServiceInterface
             : null;
     }
 
+    public function getByIdForUser(string $id, string $userId): TeamDataResponseInterface
+    {
+        $this->getInteractor->get($id, $userId);
+
+        return $this->getById($id) ?? throw new \DomainException("Team {$id} not found");
+    }
+
     public function create(TeamCreateRequestInterface $dtoRequest, string $creatorUserId): TeamDataResponseInterface
     {
         $violations = $this->validator->validate($dtoRequest);
@@ -168,8 +179,18 @@ final class TeamApiService implements TeamServiceInterface
             throw new \DomainException("Team {$id} not found");
         }
 
+        foreach ($this->members->findByTeamId(TeamId::fromString($id)) as $member) {
+            $this->members->delete($member);
+        }
+
         $this->teams->delete($team);
         $this->descriptions->delete(Team::class, $id);
+    }
+
+    public function deleteByIdForUser(string $id, string $userId): void
+    {
+        $this->deleteInteractor->delete($id, $userId);
+        $this->deleteById($id);
     }
 
     public function getMembers(string $teamId): array

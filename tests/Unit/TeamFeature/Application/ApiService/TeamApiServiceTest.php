@@ -18,6 +18,8 @@ use App\TeamFeature\Domain\Interactor\AddTeamMemberInteractor;
 use App\TeamFeature\Domain\Interactor\InviteTeamMemberInteractor;
 use App\TeamFeature\Domain\Interactor\RemoveTeamMemberInteractor;
 use App\TeamFeature\Domain\Interactor\TeamCreateInteractor;
+use App\TeamFeature\Domain\Interactor\TeamDeleteInteractor;
+use App\TeamFeature\Domain\Interactor\TeamGetInteractor;
 use App\TeamFeature\Domain\Interactor\TeamUpdateInteractor;
 use App\TeamFeature\Domain\Port\ClockInterface;
 use App\TeamFeature\Domain\Port\DomainEventDispatcherInterface;
@@ -137,6 +139,8 @@ final class TeamApiServiceTest extends TestCase
         return new TeamApiService(
             new TeamCreateInteractor($teams, $members, $dispatcher, $clock),
             new TeamUpdateInteractor($teams, $dispatcher),
+            new TeamGetInteractor($members, $dispatcher),
+            new TeamDeleteInteractor($teams, $members, $dispatcher),
             new AddTeamMemberInteractor($teams, $members, $dispatcher, $clock),
             new RemoveTeamMemberInteractor($members, $dispatcher),
             new InviteTeamMemberInteractor($teams, $members, $invitations, $dispatcher, $clock),

@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace App\TeamFeature\Presentation\Controller\Team;
 
-use App\TeamFeature\Domain\Interactor\TeamDeleteInteractor;
 use App\TeamFeatureApi\Service\TeamServiceInterface;
+use App\UserFeature\Infrastructure\Security\SecurityUser;
 use Symfony\Bundle\SecurityBundle\Security;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpKernel\Attribute\AsController;
@@ -16,7 +16,6 @@ use Symfony\Component\HttpFoundation\Response;
 final class DeleteTeamController
 {
     public function __construct(
-        private readonly TeamDeleteInteractor $deleteInteractor,
         private readonly TeamServiceInterface $teamService,
         private readonly Security $security,
     ) {}
@@ -29,9 +28,7 @@ final class DeleteTeamController
         $userId = $securityUser->getDomainUser()->id()->value();
 
         try {
-            // todo: The team itself is deleted, but the list of participants remains. Change the logic.
-            $this->deleteInteractor->delete($id, $userId);
-            $this->teamService->deleteById($id);
+            $this->teamService->deleteByIdForUser($id, $userId);
         } catch (\DomainException $e) {
             return new JsonResponse(
                 ['message' => $e->getMessage()],

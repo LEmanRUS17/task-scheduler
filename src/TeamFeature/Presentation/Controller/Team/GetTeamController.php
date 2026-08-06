@@ -5,11 +5,10 @@ declare(strict_types=1);
 namespace App\TeamFeature\Presentation\Controller\Team;
 
 use App\TagFeatureApi\Contract\TagServiceInterface;
-use App\TeamFeature\Domain\Interactor\TeamGetInteractor;
 use App\TeamFeature\Presentation\Formatter\TeamMemberFormatter;
 use App\TeamFeature\Presentation\Formatter\TeamResponseFormatter;
-use App\TeamFeature\Presentation\Formatter\TeamTagFormatter;
 use App\TeamFeatureApi\Service\TeamServiceInterface;
+use App\UserFeature\Infrastructure\Security\SecurityUser;
 use Symfony\Bundle\SecurityBundle\Security;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpKernel\Attribute\AsController;
@@ -20,7 +19,6 @@ use Symfony\Component\HttpFoundation\Response;
 final class GetTeamController
 {
     public function __construct(
-        private readonly TeamGetInteractor $getInteractor,
         private readonly TeamServiceInterface $teamService,
         private readonly TagServiceInterface $tagService,
         private readonly Security $security,
@@ -33,13 +31,18 @@ final class GetTeamController
         $securityUser = $this->security->getUser();
         $userId = $securityUser->getDomainUser()->id()->value();
 
-        $this->getInteractor->get($id, $userId);
+        try {
+            $team = $this->teamService->getByIdForUser($id, $userId);
+        } catch (\DomainException $e) {
+            return new JsonResponse(
+                ['message' => $e->getMessage()],
+                Response::HTTP_NOT_FOUND,
+            );
+        }
 
-        $team = $this->teamService->getById($id);
+        $tagsByTeam = $this->tagService->getEntityTagsByIds(TagServiceInterface::TYPE_TEAM, [$id]);
 
-        $tagsByTask = $this->tagService->getEntityTagsByIds(TagServiceInterface::TYPE_TEAM, [$id]);
-
-        $team = TeamResponseFormatter::format($team, $tagsByTask[$id] ?? []);
+        $team = TeamResponseFormatter::format($team, $tagsByTeam[$id] ?? []);
 
         $members = $this->teamService->getMembers($id);
 
@@ -48,15 +51,6 @@ final class GetTeamController
                 return TeamMemberFormatter::format($member);
             },
             $members
-        );
-
-        $tags = $this->tagService->getEntityTagsById(TagServiceInterface::TYPE_TEAM, $id);
-
-        $team['tags']  = array_map(
-            function ($tag) {
-                return TeamTagFormatter::format($tag);
-            },
-            $tags
         );
 
         return new JsonResponse($team, Response::HTTP_OK);

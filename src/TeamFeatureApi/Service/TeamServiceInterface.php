@@ -40,11 +40,25 @@ interface TeamServiceInterface
 
     public function getById(string $id): ?ResponseDTO;
 
+    /**
+     * Returns the team, verifying that the given user is a member of it.
+     *
+     * @throws \DomainException if the team does not exist or the user is not a member
+     */
+    public function getByIdForUser(string $id, string $userId): ResponseDTO;
+
     public function create(TeamCreateRequestInterface $dtoRequest, string $creatorUserId): ResponseDTO;
 
     public function update(string $id, TeamUpdateRequestInterface $dtoRequest): ResponseDTO;
 
     public function deleteById(string $id): void;
+
+    /**
+     * Deletes the team, verifying that the given user is its owner.
+     *
+     * @throws \DomainException if the team does not exist or the user is not its owner
+     */
+    public function deleteByIdForUser(string $id, string $userId): void;
 
     /** @return MemberResponseDTO[] */
     public function getMembers(string $teamId): array;
