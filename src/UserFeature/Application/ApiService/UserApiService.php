@@ -88,4 +88,11 @@ final class UserApiService implements UserServiceInterface
 
         return $user !== null ? $this->dataMapper->userToResponse($user) : null;
     }
+
+    public function findByEmail(string $email): ?UserDataResponseInterface
+    {
+        $user = $this->userRepository->findByEmail(Email::fromString($email));
+
+        return $user !== null ? $this->dataMapper->userToResponse($user) : null;
+    }
 }

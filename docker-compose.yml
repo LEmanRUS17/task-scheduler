@@ -8,7 +8,7 @@ services:
   nginx:
     image: nginx:alpine
     ports:
-      - "80:80"
+      - "${NGINX_PORT}"
     environment:
       UPLOAD_MAX_SIZE: ${UPLOAD_MAX_SIZE:-30M}
     volumes:
@@ -57,6 +57,10 @@ services:
     image: manticoresearch/manticore
     volumes:
       - ./volumes/manticore-data:/var/lib/manticore
+  redis:
+    image: redis:alpine
+    ports:
+      - "6379:6379"
   consumer:
     build: ./docker/php
     command: php bin/console messenger:consume async --time-limit=3600

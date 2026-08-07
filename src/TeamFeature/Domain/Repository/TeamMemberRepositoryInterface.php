@@ -6,6 +6,7 @@ namespace App\TeamFeature\Domain\Repository;
 
 use App\TeamFeature\Domain\Entity\TeamMember;
 use App\TeamFeature\Domain\ValueObject\TeamId;
+use App\TeamFeature\Domain\ValueObject\TeamMemberRole;
 
 interface TeamMemberRepositoryInterface
 {
@@ -18,6 +19,8 @@ interface TeamMemberRepositoryInterface
     public function findByUserId(string $userId): array;
 
     public function findByTeamAndUser(TeamId $teamId, string $userId): ?TeamMember;
+
+    public function findByTeamAndUserAndRole(TeamId $teamId, string $userId, TeamMemberRole $role): ?TeamMember;
 
     public function delete(TeamMember $member): void;
 }

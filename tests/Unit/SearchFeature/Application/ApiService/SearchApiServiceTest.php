@@ -51,7 +51,6 @@ final class SearchApiServiceTest extends TestCase
     {
         $repository = $this->createStub(TaskSearchRepositoryInterface::class);
         $repository->method('search')->willReturn(['ids' => [], 'total' => 0]);
-
         $service = new SearchApiService($repository, $this->teamRepositoryStub(), $this->workflowRepositoryStub(), $this->tagRepositoryStub());
         $this->assertSame(['ids' => [], 'total' => 0], $service->searchTasks('nothing', 'user-1'));
     }

@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace App\TeamFeature\Application\DataMapper;
 
+use App\TeamFeature\Application\DTOResponse\TeamInvitationResponseDTO;
 use App\TeamFeature\Application\DTOResponse\TeamMemberResponseDTO;
 use App\TeamFeature\Application\DTOResponse\TeamResponseDTO;
 use App\TeamFeature\Domain\Entity\Team;
+use App\TeamFeature\Domain\Entity\TeamInvitation;
 use App\TeamFeature\Domain\Entity\TeamMember;
 use App\TeamFeature\Domain\ValueObject\Title;
 use App\ProfileFeatureApi\DTOResponse\ProfileDataResponseInterface;
@@ -40,6 +42,20 @@ final class TeamDataMapper
             $member->role()->value,
             $member->joinedAt(),
             $profile,
+        );
+    }
+
+    public function invitationToResponse(TeamInvitation $invitation): TeamInvitationResponseDTO
+    {
+        return new TeamInvitationResponseDTO(
+            $invitation->id()->value(),
+            $invitation->teamId()->value(),
+            $invitation->invitedUserId(),
+            $invitation->invitedByUserId(),
+            $invitation->role()->value,
+            $invitation->status()->value,
+            $invitation->createdAt(),
+            $invitation->expiresAt(),
         );
     }
 }

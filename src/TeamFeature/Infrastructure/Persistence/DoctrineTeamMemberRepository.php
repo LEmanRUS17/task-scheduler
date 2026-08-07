@@ -7,6 +7,7 @@ namespace App\TeamFeature\Infrastructure\Persistence;
 use App\TeamFeature\Domain\Entity\TeamMember;
 use App\TeamFeature\Domain\Repository\TeamMemberRepositoryInterface;
 use App\TeamFeature\Domain\ValueObject\TeamId;
+use App\TeamFeature\Domain\ValueObject\TeamMemberRole;
 use Doctrine\ORM\EntityManagerInterface;
 
 final class DoctrineTeamMemberRepository implements TeamMemberRepositoryInterface
@@ -43,6 +44,18 @@ final class DoctrineTeamMemberRepository implements TeamMemberRepositoryInterfac
         return $this->entityManager->getRepository(TeamMember::class)->findOneBy([
             'teamId' => $teamId->value(),
             'userId' => $userId,
+        ]);
+    }
+
+    public function findByTeamAndUserAndRole(
+        TeamId $teamId,
+        string $userId,
+        TeamMemberRole $role
+    ): ?TeamMember {
+        return $this->entityManager->getRepository(TeamMember::class)->findOneBy([
+            'teamId' => $teamId->value(),
+            'userId' => $userId,
+            'role' => $role
         ]);
     }
 

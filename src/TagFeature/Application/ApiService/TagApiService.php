@@ -276,6 +276,22 @@ final class TagApiService implements TagServiceInterface
         return $result;
     }
 
+    /**
+     * Returns the tags assigned to the entity.
+     *
+     * @return list<TagResponseInterface>
+     */
+    public function getEntityTagsById(string $entityType, string $entityId): array
+    {
+        $tags = $this->getEntityTagsByIds($entityType, [$entityId]);
+
+        if (empty($tags)) {
+            return $tags;
+        }
+
+        return $tags[$entityId];
+    }
+
     private function toResponse(Tag $tag): TagResponseInterface
     {
         return $this->dataMapper->tagToResponse(
