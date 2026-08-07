@@ -14,7 +14,8 @@ final class TeamGetInteractor
     public function __construct(
         private readonly TeamMemberRepositoryInterface $teamMember,
         private readonly DomainEventDispatcherInterface $eventDispatcher,
-    ) {}
+    ) {
+    }
 
     public function get(string $id, string $userId): bool
     {

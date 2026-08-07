@@ -18,7 +18,8 @@ final class DeleteTeamController
     public function __construct(
         private readonly TeamServiceInterface $teamService,
         private readonly Security $security,
-    ) {}
+    ) {
+    }
 
     #[Route('/team/{id}', name: 'team_delete', methods: ['DELETE'])]
     public function __invoke(string $id): JsonResponse

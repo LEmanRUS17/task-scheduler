@@ -8,5 +8,6 @@ final class TeamGet
 {
     public function __construct(
         public readonly string $teamId,
-    ) {}
+    ) {
+    }
 }

@@ -10,12 +10,12 @@ use App\TeamFeature\Domain\ValueObject\TeamId;
 use App\TeamFeature\Domain\ValueObject\TeamMemberRole;
 use Doctrine\ORM\EntityManagerInterface;
 
-
 final class DoctrineTeamMemberRepository implements TeamMemberRepositoryInterface
 {
     public function __construct(
         private readonly EntityManagerInterface $entityManager,
-    ) {}
+    ) {
+    }
 
     public function save(TeamMember $member): void
     {

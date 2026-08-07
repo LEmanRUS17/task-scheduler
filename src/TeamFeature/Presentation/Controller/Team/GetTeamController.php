@@ -22,7 +22,8 @@ final class GetTeamController
         private readonly TeamServiceInterface $teamService,
         private readonly TagServiceInterface $tagService,
         private readonly Security $security,
-    ) {}
+    ) {
+    }
 
     #[Route('/team/{id}', name: 'team_get', methods: ['GET'])]
     public function __invoke(string $id): JsonResponse

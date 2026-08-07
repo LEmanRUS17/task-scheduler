@@ -56,9 +56,9 @@ interface TagServiceInterface
 
     /**
      * Returns the tags assigned to the entity.
-     *    
+     *
      * Entities without tags are excluded from the result.
-     * 
+     *
      * @return array
      */
     public function getEntityTagsById(string $entityType, string $entityId): array;

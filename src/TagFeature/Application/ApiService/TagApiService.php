@@ -277,8 +277,8 @@ final class TagApiService implements TagServiceInterface
     }
 
     /**
-     * @param string $entityType 
-     * @param string $entityId 
+     * @param string $entityType
+     * @param string $entityId
      *
      * @return array<string, list<TagResponseInterface>>
      */

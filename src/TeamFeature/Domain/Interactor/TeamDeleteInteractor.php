@@ -17,7 +17,8 @@ final class TeamDeleteInteractor
         private readonly TeamRepositoryInterface $team,
         private readonly TeamMemberRepositoryInterface $teamMember,
         private readonly DomainEventDispatcherInterface $eventDispatcher,
-    ) {}
+    ) {
+    }
 
     public function delete(string $id, string $userId): bool
     {

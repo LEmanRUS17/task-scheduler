@@ -19,7 +19,8 @@ final class ApplyTaskTransitionController
     public function __construct(
         private readonly TaskServiceInterface $taskService,
         private readonly Security $security,
-    ) {}
+    ) {
+    }
 
     #[Route('/task/{id}/transition', name: 'task_transition', methods: ['POST'])]
     public function __invoke(string $id, Request $request): JsonResponse
