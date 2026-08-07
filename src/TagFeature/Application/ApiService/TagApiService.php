@@ -277,10 +277,9 @@ final class TagApiService implements TagServiceInterface
     }
 
     /**
-     * @param string $entityType
-     * @param string $entityId
+     * Returns the tags assigned to the entity.
      *
-     * @return array<string, list<TagResponseInterface>>
+     * @return list<TagResponseInterface>
      */
     public function getEntityTagsById(string $entityType, string $entityId): array
     {

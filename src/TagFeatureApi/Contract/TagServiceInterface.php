@@ -59,7 +59,7 @@ interface TagServiceInterface
      *
      * Entities without tags are excluded from the result.
      *
-     * @return array
+     * @return list<TagResponseInterface>
      */
     public function getEntityTagsById(string $entityType, string $entityId): array;
 }

@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Tests\Unit\TeamFeature\Application\Interactor;
 
-use App\TeamFeature\Domain\Entity\Team;
 use App\TeamFeature\Domain\Entity\TeamMember;
 use App\TeamFeature\Domain\Event\TeamGet;
 use App\TeamFeature\Domain\Interactor\TeamGetInteractor;
@@ -12,18 +11,15 @@ use App\TeamFeature\Domain\Port\DomainEventDispatcherInterface;
 use App\TeamFeature\Domain\Repository\TeamMemberRepositoryInterface;
 use App\TeamFeature\Domain\ValueObject\TeamId;
 use App\TeamFeature\Domain\ValueObject\TeamMemberRole;
-use App\TeamFeature\Domain\ValueObject\Title;
 use PHPUnit\Framework\TestCase;
 
 final class TeamGetInteractorTest extends TestCase
 {
     private TeamId $teamId;
-    private Team $team;
 
     protected function setUp(): void
     {
         $this->teamId = TeamId::generate();
-        $this->team = Team::create($this->teamId, Title::fromString('test_team'), new \DateTimeImmutable());
     }
 
     private function buildInteractor(
