@@ -11,28 +11,40 @@ use App\ProfileFeatureApi\Service\ProfileServiceInterface;
 use App\TeamFeature\Application\DataMapper\TeamDataMapper;
 use App\TeamFeature\Domain\Entity\Team;
 use App\TeamFeature\Application\DTORequestValidator\TeamValidatorInterface;
+use App\TeamFeature\Domain\Interactor\AcceptTeamInvitationInteractor;
 use App\TeamFeature\Domain\Interactor\AddTeamMemberInteractor;
+use App\TeamFeature\Domain\Interactor\InviteTeamMemberInteractor;
 use App\TeamFeature\Domain\Interactor\RemoveTeamMemberInteractor;
 use App\TeamFeature\Domain\Interactor\TeamCreateInteractor;
+use App\TeamFeature\Domain\Interactor\TeamDeleteInteractor;
+use App\TeamFeature\Domain\Interactor\TeamGetInteractor;
 use App\TeamFeature\Domain\Interactor\TeamUpdateInteractor;
 use App\TeamFeature\Domain\Repository\TeamMemberRepositoryInterface;
 use App\TeamFeature\Domain\Repository\TeamRepositoryInterface;
 use App\TeamFeature\Domain\ValueObject\TeamId;
 use App\TeamFeature\Domain\ValueObject\TeamMemberRole;
+use App\TeamFeatureApi\DTORequest\TeamAcceptInvitationRequestInterface;
 use App\TeamFeatureApi\DTORequest\TeamAddMemberRequestInterface;
 use App\TeamFeatureApi\DTORequest\TeamCreateRequestInterface;
+use App\TeamFeatureApi\DTORequest\TeamInviteMemberRequestInterface;
 use App\TeamFeatureApi\DTORequest\TeamUpdateRequestInterface;
 use App\TeamFeatureApi\DTOResponse\TeamDataResponseInterface;
+use App\TeamFeatureApi\DTOResponse\TeamInvitationDataResponseInterface;
 use App\TeamFeatureApi\DTOResponse\TeamMemberDataResponseInterface;
 use App\TeamFeatureApi\Service\TeamServiceInterface;
+use App\UserFeatureApi\Service\UserServiceInterface;
 
 final class TeamApiService implements TeamServiceInterface
 {
     public function __construct(
         private readonly TeamCreateInteractor $createInteractor,
         private readonly TeamUpdateInteractor $updateInteractor,
+        private readonly TeamGetInteractor $getInteractor,
+        private readonly TeamDeleteInteractor $deleteInteractor,
         private readonly AddTeamMemberInteractor $addMemberInteractor,
         private readonly RemoveTeamMemberInteractor $removeMemberInteractor,
+        private readonly InviteTeamMemberInteractor $inviteMemberInteractor,
+        private readonly AcceptTeamInvitationInteractor $acceptInvitationInteractor,
         private readonly TeamRepositoryInterface $teams,
         private readonly TeamMemberRepositoryInterface $members,
         private readonly TeamDataMapper $dataMapper,
@@ -40,6 +52,7 @@ final class TeamApiService implements TeamServiceInterface
         private readonly DescriptionServiceInterface $descriptions,
         private readonly ProfileServiceInterface $profiles,
         private readonly TagServiceInterface $tagService,
+        private readonly UserServiceInterface $userService,
     ) {
     }
 
@@ -105,6 +118,13 @@ final class TeamApiService implements TeamServiceInterface
             : null;
     }
 
+    public function getByIdForUser(string $id, string $userId): TeamDataResponseInterface
+    {
+        $this->getInteractor->get($id, $userId);
+
+        return $this->getById($id) ?? throw new \DomainException("Team {$id} not found");
+    }
+
     public function create(TeamCreateRequestInterface $dtoRequest, string $creatorUserId): TeamDataResponseInterface
     {
         $violations = $this->validator->validate($dtoRequest);
@@ -159,8 +179,18 @@ final class TeamApiService implements TeamServiceInterface
             throw new \DomainException("Team {$id} not found");
         }
 
+        foreach ($this->members->findByTeamId(TeamId::fromString($id)) as $member) {
+            $this->members->delete($member);
+        }
+
         $this->teams->delete($team);
         $this->descriptions->delete(Team::class, $id);
+    }
+
+    public function deleteByIdForUser(string $id, string $userId): void
+    {
+        $this->deleteInteractor->delete($id, $userId);
+        $this->deleteById($id);
     }
 
     public function getMembers(string $teamId): array
@@ -197,6 +227,48 @@ final class TeamApiService implements TeamServiceInterface
     public function removeMember(string $teamId, string $userId): void
     {
         $this->removeMemberInteractor->remove(TeamId::fromString($teamId), $userId);
+    }
+
+    public function inviteMember(
+        string $teamId,
+        TeamInviteMemberRequestInterface $request,
+        string $invitedByUserId,
+    ): TeamInvitationDataResponseInterface {
+        $userId = $request->getUserId();
+        $email = $request->getEmail();
+
+        if (($userId === null) === ($email === null)) {
+            throw new \InvalidArgumentException(json_encode([
+                'userId' => 'Provide exactly one of userId or email',
+            ]));
+        }
+
+        $invitedUser = $userId !== null
+            ? $this->userService->findById($userId)
+            : $this->userService->findByEmail($email);
+
+        if ($invitedUser === null) {
+            throw new \DomainException('User not found');
+        }
+
+        $invitation = $this->inviteMemberInteractor->invite(
+            TeamId::fromString($teamId),
+            $invitedByUserId,
+            $invitedUser->getId(),
+            $invitedUser->getEmail(),
+            TeamMemberRole::from($request->getRole()),
+        );
+
+        return $this->dataMapper->invitationToResponse($invitation);
+    }
+
+    public function acceptInvitation(
+        TeamAcceptInvitationRequestInterface $request,
+        string $userId,
+    ): TeamMemberDataResponseInterface {
+        $member = $this->acceptInvitationInteractor->accept($request->getToken(), $userId);
+
+        return $this->dataMapper->memberToResponse($member, $this->findProfile($member->userId()));
     }
 
     private function teamToFullResponse(Team $team): TeamDataResponseInterface

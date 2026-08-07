@@ -24,4 +24,6 @@ interface UserServiceInterface
     public function resetPassword(ResetPasswordRequestInterface $request): void;
 
     public function findById(string $id): ?UserDataResponseInterface;
+
+    public function findByEmail(string $email): ?UserDataResponseInterface;
 }

@@ -24,6 +24,13 @@ services:
     # add more service definitions when explicit configuration is needed
     # please note that last definitions always *replace* previous ones
 
+    Psr\SimpleCache\CacheInterface:
+        class: Symfony\Component\Cache\Psr16Cache
+        arguments: ['@cache.app']
+
+    App\Shared\Cache\CacheStoreInterface:
+        class: App\Shared\Cache\RedisCacheStore
+
     App\UserFeatureApi\Service\UserServiceInterface:
         class: App\UserFeature\Application\ApiService\UserApiService
 
@@ -74,6 +81,9 @@ services:
 
     App\TeamFeature\Domain\Repository\TeamMemberRepositoryInterface:
         class: App\TeamFeature\Infrastructure\Persistence\DoctrineTeamMemberRepository
+
+    App\TeamFeature\Domain\Repository\TeamInvitationRepositoryInterface:
+        class: App\TeamFeature\Infrastructure\Persistence\RedisTeamInvitationRepository
 
     App\TaskFeatureApi\Service\TaskServiceInterface:
         class: App\TaskFeature\Application\ApiService\TaskApiService
