@@ -31,7 +31,7 @@ final class GetTeamListController
     ) {
     }
 
-    #[Route('/team/list', name: 'team_list', methods: ['GET'])]
+    #[Route('/team/list', name: 'team_list', methods: ['GET'], priority: 1)]
     public function __invoke(Request $request): JsonResponse
     {
         /** @var SecurityUser $securityUser */
