@@ -15,6 +15,8 @@ use Symfony\Component\Messenger\MessageBusInterface;
 
 final class TeamMemberInvitedHandlerTest extends TestCase
 {
+    private const FRONTEND_URL = 'https://app.example.com';
+
     private function makeMessage(): TeamMemberInvitedMessage
     {
         return new TeamMemberInvitedMessage(
@@ -30,11 +32,11 @@ final class TeamMemberInvitedHandlerTest extends TestCase
         $mailer = $this->createMock(MailerInterface::class);
         $mailer->expects($this->once())->method('send');
 
-        $handler = new TeamMemberInvitedHandler($mailer, $this->makeBusStub());
+        $handler = new TeamMemberInvitedHandler($mailer, $this->makeBusStub(), self::FRONTEND_URL);
         $handler($this->makeMessage());
     }
 
-    public function testDispatchesNotificationDispatchMessageWithToken(): void
+    public function testDispatchesNotificationDispatchMessageWithFrontendLinkAndToken(): void
     {
         $dispatched = null;
         $bus = $this->createMock(MessageBusInterface::class);
@@ -45,7 +47,7 @@ final class TeamMemberInvitedHandlerTest extends TestCase
                 return new Envelope($message);
             });
 
-        $handler = new TeamMemberInvitedHandler($this->createStub(MailerInterface::class), $bus);
+        $handler = new TeamMemberInvitedHandler($this->createStub(MailerInterface::class), $bus, self::FRONTEND_URL);
         $handler($this->makeMessage());
 
         $this->assertInstanceOf(NotificationDispatchMessage::class, $dispatched);
@@ -53,6 +55,10 @@ final class TeamMemberInvitedHandlerTest extends TestCase
         $this->assertInstanceOf(MessageAction::class, $dispatched->action);
         $this->assertSame('email', $dispatched->action->channel);
         $this->assertSame('invitee@example.com', $dispatched->action->recipient);
+        $this->assertStringContainsString(
+            'https://app.example.com/invitations/accept?token=token-abc',
+            $dispatched->action->body,
+        );
         $this->assertStringContainsString('token-abc', $dispatched->action->body);
         $this->assertStringContainsString('Backend', $dispatched->action->body);
     }

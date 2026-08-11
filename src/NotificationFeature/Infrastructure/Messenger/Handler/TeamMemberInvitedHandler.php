@@ -18,18 +18,23 @@ final class TeamMemberInvitedHandler
     public function __construct(
         private readonly MailerInterface $mailer,
         private readonly MessageBusInterface $defaultBus,
+        private readonly string $frontendUrl,
     ) {
     }
 
     public function __invoke(TeamMemberInvitedMessage $message): void
     {
+        $link = sprintf('%s/invitations/accept?token=%s', $this->frontendUrl, $message->token);
+
         $subject = sprintf('You have been invited to join "%s"', $message->teamTitle);
         $body = sprintf(
             "You have been invited to join the team \"%s\" on Task Scheduler.\n\n"
-                . "Use the following invitation code to accept: %s\n\n"
+                . "Accept the invitation: %s\n\n"
+                . "Or use this invitation code manually: %s\n\n"
                 . "The invitation is valid for 7 days.\n\n"
                 . 'If you did not expect this invitation, you can safely ignore this email.',
             $message->teamTitle,
+            $link,
             $message->token,
         );
 

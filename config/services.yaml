@@ -85,6 +85,10 @@ services:
     App\TeamFeature\Domain\Repository\TeamInvitationRepositoryInterface:
         class: App\TeamFeature\Infrastructure\Persistence\RedisTeamInvitationRepository
 
+    App\NotificationFeature\Infrastructure\Messenger\Handler\TeamMemberInvitedHandler:
+        arguments:
+            $frontendUrl: '%env(FRONTEND_URL)%'
+
     App\TaskFeatureApi\Service\TaskServiceInterface:
         class: App\TaskFeature\Application\ApiService\TaskApiService
 
