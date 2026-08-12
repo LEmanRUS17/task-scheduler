@@ -204,6 +204,14 @@ final class TeamApiService implements TeamServiceInterface
         );
     }
 
+    public function getOwners(string $teamId): array
+    {
+        return array_map(
+            fn($member) => $member->userId(),
+            $this->members->findByTeamIdAndRole(TeamId::fromString($teamId), TeamMemberRole::OWNER),
+        );
+    }
+
     public function addMember(string $teamId, TeamAddMemberRequestInterface $request): TeamMemberDataResponseInterface
     {
         $member = $this->addMemberInteractor->add(

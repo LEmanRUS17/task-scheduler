@@ -63,6 +63,9 @@ interface TeamServiceInterface
     /** @return MemberResponseDTO[] */
     public function getMembers(string $teamId): array;
 
+    /** @return list<string> user ids of team members with the owner role */
+    public function getOwners(string $teamId): array;
+
     public function addMember(string $teamId, TeamAddMemberRequestInterface $request): MemberResponseDTO;
 
     public function removeMember(string $teamId, string $userId): void;

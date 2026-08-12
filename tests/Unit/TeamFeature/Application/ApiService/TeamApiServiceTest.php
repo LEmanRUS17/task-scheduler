@@ -13,6 +13,7 @@ use App\TeamFeature\Application\DTORequest\TeamCreateRequestDTO;
 use App\TeamFeature\Application\DTORequest\TeamInviteMemberRequestDTO;
 use App\TeamFeature\Application\DTORequestValidator\TeamValidatorInterface;
 use App\TeamFeature\Domain\Entity\Team;
+use App\TeamFeature\Domain\Entity\TeamMember;
 use App\TeamFeature\Domain\Interactor\AcceptTeamInvitationInteractor;
 use App\TeamFeature\Domain\Interactor\AddTeamMemberInteractor;
 use App\TeamFeature\Domain\Interactor\InviteTeamMemberInteractor;
@@ -27,6 +28,7 @@ use App\TeamFeature\Domain\Repository\TeamInvitationRepositoryInterface;
 use App\TeamFeature\Domain\Repository\TeamMemberRepositoryInterface;
 use App\TeamFeature\Domain\Repository\TeamRepositoryInterface;
 use App\TeamFeature\Domain\ValueObject\TeamId;
+use App\TeamFeature\Domain\ValueObject\TeamMemberRole;
 use App\TeamFeature\Domain\ValueObject\Title;
 use App\UserFeatureApi\DTOResponse\UserDataResponseInterface;
 use App\UserFeatureApi\Service\UserServiceInterface;
@@ -106,6 +108,29 @@ final class TeamApiServiceTest extends TestCase
         $teams->method('findByIds')->willReturn([]);
 
         $this->assertSame([], $this->makeService($teams)->getByIds([]));
+    }
+
+    public function testGetOwnersQueriesRepositoryByOwnerRole(): void
+    {
+        $team = $this->makeTeam('11111111-1111-4111-8111-111111111111', 'Backend');
+        $owner = TeamMember::add(
+            $team->id(),
+            'owner-1',
+            TeamMemberRole::OWNER,
+            new \DateTimeImmutable('2026-01-01 00:00:00'),
+        );
+
+        $teams = $this->createStub(TeamRepositoryInterface::class);
+
+        $members = $this->createMock(TeamMemberRepositoryInterface::class);
+        $members->expects($this->once())
+            ->method('findByTeamIdAndRole')
+            ->with($team->id(), TeamMemberRole::OWNER)
+            ->willReturn([$owner]);
+
+        $result = $this->makeService($teams, members: $members)->getOwners($team->id()->value());
+
+        $this->assertSame(['owner-1'], $result);
     }
 
     private function makeTeam(string $id, string $title): Team

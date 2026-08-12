@@ -54,6 +54,8 @@ final class GetTeamController
             $members
         );
 
+        $team['owners'] = $this->teamService->getOwners($id);
+
         return new JsonResponse($team, Response::HTTP_OK);
     }
 }
