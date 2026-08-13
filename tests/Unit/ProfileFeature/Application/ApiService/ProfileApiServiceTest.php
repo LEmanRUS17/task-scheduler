@@ -12,6 +12,7 @@ use App\ProfileFeature\Domain\Entity\Profile;
 use App\ProfileFeature\Domain\Interactor\CreateProfileInteractor;
 use App\ProfileFeature\Domain\Interactor\UpdateProfileInteractor;
 use App\ProfileFeature\Domain\Port\ClockInterface;
+use App\ProfileFeature\Domain\Port\DomainEventDispatcherInterface;
 use App\ProfileFeature\Domain\Repository\ProfileRepositoryInterface;
 use App\ProfileFeature\Domain\ValueObject\Username;
 use App\ProfileFeatureApi\DTORequest\UpdateProfileRequestInterface;
@@ -31,9 +32,11 @@ final class ProfileApiServiceTest extends TestCase
         $fileService = $this->createStub(FileServiceInterface::class);
         $fileService->method('getAvatar')->willReturn(null);
 
+        $eventDispatcher = $this->createStub(DomainEventDispatcherInterface::class);
+
         return new ProfileApiService(
-            new CreateProfileInteractor($profiles, $clock),
-            new UpdateProfileInteractor($profiles),
+            new CreateProfileInteractor($profiles, $clock, $eventDispatcher),
+            new UpdateProfileInteractor($profiles, $eventDispatcher),
             $profiles,
             new ProfileDataMapper($fileService, $this->createStub(UrlGeneratorInterface::class)),
             $validator ?? $this->createStub(ProfileValidatorInterface::class),
@@ -77,6 +80,21 @@ final class ProfileApiServiceTest extends TestCase
         $profiles->expects($this->once())->method('save');
 
         $this->buildService($profiles)->createForUser('user-1');
+    }
+
+    // --- getAllUserIds ---
+
+    public function testGetAllUserIdsMapsProfilesToUserIds(): void
+    {
+        $profiles = $this->createStub(ProfileRepositoryInterface::class);
+        $profiles->method('findAll')->willReturn([
+            $this->makeProfile(),
+            Profile::create('user-2', Username::fromString('jane_doe'), new \DateTimeImmutable()),
+        ]);
+
+        $result = $this->buildService($profiles)->getAllUserIds();
+
+        $this->assertSame(['user-1', 'user-2'], $result);
     }
 
     // --- update ---

@@ -32,10 +32,13 @@ use App\TeamFeatureApi\DTOResponse\TeamDataResponseInterface;
 use App\TeamFeatureApi\DTOResponse\TeamInvitationDataResponseInterface;
 use App\TeamFeatureApi\DTOResponse\TeamMemberDataResponseInterface;
 use App\TeamFeatureApi\Service\TeamServiceInterface;
+use App\SearchFeatureApi\Contract\SearchServiceInterface;
 use App\UserFeatureApi\Service\UserServiceInterface;
 
 final class TeamApiService implements TeamServiceInterface
 {
+    private const MEMBER_SEARCH_LIMIT = 500;
+
     public function __construct(
         private readonly TeamCreateInteractor $createInteractor,
         private readonly TeamUpdateInteractor $updateInteractor,
@@ -53,6 +56,7 @@ final class TeamApiService implements TeamServiceInterface
         private readonly ProfileServiceInterface $profiles,
         private readonly TagServiceInterface $tagService,
         private readonly UserServiceInterface $userService,
+        private readonly SearchServiceInterface $searchService,
     ) {
     }
 
@@ -202,6 +206,42 @@ final class TeamApiService implements TeamServiceInterface
             ),
             $this->members->findByTeamId(TeamId::fromString($teamId)),
         );
+    }
+
+    public function searchMembers(string $teamId, string $currentUserId, ?string $name = null): array
+    {
+        $id = TeamId::fromString($teamId);
+
+        if ($this->teams->findById($id) === null) {
+            throw new \DomainException("Team {$teamId} not found");
+        }
+
+        $name = $name !== null ? trim($name) : null;
+
+        $matchingUserIds = null;
+        if ($name !== null && $name !== '') {
+            $result = $this->searchService->searchTeamUsers($teamId, $name, self::MEMBER_SEARCH_LIMIT);
+            $matchingUserIds = array_flip($result['ids']);
+        }
+
+        $currentUserResult = null;
+        $others = [];
+
+        foreach ($this->members->findByTeamId($id) as $member) {
+            if ($matchingUserIds !== null && !isset($matchingUserIds[$member->userId()])) {
+                continue;
+            }
+
+            $result = $this->dataMapper->memberToResponse($member, $this->findProfile($member->userId()));
+
+            if ($member->userId() === $currentUserId) {
+                $currentUserResult = $result;
+            } else {
+                $others[] = $result;
+            }
+        }
+
+        return $currentUserResult !== null ? [$currentUserResult, ...$others] : $others;
     }
 
     public function getOwners(string $teamId): array

@@ -5,8 +5,10 @@ declare(strict_types=1);
 namespace App\Tests\Unit\ProfileFeature\Domain\Interactor;
 
 use App\ProfileFeature\Domain\Entity\Profile;
+use App\ProfileFeature\Domain\Event\ProfileCreated;
 use App\ProfileFeature\Domain\Interactor\CreateProfileInteractor;
 use App\ProfileFeature\Domain\Port\ClockInterface;
+use App\ProfileFeature\Domain\Port\DomainEventDispatcherInterface;
 use App\ProfileFeature\Domain\Repository\ProfileRepositoryInterface;
 use App\ProfileFeature\Domain\ValueObject\Username;
 use PHPUnit\Framework\TestCase;
@@ -14,11 +16,13 @@ use PHPUnit\Framework\TestCase;
 final class CreateProfileInteractorTest extends TestCase
 {
     private ClockInterface $clock;
+    private DomainEventDispatcherInterface $eventDispatcher;
 
     protected function setUp(): void
     {
         $this->clock = $this->createStub(ClockInterface::class);
         $this->clock->method('now')->willReturn(new \DateTimeImmutable('2024-01-01 12:00:00'));
+        $this->eventDispatcher = $this->createStub(DomainEventDispatcherInterface::class);
     }
 
     public function testCreateSavesProfile(): void
@@ -27,7 +31,7 @@ final class CreateProfileInteractorTest extends TestCase
         $profiles->method('findByUserId')->willReturn(null);
         $profiles->expects($this->once())->method('save');
 
-        (new CreateProfileInteractor($profiles, $this->clock))->create('user-1');
+        (new CreateProfileInteractor($profiles, $this->clock, $this->eventDispatcher))->create('user-1');
     }
 
     public function testCreateThrowsWhenProfileAlreadyExists(): void
@@ -39,7 +43,7 @@ final class CreateProfileInteractorTest extends TestCase
 
         $this->expectException(\DomainException::class);
 
-        (new CreateProfileInteractor($profiles, $this->clock))->create('user-1');
+        (new CreateProfileInteractor($profiles, $this->clock, $this->eventDispatcher))->create('user-1');
     }
 
     public function testCreateDoesNotSaveWhenProfileAlreadyExists(): void
@@ -51,7 +55,7 @@ final class CreateProfileInteractorTest extends TestCase
         $profiles->expects($this->never())->method('save');
 
         try {
-            (new CreateProfileInteractor($profiles, $this->clock))->create('user-1');
+            (new CreateProfileInteractor($profiles, $this->clock, $this->eventDispatcher))->create('user-1');
         } catch (\DomainException) {
         }
     }
@@ -65,9 +69,22 @@ final class CreateProfileInteractorTest extends TestCase
             $saved = $p;
         });
 
-        (new CreateProfileInteractor($profiles, $this->clock))->create('user-1');
+        (new CreateProfileInteractor($profiles, $this->clock, $this->eventDispatcher))->create('user-1');
 
         $this->assertNotNull($saved);
         $this->assertStringStartsWith('user_', $saved->username()?->value() ?? '');
+    }
+
+    public function testCreateDispatchesProfileCreatedEvent(): void
+    {
+        $profiles = $this->createStub(ProfileRepositoryInterface::class);
+        $profiles->method('findByUserId')->willReturn(null);
+
+        $dispatcher = $this->createMock(DomainEventDispatcherInterface::class);
+        $dispatcher->expects($this->once())
+            ->method('dispatch')
+            ->with($this->isInstanceOf(ProfileCreated::class));
+
+        (new CreateProfileInteractor($profiles, $this->clock, $dispatcher))->create('user-1');
     }
 }

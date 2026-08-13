@@ -14,4 +14,7 @@ interface ProfileServiceInterface
     public function getByUserId(string $userId): ProfileDataResponseInterface;
 
     public function update(string $userId, UpdateProfileRequestInterface $request): void;
+
+    /** @return list<string> */
+    public function getAllUserIds(): array;
 }

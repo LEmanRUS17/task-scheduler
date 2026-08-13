@@ -6,6 +6,7 @@ namespace App\Tests\Unit\ProfileFeature\Domain\Entity;
 
 use App\ProfileFeature\Domain\Entity\Profile;
 use App\ProfileFeature\Domain\Event\ProfileCreated;
+use App\ProfileFeature\Domain\Event\ProfileUpdated;
 use App\ProfileFeature\Domain\ValueObject\ProfileStatus;
 use App\ProfileFeature\Domain\ValueObject\Username;
 use PHPUnit\Framework\TestCase;
@@ -99,6 +100,19 @@ final class ProfileTest extends TestCase
         $this->assertSame('john_doe', $profile->username()?->value());
         $this->assertSame('John', $profile->firstname());
         $this->assertNull($profile->lastname());
+    }
+
+    public function testUpdateRecordsProfileUpdatedEvent(): void
+    {
+        $profile = $this->makeProfile();
+        $profile->pullDomainEvents();
+
+        $profile->update(null, 'John', null, null, null);
+        $events = $profile->pullDomainEvents();
+
+        $this->assertCount(1, $events);
+        $this->assertInstanceOf(ProfileUpdated::class, $events[0]);
+        $this->assertSame('user-1', $events[0]->userId);
     }
 
     public function testRecordLastLoginStoresDatetime(): void

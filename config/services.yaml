@@ -58,6 +58,11 @@ services:
     App\ProfileFeature\Domain\Port\ClockInterface:
         class: App\ProfileFeature\Infrastructure\Clock\SystemClock
 
+    App\ProfileFeature\Domain\Port\DomainEventDispatcherInterface:
+        class: App\ProfileFeature\Infrastructure\Messenger\MessengerDomainEventDispatcher
+        arguments:
+            $eventBus: '@event.bus'
+
     App\ProfileFeature\Infrastructure\Persistence\Doctrine\ProfileForeignKeySchemaListener:
         tags:
             - { name: doctrine.event_listener, event: postGenerateSchema }
@@ -172,6 +177,13 @@ services:
     App\SearchFeature\Domain\Port\TagSearchIndexInterface:
         class: App\SearchFeature\Infrastructure\Manticore\ManticoreTagSearchIndex
 
+    App\SearchFeature\Domain\Port\UserSearchIndexInterface:
+        class: App\SearchFeature\Infrastructure\Manticore\ManticoreUserSearchIndex
+
+    App\SearchFeature\Infrastructure\Messenger\EventSubscriber\UserSearchIndexSubscriber:
+        arguments:
+            $defaultBus: '@messenger.bus.default'
+
     App\SearchFeature\Infrastructure\Messenger\EventSubscriber\TaskSearchIndexSubscriber:
         arguments:
             $defaultBus: '@messenger.bus.default'
@@ -202,6 +214,9 @@ services:
 
     App\SearchFeature\Domain\Port\TagSearchRepositoryInterface:
         class: App\SearchFeature\Infrastructure\Manticore\ManticoreTagSearchRepository
+
+    App\SearchFeature\Domain\Port\UserSearchRepositoryInterface:
+        class: App\SearchFeature\Infrastructure\Manticore\ManticoreUserSearchRepository
     App\AnalyticsFeature\Infrastructure\ClickHouse\ClickHouseClient:
         arguments:
             $baseUrl: '%env(CLICKHOUSE_URL)%'

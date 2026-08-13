@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\ProfileFeature\Domain\Interactor;
 
+use App\ProfileFeature\Domain\Port\DomainEventDispatcherInterface;
 use App\ProfileFeature\Domain\Repository\ProfileRepositoryInterface;
 use App\ProfileFeature\Domain\ValueObject\ProfileStatus;
 use App\ProfileFeature\Domain\ValueObject\Username;
@@ -12,6 +13,7 @@ final class UpdateProfileInteractor
 {
     public function __construct(
         private readonly ProfileRepositoryInterface $profiles,
+        private readonly DomainEventDispatcherInterface $eventDispatcher,
     ) {
     }
 
@@ -38,5 +40,6 @@ final class UpdateProfileInteractor
         );
 
         $this->profiles->save($profile);
+        $this->eventDispatcher->dispatch(...$profile->pullDomainEvents());
     }
 }

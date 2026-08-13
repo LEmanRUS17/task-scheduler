@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\ProfileFeature\Domain\Entity;
 
 use App\ProfileFeature\Domain\Event\ProfileCreated;
+use App\ProfileFeature\Domain\Event\ProfileUpdated;
 use App\ProfileFeature\Domain\ValueObject\ProfileStatus;
 use App\ProfileFeature\Domain\ValueObject\Username;
 
@@ -68,6 +69,8 @@ final class Profile
         if ($status !== null) {
             $this->status = $status->value();
         }
+
+        $this->recordEvent(new ProfileUpdated($this->userId));
     }
 
     public function recordLastLogin(\DateTimeImmutable $at): void

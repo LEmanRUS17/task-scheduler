@@ -6,6 +6,7 @@ namespace App\ProfileFeature\Domain\Interactor;
 
 use App\ProfileFeature\Domain\Entity\Profile;
 use App\ProfileFeature\Domain\Port\ClockInterface;
+use App\ProfileFeature\Domain\Port\DomainEventDispatcherInterface;
 use App\ProfileFeature\Domain\Repository\ProfileRepositoryInterface;
 use App\ProfileFeature\Domain\ValueObject\Username;
 
@@ -14,6 +15,7 @@ final class CreateProfileInteractor
     public function __construct(
         private readonly ProfileRepositoryInterface $profiles,
         private readonly ClockInterface $clock,
+        private readonly DomainEventDispatcherInterface $eventDispatcher,
     ) {
     }
 
@@ -30,5 +32,6 @@ final class CreateProfileInteractor
         );
 
         $this->profiles->save($profile);
+        $this->eventDispatcher->dispatch(...$profile->pullDomainEvents());
     }
 }

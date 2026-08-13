@@ -60,4 +60,17 @@ interface SearchServiceInterface
         int $limit = 10,
         int $offset = 0,
     ): array;
+
+    /**
+     * Returns a page of matching user ids that are members of the given team, ordered by
+     * relevance, plus the total match count. Matches against nickname and full name (ФИО).
+     *
+     * @return array{ids: list<string>, total: int}
+     */
+    public function searchTeamUsers(
+        string $teamId,
+        string $query,
+        int $limit = 50,
+        int $offset = 0,
+    ): array;
 }
