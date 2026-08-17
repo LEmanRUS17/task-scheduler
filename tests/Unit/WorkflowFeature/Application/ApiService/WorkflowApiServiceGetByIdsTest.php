@@ -83,7 +83,7 @@ final class WorkflowApiServiceGetByIdsTest extends TestCase
             ->with(10, 20)
             ->willReturn([$wf1, $wf2]);
 
-        $results = $this->makeService($repository)->getPage(10, 20);
+        $results = $this->makeService($repository)->getPage(10, 20, 'user-1');
 
         $this->assertSame(
             [$wf1->id()->value(), $wf2->id()->value()],
@@ -96,7 +96,7 @@ final class WorkflowApiServiceGetByIdsTest extends TestCase
         $repository = $this->createStub(WorkflowRepositoryInterface::class);
         $repository->method('count')->willReturn(42);
 
-        $this->assertSame(42, $this->makeService($repository)->countAll());
+        $this->assertSame(42, $this->makeService($repository)->countAll('user-1'));
     }
 
     private function makeWorkflow(string $id, string $title): Workflow

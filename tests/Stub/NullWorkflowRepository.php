@@ -19,6 +19,11 @@ final class NullWorkflowRepository implements WorkflowRepositoryInterface
         return null;
     }
 
+    public function findDefaultByCreatedBy(string $createdBy): ?Workflow
+    {
+        return null;
+    }
+
     public function findByIds(array $ids): array
     {
         return [];

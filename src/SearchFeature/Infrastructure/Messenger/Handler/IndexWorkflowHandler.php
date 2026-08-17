@@ -24,7 +24,7 @@ final class IndexWorkflowHandler
     {
         $workflow = $this->workflowService->getById($message->workflowId);
 
-        if ($workflow === null) {
+        if ($workflow === null || $workflow->isDefault()) {
             return;
         }
 

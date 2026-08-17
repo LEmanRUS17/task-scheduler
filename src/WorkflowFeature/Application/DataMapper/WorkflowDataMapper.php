@@ -63,6 +63,7 @@ final class WorkflowDataMapper
             $workflow->title()->value(),
             $workflow->createdBy(),
             $workflow->createdAt(),
+            $workflow->isDefault(),
             $description,
         );
     }

@@ -18,6 +18,14 @@ interface WorkflowServiceInterface
 {
     public function create(CreateWorkflowRequestInterface $request, string $createdBy): WorkflowResponseInterface;
 
+    /**
+     * Creates the default workflow (statuses "открыт"/"закрыт") for a newly registered user, if one
+     * does not already exist for them.
+     */
+    public function createDefaultForUser(string $userId): WorkflowResponseInterface;
+
+    public function getDefaultForUser(string $userId): ?WorkflowResponseInterface;
+
     public function update(string $id, UpdateWorkflowRequestInterface $request): WorkflowResponseInterface;
 
     public function getById(string $id): ?WorkflowResponseInterface;
@@ -26,13 +34,15 @@ interface WorkflowServiceInterface
     public function getList(): array;
 
     /**
-     * Returns a single page of workflows ordered by creation date (newest first).
+     * Returns a single page of workflows ordered by creation date (newest first), with the
+     * caller's own default workflow pinned first on the initial page (offset 0).
      *
      * @return WorkflowResponseInterface[]
      */
-    public function getPage(int $limit, int $offset): array;
+    public function getPage(int $limit, int $offset, string $userId): array;
 
-    public function countAll(): int;
+    /** Counts the same set as {@see getPage()}, including the caller's own default workflow if any. */
+    public function countAll(string $userId): int;
 
     /**
      * Returns workflows for the given ids, preserving the order of the ids.

@@ -27,6 +27,12 @@ final class DoctrineWorkflowRepository implements WorkflowRepositoryInterface
         return $this->entityManager->find(Workflow::class, $id->value());
     }
 
+    public function findDefaultByCreatedBy(string $createdBy): ?Workflow
+    {
+        return $this->entityManager->getRepository(Workflow::class)
+            ->findOneBy(['createdBy' => $createdBy, 'isDefault' => true]);
+    }
+
     public function findByIds(array $ids): array
     {
         if ($ids === []) {
@@ -44,11 +50,11 @@ final class DoctrineWorkflowRepository implements WorkflowRepositoryInterface
     public function findPaginated(int $limit, int $offset): array
     {
         return $this->entityManager->getRepository(Workflow::class)
-            ->findBy([], ['createdAt' => 'DESC'], $limit, $offset);
+            ->findBy(['isDefault' => false], ['createdAt' => 'DESC'], $limit, $offset);
     }
 
     public function count(): int
     {
-        return $this->entityManager->getRepository(Workflow::class)->count([]);
+        return $this->entityManager->getRepository(Workflow::class)->count(['isDefault' => false]);
     }
 }

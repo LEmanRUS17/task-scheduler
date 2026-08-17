@@ -14,5 +14,7 @@ interface WorkflowResponseInterface
 
     public function getCreatedAt(): \DateTimeImmutable;
 
+    public function isDefault(): bool;
+
     public function getDescription(): ?string;
 }

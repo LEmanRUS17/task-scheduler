@@ -9,6 +9,8 @@ use App\WorkflowFeature\Application\DTORequestValidator\WorkflowValidatorInterfa
 use App\WorkflowFeature\Domain\Interactor\AddWorkflowStatusInteractor;
 use App\WorkflowFeature\Domain\Interactor\AddWorkflowTransitionInteractor;
 use App\WorkflowFeature\Domain\Interactor\CreateWorkflowInteractor;
+use App\WorkflowFeature\Domain\Interactor\NewWorkflowStatus;
+use App\WorkflowFeature\Domain\Interactor\NewWorkflowTransition;
 use App\WorkflowFeature\Domain\Interactor\UpdateWorkflowInteractor;
 use App\WorkflowFeature\Domain\Interactor\UpdateWorkflowStatusInteractor;
 use App\WorkflowFeature\Domain\Interactor\UpdateWorkflowTransitionInteractor;
@@ -92,6 +94,45 @@ final class WorkflowApiService implements WorkflowServiceInterface
         return $this->dataMapper->workflowToResponse($workflow, $description);
     }
 
+    public function createDefaultForUser(string $userId): WorkflowResponseInterface
+    {
+        $existing = $this->workflows->findDefaultByCreatedBy($userId);
+        if ($existing !== null) {
+            return $this->dataMapper->workflowToResponse($existing);
+        }
+
+        $workflow = $this->createInteractor->create(
+            WorkflowTitle::fromString('Базовый'),
+            $userId,
+            [
+                new NewWorkflowStatus(StatusLabel::fromString('открыт'), true, false),
+                new NewWorkflowStatus(StatusLabel::fromString('закрыт'), false, true),
+            ],
+            [
+                new NewWorkflowTransition(
+                    TransitionName::fromString('закрыть'),
+                    StatusLabel::fromString('открыт'),
+                    StatusLabel::fromString('закрыт'),
+                ),
+            ],
+            true,
+        );
+
+        return $this->dataMapper->workflowToResponse($workflow);
+    }
+
+    public function getDefaultForUser(string $userId): ?WorkflowResponseInterface
+    {
+        $workflow = $this->workflows->findDefaultByCreatedBy($userId);
+
+        return $workflow !== null
+            ? $this->dataMapper->workflowToResponse(
+                $workflow,
+                $this->descriptions->get(Workflow::class, $workflow->id()->value()),
+            )
+            : null;
+    }
+
     public function update(string $id, UpdateWorkflowRequestInterface $request): WorkflowResponseInterface
     {
         $violations = $this->validator->validate($request);
@@ -139,17 +180,27 @@ final class WorkflowApiService implements WorkflowServiceInterface
         );
     }
 
-    public function getPage(int $limit, int $offset): array
+    public function getPage(int $limit, int $offset, string $userId): array
     {
-        return array_map(
-            fn($workflow) => $this->dataMapper->workflowToResponse($workflow),
-            $this->workflows->findPaginated($limit, $offset),
-        );
+        $default = $this->workflows->findDefaultByCreatedBy($userId);
+
+        if ($offset === 0) {
+            $othersLimit = $default !== null ? max(0, $limit - 1) : $limit;
+            $others = $this->workflows->findPaginated($othersLimit, 0);
+            $page = $default !== null ? [$default, ...$others] : $others;
+        } else {
+            $adjustedOffset = $default !== null ? max(0, $offset - 1) : $offset;
+            $page = $this->workflows->findPaginated($limit, $adjustedOffset);
+        }
+
+        return array_map(fn($workflow) => $this->dataMapper->workflowToResponse($workflow), $page);
     }
 
-    public function countAll(): int
+    public function countAll(string $userId): int
     {
-        return $this->workflows->count();
+        $count = $this->workflows->count();
+
+        return $this->workflows->findDefaultByCreatedBy($userId) !== null ? $count + 1 : $count;
     }
 
     public function getByIds(array $ids): array

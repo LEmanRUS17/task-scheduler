@@ -41,12 +41,13 @@ final class CreateWorkflowInteractor
         string $createdBy,
         array $statuses,
         array $transitions,
+        bool $isDefault = false,
     ): Workflow {
         $this->assertValidGraph($statuses, $transitions);
 
         $now = $this->clock->now();
         $id = WorkflowId::generate();
-        $workflow = Workflow::create($id, $title, $createdBy, $now);
+        $workflow = Workflow::create($id, $title, $createdBy, $now, $isDefault);
 
         $statusEntities = [];
         foreach ($statuses as $status) {

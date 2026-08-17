@@ -20,3 +20,4 @@ $builder->createField('id', 'string')
 $builder->addField('title', 'string', ['length' => 255]);
 $builder->addField('createdBy', 'string', ['columnName' => 'created_by', 'length' => 36]);
 $builder->addField('createdAt', 'datetime_immutable', ['columnName' => 'created_at']);
+$builder->addField('isDefault', 'boolean', ['columnName' => 'is_default']);
