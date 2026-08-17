@@ -36,7 +36,7 @@ final class SymfonyTaskWorkflow implements TaskWorkflowInterface
 
     public function applyTransition(Task $task, string $transition): void
     {
-        $workflow = $this->registry->get($task, $this->resolveTitle($task));
+        $workflow = $this->registry->get($task, $this->resolveWorkflowName($task));
 
         if (!$workflow->can($task, $transition)) {
             throw new \DomainException(
@@ -49,18 +49,23 @@ final class SymfonyTaskWorkflow implements TaskWorkflowInterface
 
     public function canApply(Task $task, string $transition): bool
     {
-        return $this->registry->get($task, $this->resolveTitle($task))->can($task, $transition);
+        return $this->registry->get($task, $this->resolveWorkflowName($task))->can($task, $transition);
     }
 
     public function getEnabledTransitions(Task $task): array
     {
         return array_map(
             fn($t) => $t->getName(),
-            $this->registry->get($task, $this->resolveTitle($task))->getEnabledTransitions($task),
+            $this->registry->get($task, $this->resolveWorkflowName($task))->getEnabledTransitions($task),
         );
     }
 
-    private function resolveTitle(Task $task): string
+    /**
+     * Registry lookups must key on the workflow id, not its title: titles are user-chosen and
+     * not unique (e.g. every user's personal default workflow is titled "Базовый"), so using the
+     * title here would leave the registry unable to tell same-named workflows apart.
+     */
+    private function resolveWorkflowName(Task $task): string
     {
         $workflow = $this->workflows->findById(WorkflowId::fromString($task->getWorkflowDefinitionTitle()));
 
@@ -70,6 +75,6 @@ final class SymfonyTaskWorkflow implements TaskWorkflowInterface
             );
         }
 
-        return $workflow->title()->value();
+        return $workflow->id()->value();
     }
 }

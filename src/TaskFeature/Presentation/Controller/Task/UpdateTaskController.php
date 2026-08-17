@@ -42,10 +42,12 @@ final class UpdateTaskController
         try {
             $task = $this->taskService->update($id, $request);
         } catch (\InvalidArgumentException $e) {
+            $errors = json_decode($e->getMessage(), true);
+
             return new JsonResponse(
                 [
                     'message' => 'Validation failed',
-                    'errors' => json_decode($e->getMessage(), true),
+                    'errors' => is_array($errors) ? $errors : ['general' => [$e->getMessage()]],
                 ],
                 Response::HTTP_UNPROCESSABLE_ENTITY,
             );
