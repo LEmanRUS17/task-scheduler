@@ -32,10 +32,7 @@ final class GetSubscriptionsController
         $subscriptions = $this->subscriptionService->getUserSubscriptions($userId);
 
         return new JsonResponse(
-            [
-                'success' => true,
-                'data' => array_map(SubscriptionResponseFormatter::format(...), $subscriptions),
-            ],
+            array_map(SubscriptionResponseFormatter::format(...), $subscriptions),
             Response::HTTP_OK,
         );
     }
