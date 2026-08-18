@@ -10,6 +10,7 @@ use App\WorkflowFeatureApi\DTORequest\CreateWorkflowRequestInterface;
 use App\WorkflowFeatureApi\DTORequest\UpdateStatusRequestInterface;
 use App\WorkflowFeatureApi\DTORequest\UpdateTransitionRequestInterface;
 use App\WorkflowFeatureApi\DTORequest\UpdateWorkflowRequestInterface;
+use App\WorkflowFeatureApi\DTOResponse\WorkflowListMiniResponseInterface;
 use App\WorkflowFeatureApi\DTOResponse\WorkflowResponseInterface;
 use App\WorkflowFeatureApi\DTOResponse\WorkflowStatusResponseInterface;
 use App\WorkflowFeatureApi\DTOResponse\WorkflowTransitionResponseInterface;
@@ -83,4 +84,10 @@ interface WorkflowServiceInterface
 
     /** @return WorkflowTransitionResponseInterface[] */
     public function getTransitions(string $workflowId): array;
+
+    /**
+     * Returns the workflow's transitions (id + name) available for notification
+     * subscriptions, along with the total number of transitions.
+     */
+    public function listTransactionByWorkflow(string $workflowId): WorkflowListMiniResponseInterface;
 }

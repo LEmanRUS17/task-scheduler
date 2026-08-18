@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\WorkflowFeature\Application\DataMapper;
 
+use App\WorkflowFeature\Application\DTOResponse\WorkflowListMiniItemResponseDTO;
+use App\WorkflowFeature\Application\DTOResponse\WorkflowListMiniResponseDTO;
 use App\WorkflowFeature\Application\DTOResponse\WorkflowResponseDTO;
 use App\WorkflowFeature\Application\DTOResponse\WorkflowStatusResponseDTO;
 use App\WorkflowFeature\Application\DTOResponse\WorkflowTransitionResponseDTO;
@@ -20,6 +22,7 @@ use App\WorkflowFeatureApi\DTORequest\AddTransitionRequestInterface;
 use App\WorkflowFeatureApi\DTORequest\CreateWorkflowRequestInterface;
 use App\WorkflowFeatureApi\DTORequest\CreateWorkflowStatusRequestInterface;
 use App\WorkflowFeatureApi\DTORequest\CreateWorkflowTransitionRequestInterface;
+use App\WorkflowFeatureApi\DTOResponse\WorkflowListMiniResponseInterface;
 
 final class WorkflowDataMapper
 {
@@ -94,5 +97,19 @@ final class WorkflowDataMapper
             $transition->createdAt(),
             $description,
         );
+    }
+
+    /** @param WorkflowTransition[] $transitions */
+    public function transitionsToWorkflowListMini(array $transitions): WorkflowListMiniResponseInterface
+    {
+        $options = array_map(
+            fn(WorkflowTransition $t) => new WorkflowListMiniItemResponseDTO(
+                $t->id()->value(),
+                $t->name()->value(),
+            ),
+            $transitions,
+        );
+
+        return new WorkflowListMiniResponseDTO($options, count($options));
     }
 }

@@ -34,6 +34,7 @@ use App\WorkflowFeature\Domain\Entity\Workflow;
 use App\WorkflowFeature\Domain\Entity\WorkflowStatus;
 use App\WorkflowFeature\Domain\Entity\WorkflowTransition;
 use App\WorkflowFeatureApi\DTORequest\CreateWorkflowRequestInterface;
+use App\WorkflowFeatureApi\DTOResponse\WorkflowListMiniResponseInterface;
 use App\WorkflowFeatureApi\DTOResponse\WorkflowResponseInterface;
 use App\WorkflowFeatureApi\DTOResponse\WorkflowStatusResponseInterface;
 use App\WorkflowFeatureApi\DTOResponse\WorkflowTransitionResponseInterface;
@@ -375,6 +376,13 @@ final class WorkflowApiService implements WorkflowServiceInterface
                 $transition,
                 $this->descriptions->get(WorkflowTransition::class, $transition->id()->value()),
             ),
+            $this->transitions->findByWorkflowId(WorkflowId::fromString($workflowId)),
+        );
+    }
+
+    public function listTransactionByWorkflow(string $workflowId): WorkflowListMiniResponseInterface
+    {
+        return $this->dataMapper->transitionsToWorkflowListMini(
             $this->transitions->findByWorkflowId(WorkflowId::fromString($workflowId)),
         );
     }
