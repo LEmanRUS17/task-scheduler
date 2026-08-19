@@ -50,12 +50,25 @@ interface WorkflowServiceInterface
      * this method); the team's workflows attached via {@see attachToTeam()} are additionally
      * surfaced on the initial page (offset 0), deduplicated against the caller's own workflows.
      *
+     * When $includeDefault is false, the caller's default workflow is left out entirely (it is
+     * never pinned, and never counted by {@see countAll()} either).
+     *
+     * When $inTeamId is given, each returned workflow reports via {@see WorkflowResponseInterface::isInTeam()}
+     * whether it is currently attached to that team; this is independent of $teamId.
+     *
      * @return WorkflowResponseInterface[]
      */
-    public function getPage(int $limit, int $offset, string $userId, ?string $teamId = null): array;
+    public function getPage(
+        int $limit,
+        int $offset,
+        string $userId,
+        ?string $teamId = null,
+        bool $includeDefault = true,
+        ?string $inTeamId = null,
+    ): array;
 
-    /** Counts the same set as {@see getPage()}, including the caller's own default workflow if any. */
-    public function countAll(string $userId, ?string $teamId = null): int;
+    /** Counts the same set as {@see getPage()}, including the caller's own default workflow unless $includeDefault is false. */
+    public function countAll(string $userId, ?string $teamId = null, bool $includeDefault = true): int;
 
     /**
      * Returns workflows for the given ids, preserving the order of the ids.

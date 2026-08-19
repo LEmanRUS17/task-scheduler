@@ -63,6 +63,7 @@ final class WorkflowDataMapper
         Workflow $workflow,
         ?string $description = null,
         ?string $teamTitle = null,
+        bool $inTeam = false,
     ): WorkflowResponseDTO {
         return new WorkflowResponseDTO(
             $workflow->id()->value(),
@@ -72,6 +73,7 @@ final class WorkflowDataMapper
             $workflow->isDefault(),
             $description,
             $teamTitle,
+            $inTeam,
         );
     }
 

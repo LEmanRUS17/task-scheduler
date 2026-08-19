@@ -16,6 +16,7 @@ final class WorkflowResponseDTO implements WorkflowResponseInterface
         private readonly bool $isDefault = false,
         private readonly ?string $description = null,
         private readonly ?string $teamTitle = null,
+        private readonly bool $inTeam = false,
     ) {
     }
 
@@ -52,5 +53,10 @@ final class WorkflowResponseDTO implements WorkflowResponseInterface
     public function getTeamTitle(): ?string
     {
         return $this->teamTitle;
+    }
+
+    public function isInTeam(): bool
+    {
+        return $this->inTeam;
     }
 }

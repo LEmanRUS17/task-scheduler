@@ -129,6 +129,22 @@ final class WorkflowApiServiceDefaultWorkflowTest extends TestCase
         $this->assertTrue($results[0]->isDefault());
     }
 
+    public function testGetPageExcludesOwnDefaultWorkflowWhenIncludeDefaultIsFalse(): void
+    {
+        $other = $this->makeWorkflow('Bug flow');
+
+        $repository = $this->createMock(WorkflowRepositoryInterface::class);
+        $repository->expects($this->never())->method('findDefaultByCreatedBy');
+        $repository->expects($this->once())
+            ->method('findByCreatedBy')
+            ->with('user-1', 10, 0)
+            ->willReturn([$other]);
+
+        $results = $this->makeService($repository)->getPage(10, 0, 'user-1', includeDefault: false);
+
+        $this->assertSame(['Bug flow'], array_map(static fn($r) => $r->getTitle(), $results));
+    }
+
     public function testGetPageOnFirstPageWithoutOwnDefaultDoesNotPin(): void
     {
         $other = $this->makeWorkflow('Bug flow');
@@ -241,6 +257,43 @@ final class WorkflowApiServiceDefaultWorkflowTest extends TestCase
         $this->assertSame('Engineering', $results[0]->getTeamTitle());
     }
 
+    public function testGetPageTagsInTeamForWorkflowsAttachedToTheGivenInTeamId(): void
+    {
+        $attached = $this->makeWorkflow('Attached', createdBy: 'user-1');
+        $notAttached = $this->makeWorkflow('Not attached', createdBy: 'user-1');
+
+        $repository = $this->createStub(WorkflowRepositoryInterface::class);
+        $repository->method('findDefaultByCreatedBy')->willReturn(null);
+        $repository->method('findByCreatedBy')->willReturn([$attached, $notAttached]);
+
+        $workflowTeams = $this->createStub(WorkflowTeamRepositoryInterface::class);
+        $workflowTeams->method('findByTeamId')->willReturn([
+            WorkflowTeam::attach($attached->id(), 'team-1', new \DateTimeImmutable('2026-01-01')),
+        ]);
+
+        $results = $this->makeService($repository, workflowTeams: $workflowTeams)
+            ->getPage(10, 0, 'user-1', inTeamId: 'team-1');
+
+        $this->assertTrue($results[0]->isInTeam());
+        $this->assertFalse($results[1]->isInTeam());
+    }
+
+    public function testGetPageLeavesInTeamFalseWhenInTeamIdIsNotGiven(): void
+    {
+        $workflow = $this->makeWorkflow('Mine', createdBy: 'user-1');
+
+        $repository = $this->createStub(WorkflowRepositoryInterface::class);
+        $repository->method('findDefaultByCreatedBy')->willReturn(null);
+        $repository->method('findByCreatedBy')->willReturn([$workflow]);
+
+        $workflowTeams = $this->createMock(WorkflowTeamRepositoryInterface::class);
+        $workflowTeams->expects($this->never())->method('findByTeamId');
+
+        $results = $this->makeService($repository, workflowTeams: $workflowTeams)->getPage(10, 0, 'user-1');
+
+        $this->assertFalse($results[0]->isInTeam());
+    }
+
     public function testGetPageDoesNotAppendTeamWorkflowsOnLaterPages(): void
     {
         $mine = $this->makeWorkflow('Mine', createdBy: 'user-1');
@@ -277,6 +330,17 @@ final class WorkflowApiServiceDefaultWorkflowTest extends TestCase
         $repository->method('findDefaultByCreatedBy')->willReturn(null);
 
         $this->assertSame(5, $this->makeService($repository)->countAll('user-1'));
+    }
+
+    public function testCountAllExcludesDefaultWhenIncludeDefaultIsFalse(): void
+    {
+        $default = $this->makeWorkflow('Базовый', true);
+
+        $repository = $this->createStub(WorkflowRepositoryInterface::class);
+        $repository->method('countByCreatedBy')->willReturn(5);
+        $repository->method('findDefaultByCreatedBy')->willReturn($default);
+
+        $this->assertSame(5, $this->makeService($repository)->countAll('user-1', includeDefault: false));
     }
 
     public function testCountAllAddsTeamAttachedWorkflowsNotOwnedByCaller(): void

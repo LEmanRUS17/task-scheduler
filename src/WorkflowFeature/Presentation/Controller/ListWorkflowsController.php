@@ -42,6 +42,8 @@ final class ListWorkflowsController
         $userId = $securityUser->getDomainUser()->id()->value();
 
         $teamId = $request->query->get('teamId') ?: null;
+        $inTeamId = $request->query->get('inTeamId') ?: null;
+        $includeDefault = $request->query->getBoolean('default', true);
 
         if ($teamId !== null && !$this->membership->isMember($teamId, $userId)) {
             return new JsonResponse(['message' => 'Not a team member'], Response::HTTP_FORBIDDEN);
@@ -56,8 +58,8 @@ final class ListWorkflowsController
         if (strlen($query) >= self::MIN_QUERY_LENGTH) {
             [$workflows, $count] = $this->search($userId, $query, $limit, $offset);
         } else {
-            $workflows = $this->workflowService->getPage($limit, $offset, $userId, $teamId);
-            $count = $this->workflowService->countAll($userId, $teamId);
+            $workflows = $this->workflowService->getPage($limit, $offset, $userId, $teamId, $includeDefault, $inTeamId);
+            $count = $this->workflowService->countAll($userId, $teamId, $includeDefault);
         }
 
         $tagsByWorkflow = $this->tagService->getEntityTagsByIds(
@@ -74,6 +76,7 @@ final class ListWorkflowsController
                     'createdAt' => $w->getCreatedAt()->format(\DateTimeInterface::ATOM),
                     'isDefault' => $w->isDefault(),
                     'teamTitle' => $w->getTeamTitle(),
+                    'inTeam' => $w->isInTeam(),
                     'tags' => array_map(
                         static fn(TagResponseInterface $tag): array => [
                             'id' => $tag->getId(),

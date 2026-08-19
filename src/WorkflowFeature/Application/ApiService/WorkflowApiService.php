@@ -194,9 +194,15 @@ final class WorkflowApiService implements WorkflowServiceInterface
         );
     }
 
-    public function getPage(int $limit, int $offset, string $userId, ?string $teamId = null): array
-    {
-        $default = $this->workflows->findDefaultByCreatedBy($userId);
+    public function getPage(
+        int $limit,
+        int $offset,
+        string $userId,
+        ?string $teamId = null,
+        bool $includeDefault = true,
+        ?string $inTeamId = null,
+    ): array {
+        $default = $includeDefault ? $this->workflows->findDefaultByCreatedBy($userId) : null;
 
         if ($offset === 0) {
             $othersLimit = $default !== null ? max(0, $limit - 1) : $limit;
@@ -227,21 +233,30 @@ final class WorkflowApiService implements WorkflowServiceInterface
             }
         }
 
+        $inTeamWorkflowIds = [];
+        if ($inTeamId !== null) {
+            $inTeamWorkflowIds = array_map(
+                static fn(WorkflowTeam $link) => $link->workflowId()->value(),
+                $this->workflowTeams->findByTeamId($inTeamId),
+            );
+        }
+
         return array_map(
             fn($workflow) => $this->dataMapper->workflowToResponse(
                 $workflow,
                 null,
                 in_array($workflow->id()->value(), $teamWorkflowIds, true) ? $teamTitle : null,
+                in_array($workflow->id()->value(), $inTeamWorkflowIds, true),
             ),
             $page,
         );
     }
 
-    public function countAll(string $userId, ?string $teamId = null): int
+    public function countAll(string $userId, ?string $teamId = null, bool $includeDefault = true): int
     {
         $count = $this->workflows->countByCreatedBy($userId);
 
-        if ($this->workflows->findDefaultByCreatedBy($userId) !== null) {
+        if ($includeDefault && $this->workflows->findDefaultByCreatedBy($userId) !== null) {
             $count++;
         }
 
