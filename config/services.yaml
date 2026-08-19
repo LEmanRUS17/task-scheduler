@@ -143,6 +143,12 @@ services:
     App\WorkflowFeature\Domain\Repository\WorkflowTransitionRepositoryInterface:
         class: App\WorkflowFeature\Infrastructure\Persistence\DoctrineWorkflowTransitionRepository
 
+    App\WorkflowFeature\Domain\Repository\WorkflowTeamRepositoryInterface:
+        class: App\WorkflowFeature\Infrastructure\Persistence\DoctrineWorkflowTeamRepository
+
+    App\WorkflowFeature\Domain\Port\TeamMembershipInterface:
+        class: App\WorkflowFeature\Infrastructure\Team\TeamMembershipChecker
+
     App\WorkflowFeature\Application\DTORequestValidator\WorkflowValidatorInterface:
         class: App\WorkflowFeature\Application\DTORequestValidator\WorkflowValidator
 

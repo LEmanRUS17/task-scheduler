@@ -15,7 +15,9 @@ use App\WorkflowFeature\Application\DTORequestValidator\WorkflowValidatorInterfa
 use App\WorkflowFeature\Domain\Entity\Workflow;
 use App\WorkflowFeature\Domain\Interactor\AddWorkflowStatusInteractor;
 use App\WorkflowFeature\Domain\Interactor\AddWorkflowTransitionInteractor;
+use App\WorkflowFeature\Domain\Interactor\AttachWorkflowToTeamInteractor;
 use App\WorkflowFeature\Domain\Interactor\CreateWorkflowInteractor;
+use App\WorkflowFeature\Domain\Interactor\DetachWorkflowFromTeamInteractor;
 use App\WorkflowFeature\Domain\Interactor\UpdateWorkflowInteractor;
 use App\WorkflowFeature\Domain\Interactor\UpdateWorkflowStatusInteractor;
 use App\WorkflowFeature\Domain\Interactor\UpdateWorkflowTransitionInteractor;
@@ -23,9 +25,11 @@ use App\WorkflowFeature\Domain\Port\ClockInterface;
 use App\WorkflowFeature\Domain\Port\DomainEventDispatcherInterface;
 use App\WorkflowFeature\Domain\Repository\WorkflowRepositoryInterface;
 use App\WorkflowFeature\Domain\Repository\WorkflowStatusRepositoryInterface;
+use App\WorkflowFeature\Domain\Repository\WorkflowTeamRepositoryInterface;
 use App\WorkflowFeature\Domain\Repository\WorkflowTransitionRepositoryInterface;
 use App\WorkflowFeature\Domain\ValueObject\WorkflowId;
 use App\WorkflowFeature\Domain\ValueObject\WorkflowTitle;
+use App\TeamFeatureApi\Service\TeamServiceInterface;
 use PHPUnit\Framework\TestCase;
 
 final class WorkflowApiServiceGetByIdsTest extends TestCase
@@ -72,15 +76,16 @@ final class WorkflowApiServiceGetByIdsTest extends TestCase
         $this->assertSame([], $this->makeService($repository)->getByIds([]));
     }
 
-    public function testGetPageMapsPaginatedWorkflows(): void
+    public function testGetPageMapsOwnPaginatedWorkflows(): void
     {
         $wf1 = $this->makeWorkflow('11111111-1111-4111-8111-111111111111', 'Bug flow');
         $wf2 = $this->makeWorkflow('22222222-2222-4222-8222-222222222222', 'Release flow');
 
         $repository = $this->createMock(WorkflowRepositoryInterface::class);
+        $repository->method('findDefaultByCreatedBy')->willReturn(null);
         $repository->expects($this->once())
-            ->method('findPaginated')
-            ->with(10, 20)
+            ->method('findByCreatedBy')
+            ->with('user-1', 10, 20)
             ->willReturn([$wf1, $wf2]);
 
         $results = $this->makeService($repository)->getPage(10, 20, 'user-1');
@@ -94,7 +99,8 @@ final class WorkflowApiServiceGetByIdsTest extends TestCase
     public function testCountAllDelegatesToRepository(): void
     {
         $repository = $this->createStub(WorkflowRepositoryInterface::class);
-        $repository->method('count')->willReturn(42);
+        $repository->method('countByCreatedBy')->willReturn(42);
+        $repository->method('findDefaultByCreatedBy')->willReturn(null);
 
         $this->assertSame(42, $this->makeService($repository)->countAll('user-1'));
     }
@@ -119,6 +125,7 @@ final class WorkflowApiServiceGetByIdsTest extends TestCase
         // getByIds() does not touch them, so their wiring is irrelevant here.
         $statuses = $this->createStub(WorkflowStatusRepositoryInterface::class);
         $transitions = $this->createStub(WorkflowTransitionRepositoryInterface::class);
+        $workflowTeams = $this->createStub(WorkflowTeamRepositoryInterface::class);
         $dispatcher = $this->createStub(DomainEventDispatcherInterface::class);
         $clock ??= $this->createStub(ClockInterface::class);
         $validator ??= $this->createStub(WorkflowValidatorInterface::class);
@@ -131,13 +138,17 @@ final class WorkflowApiServiceGetByIdsTest extends TestCase
             new UpdateWorkflowStatusInteractor($repository, $statuses, $dispatcher),
             new AddWorkflowTransitionInteractor($repository, $statuses, $transitions, $dispatcher, $clock),
             new UpdateWorkflowTransitionInteractor($repository, $statuses, $transitions, $dispatcher),
+            new AttachWorkflowToTeamInteractor($repository, $workflowTeams, $clock),
+            new DetachWorkflowFromTeamInteractor($repository, $workflowTeams),
             $repository,
             $statuses,
             $transitions,
+            $workflowTeams,
             new WorkflowDataMapper(),
             $validator,
             $this->createStub(DescriptionServiceInterface::class),
             $tagService,
+            $this->createStub(TeamServiceInterface::class),
         );
     }
 

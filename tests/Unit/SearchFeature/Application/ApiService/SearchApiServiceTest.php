@@ -107,11 +107,11 @@ final class SearchApiServiceTest extends TestCase
         $workflowRepository = $this->createMock(WorkflowSearchRepositoryInterface::class);
         $workflowRepository->expects($this->once())
             ->method('search')
-            ->with('flow', 'user-1', true, 20, 40)
+            ->with('flow', 'user-1', 20, 40)
             ->willReturn(['ids' => [], 'total' => 0]);
 
         $service = new SearchApiService($this->taskRepositoryStub(), $this->teamRepositoryStub(), $workflowRepository, $this->tagRepositoryStub(), $this->userRepositoryStub());
-        $service->searchWorkflows('flow', 'user-1', true, 20, 40);
+        $service->searchWorkflows('flow', 'user-1', 20, 40);
     }
 
     public function testSearchWorkflowsWithDefaultParameters(): void
@@ -119,7 +119,7 @@ final class SearchApiServiceTest extends TestCase
         $workflowRepository = $this->createMock(WorkflowSearchRepositoryInterface::class);
         $workflowRepository->expects($this->once())
             ->method('search')
-            ->with('flow', 'user-1', false, 10, 0)
+            ->with('flow', 'user-1', 10, 0)
             ->willReturn(['ids' => [], 'total' => 0]);
 
         $service = new SearchApiService($this->taskRepositoryStub(), $this->teamRepositoryStub(), $workflowRepository, $this->tagRepositoryStub(), $this->userRepositoryStub());

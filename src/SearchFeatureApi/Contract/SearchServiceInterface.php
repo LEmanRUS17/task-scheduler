@@ -36,14 +36,14 @@ interface SearchServiceInterface
     ): array;
 
     /**
-     * Returns a page of matching workflow ids, ordered by relevance, plus the total match count.
+     * Returns a page of matching workflow ids owned by $userId, ordered by relevance, plus the
+     * total match count.
      *
      * @return array{ids: list<string>, total: int}
      */
     public function searchWorkflows(
         string $query,
         string $userId,
-        bool $ownedOnly = false,
         int $limit = 10,
         int $offset = 0,
     ): array;

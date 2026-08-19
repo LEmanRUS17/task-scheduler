@@ -35,12 +35,12 @@ final class NullWorkflowRepository implements WorkflowRepositoryInterface
         return [];
     }
 
-    public function findPaginated(int $limit, int $offset): array
+    public function findByCreatedBy(string $createdBy, int $limit, int $offset): array
     {
         return [];
     }
 
-    public function count(): int
+    public function countByCreatedBy(string $createdBy): int
     {
         return 0;
     }

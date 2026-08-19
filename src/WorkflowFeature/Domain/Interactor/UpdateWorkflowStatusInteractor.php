@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\WorkflowFeature\Domain\Interactor;
 
 use App\WorkflowFeature\Domain\Entity\WorkflowStatus;
+use App\WorkflowFeature\Domain\Exception\WorkflowAccessDeniedException;
 use App\WorkflowFeature\Domain\Port\DomainEventDispatcherInterface;
 use App\WorkflowFeature\Domain\Repository\WorkflowRepositoryInterface;
 use App\WorkflowFeature\Domain\Repository\WorkflowStatusRepositoryInterface;
@@ -23,12 +24,19 @@ final class UpdateWorkflowStatusInteractor
 
     public function update(
         WorkflowId $workflowId,
+        string $userId,
         WorkflowStatusId $statusId,
         StatusLabel $label,
         ?bool $isFinal = null,
     ): WorkflowStatus {
-        if ($this->workflows->findById($workflowId) === null) {
+        $workflow = $this->workflows->findById($workflowId);
+
+        if ($workflow === null) {
             throw new \DomainException("Workflow \"{$workflowId->value()}\" not found");
+        }
+
+        if ($workflow->createdBy() !== $userId) {
+            throw WorkflowAccessDeniedException::notOwner($workflowId->value());
         }
 
         $status = $this->statuses->findById($workflowId, $statusId->value());

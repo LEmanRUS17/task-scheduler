@@ -25,13 +25,12 @@ interface WorkflowRepositoryInterface
     public function findAll(): array;
 
     /**
-     * Excludes personal default workflows (auto-created per user on registration) — used for the
-     * public workflow catalog, which should only surface workflows users created themselves.
+     * Returns a page of the given user's own non-default workflows, newest first.
      *
      * @return Workflow[]
      */
-    public function findPaginated(int $limit, int $offset): array;
+    public function findByCreatedBy(string $createdBy, int $limit, int $offset): array;
 
-    /** Counts the same set as {@see findPaginated()}. */
-    public function count(): int;
+    /** Counts the same set as {@see findByCreatedBy()}. */
+    public function countByCreatedBy(string $createdBy): int;
 }

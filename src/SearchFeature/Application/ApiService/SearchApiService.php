@@ -55,11 +55,10 @@ final class SearchApiService implements SearchServiceInterface
     public function searchWorkflows(
         string $query,
         string $userId,
-        bool $ownedOnly = false,
         int $limit = 10,
         int $offset = 0,
     ): array {
-        return $this->workflowRepository->search($query, $userId, $ownedOnly, $limit, $offset);
+        return $this->workflowRepository->search($query, $userId, $limit, $offset);
     }
 
     /** @return array{ids: list<string>, total: int} */

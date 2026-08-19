@@ -47,14 +47,19 @@ final class DoctrineWorkflowRepository implements WorkflowRepositoryInterface
         return $this->entityManager->getRepository(Workflow::class)->findAll();
     }
 
-    public function findPaginated(int $limit, int $offset): array
+    public function findByCreatedBy(string $createdBy, int $limit, int $offset): array
     {
-        return $this->entityManager->getRepository(Workflow::class)
-            ->findBy(['isDefault' => false], ['createdAt' => 'DESC'], $limit, $offset);
+        return $this->entityManager->getRepository(Workflow::class)->findBy(
+            ['createdBy' => $createdBy, 'isDefault' => false],
+            ['createdAt' => 'DESC'],
+            $limit,
+            $offset,
+        );
     }
 
-    public function count(): int
+    public function countByCreatedBy(string $createdBy): int
     {
-        return $this->entityManager->getRepository(Workflow::class)->count(['isDefault' => false]);
+        return $this->entityManager->getRepository(Workflow::class)
+            ->count(['createdBy' => $createdBy, 'isDefault' => false]);
     }
 }

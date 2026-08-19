@@ -6,6 +6,7 @@ namespace App\Tests\Unit\WorkflowFeature\Domain\Interactor;
 
 use App\WorkflowFeature\Domain\Entity\Workflow;
 use App\WorkflowFeature\Domain\Entity\WorkflowStatus;
+use App\WorkflowFeature\Domain\Exception\WorkflowAccessDeniedException;
 use App\WorkflowFeature\Domain\Interactor\AddWorkflowStatusInteractor;
 use App\WorkflowFeature\Domain\Port\ClockInterface;
 use App\WorkflowFeature\Domain\Port\DomainEventDispatcherInterface;
@@ -69,7 +70,7 @@ final class AddWorkflowStatusInteractorTest extends TestCase
         $statuses->expects($this->once())->method('save');
 
         $this->buildInteractor($this->workflowsWithFound(), $statuses)
-            ->add($this->workflowId, StatusLabel::fromString('open'), true);
+            ->add($this->workflowId, 'user-1', StatusLabel::fromString('open'), true);
     }
 
     public function testAddDispatchesEvent(): void
@@ -82,7 +83,7 @@ final class AddWorkflowStatusInteractorTest extends TestCase
         $dispatcher->expects($this->once())->method('dispatch');
 
         $this->buildInteractor($this->workflowsWithFound(), $statuses, $dispatcher)
-            ->add($this->workflowId, StatusLabel::fromString('open'), true);
+            ->add($this->workflowId, 'user-1', StatusLabel::fromString('open'), true);
     }
 
     public function testAddReturnsStatus(): void
@@ -92,7 +93,7 @@ final class AddWorkflowStatusInteractorTest extends TestCase
         $statuses->method('hasInitial')->willReturn(false);
 
         $status = $this->buildInteractor($this->workflowsWithFound(), $statuses)
-            ->add($this->workflowId, StatusLabel::fromString('open'), true);
+            ->add($this->workflowId, 'user-1', StatusLabel::fromString('open'), true);
 
         $this->assertInstanceOf(WorkflowStatus::class, $status);
         $this->assertSame('open', $status->label()->value());
@@ -106,7 +107,7 @@ final class AddWorkflowStatusInteractorTest extends TestCase
         $statuses->method('hasInitial')->willReturn(false);
 
         $status = $this->buildInteractor($this->workflowsWithFound(), $statuses)
-            ->add($this->workflowId, StatusLabel::fromString('done'), false, true);
+            ->add($this->workflowId, 'user-1', StatusLabel::fromString('done'), false, true);
 
         $this->assertTrue($status->isFinal());
     }
@@ -118,7 +119,7 @@ final class AddWorkflowStatusInteractorTest extends TestCase
         $statuses->method('hasInitial')->willReturn(false);
 
         $status = $this->buildInteractor($this->workflowsWithFound(), $statuses)
-            ->add($this->workflowId, StatusLabel::fromString('open'), true);
+            ->add($this->workflowId, 'user-1', StatusLabel::fromString('open'), true);
 
         $this->assertFalse($status->isFinal());
     }
@@ -132,7 +133,18 @@ final class AddWorkflowStatusInteractorTest extends TestCase
         $this->expectExceptionMessageMatches('/not found/');
 
         $this->buildInteractor($workflows, $this->createStub(WorkflowStatusRepositoryInterface::class))
-            ->add($this->workflowId, StatusLabel::fromString('open'), false);
+            ->add($this->workflowId, 'user-1', StatusLabel::fromString('open'), false);
+    }
+
+    public function testAddThrowsWhenCallerIsNotTheOwner(): void
+    {
+        $statuses = $this->createMock(WorkflowStatusRepositoryInterface::class);
+        $statuses->expects($this->never())->method('save');
+
+        $this->expectException(WorkflowAccessDeniedException::class);
+
+        $this->buildInteractor($this->workflowsWithFound(), $statuses)
+            ->add($this->workflowId, 'user-2', StatusLabel::fromString('open'), false);
     }
 
     public function testAddThrowsWhenLabelAlreadyExists(): void
@@ -152,7 +164,7 @@ final class AddWorkflowStatusInteractorTest extends TestCase
         $this->expectExceptionMessageMatches('/already exists/');
 
         $this->buildInteractor($this->workflowsWithFound(), $statuses)
-            ->add($this->workflowId, StatusLabel::fromString('open'), false);
+            ->add($this->workflowId, 'user-1', StatusLabel::fromString('open'), false);
     }
 
     public function testAddThrowsWhenInitialAlreadyExists(): void
@@ -165,6 +177,6 @@ final class AddWorkflowStatusInteractorTest extends TestCase
         $this->expectExceptionMessageMatches('/initial status/');
 
         $this->buildInteractor($this->workflowsWithFound(), $statuses)
-            ->add($this->workflowId, StatusLabel::fromString('open'), true);
+            ->add($this->workflowId, 'user-1', StatusLabel::fromString('open'), true);
     }
 }

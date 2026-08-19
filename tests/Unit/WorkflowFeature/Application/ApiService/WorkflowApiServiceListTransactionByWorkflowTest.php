@@ -12,7 +12,9 @@ use App\WorkflowFeature\Application\DTORequestValidator\WorkflowValidatorInterfa
 use App\WorkflowFeature\Domain\Entity\WorkflowTransition;
 use App\WorkflowFeature\Domain\Interactor\AddWorkflowStatusInteractor;
 use App\WorkflowFeature\Domain\Interactor\AddWorkflowTransitionInteractor;
+use App\WorkflowFeature\Domain\Interactor\AttachWorkflowToTeamInteractor;
 use App\WorkflowFeature\Domain\Interactor\CreateWorkflowInteractor;
+use App\WorkflowFeature\Domain\Interactor\DetachWorkflowFromTeamInteractor;
 use App\WorkflowFeature\Domain\Interactor\UpdateWorkflowInteractor;
 use App\WorkflowFeature\Domain\Interactor\UpdateWorkflowStatusInteractor;
 use App\WorkflowFeature\Domain\Interactor\UpdateWorkflowTransitionInteractor;
@@ -20,11 +22,13 @@ use App\WorkflowFeature\Domain\Port\ClockInterface;
 use App\WorkflowFeature\Domain\Port\DomainEventDispatcherInterface;
 use App\WorkflowFeature\Domain\Repository\WorkflowRepositoryInterface;
 use App\WorkflowFeature\Domain\Repository\WorkflowStatusRepositoryInterface;
+use App\WorkflowFeature\Domain\Repository\WorkflowTeamRepositoryInterface;
 use App\WorkflowFeature\Domain\Repository\WorkflowTransitionRepositoryInterface;
 use App\WorkflowFeature\Domain\ValueObject\TransitionName;
 use App\WorkflowFeature\Domain\ValueObject\WorkflowId;
 use App\WorkflowFeature\Domain\ValueObject\WorkflowStatusId;
 use App\WorkflowFeature\Domain\ValueObject\WorkflowTransitionId;
+use App\TeamFeatureApi\Service\TeamServiceInterface;
 use PHPUnit\Framework\TestCase;
 
 final class WorkflowApiServiceListTransactionByWorkflowTest extends TestCase
@@ -82,6 +86,7 @@ final class WorkflowApiServiceListTransactionByWorkflowTest extends TestCase
         // listTransactionByWorkflow() does not touch them, so their wiring is irrelevant here.
         $repository = $this->createStub(WorkflowRepositoryInterface::class);
         $statuses = $this->createStub(WorkflowStatusRepositoryInterface::class);
+        $workflowTeams = $this->createStub(WorkflowTeamRepositoryInterface::class);
         $dispatcher = $this->createStub(DomainEventDispatcherInterface::class);
         $clock = $this->createStub(ClockInterface::class);
         $validator = $this->createStub(WorkflowValidatorInterface::class);
@@ -93,13 +98,17 @@ final class WorkflowApiServiceListTransactionByWorkflowTest extends TestCase
             new UpdateWorkflowStatusInteractor($repository, $statuses, $dispatcher),
             new AddWorkflowTransitionInteractor($repository, $statuses, $transitions, $dispatcher, $clock),
             new UpdateWorkflowTransitionInteractor($repository, $statuses, $transitions, $dispatcher),
+            new AttachWorkflowToTeamInteractor($repository, $workflowTeams, $clock),
+            new DetachWorkflowFromTeamInteractor($repository, $workflowTeams),
             $repository,
             $statuses,
             $transitions,
+            $workflowTeams,
             new WorkflowDataMapper(),
             $validator,
             $this->createStub(DescriptionServiceInterface::class),
             $this->createStub(TagServiceInterface::class),
+            $this->createStub(TeamServiceInterface::class),
         );
     }
 }

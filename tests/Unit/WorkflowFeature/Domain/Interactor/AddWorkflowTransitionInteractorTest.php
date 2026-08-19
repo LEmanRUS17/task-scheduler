@@ -6,6 +6,7 @@ namespace App\Tests\Unit\WorkflowFeature\Domain\Interactor;
 
 use App\WorkflowFeature\Domain\Entity\Workflow;
 use App\WorkflowFeature\Domain\Entity\WorkflowStatus;
+use App\WorkflowFeature\Domain\Exception\WorkflowAccessDeniedException;
 use App\WorkflowFeature\Domain\Interactor\AddWorkflowTransitionInteractor;
 use App\WorkflowFeature\Domain\Port\ClockInterface;
 use App\WorkflowFeature\Domain\Port\DomainEventDispatcherInterface;
@@ -103,7 +104,7 @@ final class AddWorkflowTransitionInteractorTest extends TestCase
         $transitions->expects($this->once())->method('save');
 
         $this->buildInteractor($this->workflowsWithFound(), $this->statusesWithBothFound(), $transitions)
-            ->add($this->workflowId, $this->name, $this->from, $this->to);
+            ->add($this->workflowId, 'user-1', $this->name, $this->from, $this->to);
     }
 
     public function testAddDispatchesEvent(): void
@@ -116,7 +117,7 @@ final class AddWorkflowTransitionInteractorTest extends TestCase
             $this->statusesWithBothFound(),
             $this->transitionsWithNoConflict(),
             $dispatcher,
-        )->add($this->workflowId, $this->name, $this->from, $this->to);
+        )->add($this->workflowId, 'user-1', $this->name, $this->from, $this->to);
     }
 
     public function testAddReturnsTransition(): void
@@ -125,7 +126,7 @@ final class AddWorkflowTransitionInteractorTest extends TestCase
             $this->workflowsWithFound(),
             $this->statusesWithBothFound(),
             $this->transitionsWithNoConflict(),
-        )->add($this->workflowId, $this->name, $this->from, $this->to);
+        )->add($this->workflowId, 'user-1', $this->name, $this->from, $this->to);
 
         $this->assertInstanceOf(WorkflowTransition::class, $transition);
         $this->assertSame('close', $transition->name()->value());
@@ -145,7 +146,18 @@ final class AddWorkflowTransitionInteractorTest extends TestCase
             $workflows,
             $this->createStub(WorkflowStatusRepositoryInterface::class),
             $this->createStub(WorkflowTransitionRepositoryInterface::class),
-        )->add($this->workflowId, $this->name, $this->from, $this->to);
+        )->add($this->workflowId, 'user-1', $this->name, $this->from, $this->to);
+    }
+
+    public function testAddThrowsWhenCallerIsNotTheOwner(): void
+    {
+        $transitions = $this->createMock(WorkflowTransitionRepositoryInterface::class);
+        $transitions->expects($this->never())->method('save');
+
+        $this->expectException(WorkflowAccessDeniedException::class);
+
+        $this->buildInteractor($this->workflowsWithFound(), $this->statusesWithBothFound(), $transitions)
+            ->add($this->workflowId, 'user-2', $this->name, $this->from, $this->to);
     }
 
     public function testAddThrowsWhenFromStatusNotFound(): void
@@ -160,7 +172,7 @@ final class AddWorkflowTransitionInteractorTest extends TestCase
             $this->workflowsWithFound(),
             $statuses,
             $this->createStub(WorkflowTransitionRepositoryInterface::class),
-        )->add($this->workflowId, $this->name, $this->from, $this->to);
+        )->add($this->workflowId, 'user-1', $this->name, $this->from, $this->to);
     }
 
     public function testAddThrowsWhenToStatusNotFound(): void
@@ -175,7 +187,7 @@ final class AddWorkflowTransitionInteractorTest extends TestCase
             $this->workflowsWithFound(),
             $statuses,
             $this->createStub(WorkflowTransitionRepositoryInterface::class),
-        )->add($this->workflowId, $this->name, $this->from, $this->to);
+        )->add($this->workflowId, 'user-1', $this->name, $this->from, $this->to);
     }
 
     public function testAddThrowsWhenTransitionNameAlreadyExists(): void
@@ -187,6 +199,6 @@ final class AddWorkflowTransitionInteractorTest extends TestCase
         $this->expectExceptionMessageMatches('/already exists/');
 
         $this->buildInteractor($this->workflowsWithFound(), $this->statusesWithBothFound(), $transitions)
-            ->add($this->workflowId, $this->name, $this->from, $this->to);
+            ->add($this->workflowId, 'user-1', $this->name, $this->from, $this->to);
     }
 }

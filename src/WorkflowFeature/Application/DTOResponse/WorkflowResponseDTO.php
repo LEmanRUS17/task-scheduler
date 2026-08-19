@@ -15,6 +15,7 @@ final class WorkflowResponseDTO implements WorkflowResponseInterface
         private readonly \DateTimeImmutable $createdAt,
         private readonly bool $isDefault = false,
         private readonly ?string $description = null,
+        private readonly ?string $teamTitle = null,
     ) {
     }
 
@@ -46,5 +47,10 @@ final class WorkflowResponseDTO implements WorkflowResponseInterface
     public function getDescription(): ?string
     {
         return $this->description;
+    }
+
+    public function getTeamTitle(): ?string
+    {
+        return $this->teamTitle;
     }
 }

@@ -27,7 +27,15 @@ interface WorkflowServiceInterface
 
     public function getDefaultForUser(string $userId): ?WorkflowResponseInterface;
 
-    public function update(string $id, UpdateWorkflowRequestInterface $request): WorkflowResponseInterface;
+    /**
+     * @throws \InvalidArgumentException if $request fails validation
+     * @throws \DomainException if the workflow does not exist or $userId is not its creator
+     */
+    public function update(
+        string $id,
+        UpdateWorkflowRequestInterface $request,
+        string $userId,
+    ): WorkflowResponseInterface;
 
     public function getById(string $id): ?WorkflowResponseInterface;
 
@@ -35,15 +43,19 @@ interface WorkflowServiceInterface
     public function getList(): array;
 
     /**
-     * Returns a single page of workflows ordered by creation date (newest first), with the
-     * caller's own default workflow pinned first on the initial page (offset 0).
+     * Returns a single page of the caller's own workflows ordered by creation date (newest
+     * first), with the caller's own default workflow pinned first on the initial page (offset 0).
+     *
+     * When $teamId is given, the caller must be a member of that team (verified by the caller of
+     * this method); the team's workflows attached via {@see attachToTeam()} are additionally
+     * surfaced on the initial page (offset 0), deduplicated against the caller's own workflows.
      *
      * @return WorkflowResponseInterface[]
      */
-    public function getPage(int $limit, int $offset, string $userId): array;
+    public function getPage(int $limit, int $offset, string $userId, ?string $teamId = null): array;
 
     /** Counts the same set as {@see getPage()}, including the caller's own default workflow if any. */
-    public function countAll(string $userId): int;
+    public function countAll(string $userId, ?string $teamId = null): int;
 
     /**
      * Returns workflows for the given ids, preserving the order of the ids.
@@ -53,12 +65,25 @@ interface WorkflowServiceInterface
      */
     public function getByIds(array $ids): array;
 
-    public function addStatus(string $workflowId, AddStatusRequestInterface $request): WorkflowStatusResponseInterface;
+    /**
+     * @throws \InvalidArgumentException if $request fails validation
+     * @throws \DomainException if the workflow does not exist or $userId is not its creator
+     */
+    public function addStatus(
+        string $workflowId,
+        AddStatusRequestInterface $request,
+        string $userId,
+    ): WorkflowStatusResponseInterface;
 
+    /**
+     * @throws \InvalidArgumentException if $request fails validation
+     * @throws \DomainException if the workflow does not exist or $userId is not its creator
+     */
     public function updateStatus(
         string $workflowId,
         string $statusId,
         UpdateStatusRequestInterface $request,
+        string $userId,
     ): WorkflowStatusResponseInterface;
 
     public function getStatusById(string $workflowId, string $statusId): ?WorkflowStatusResponseInterface;
@@ -66,15 +91,25 @@ interface WorkflowServiceInterface
     /** @return WorkflowStatusResponseInterface[] */
     public function getStatuses(string $workflowId): array;
 
+    /**
+     * @throws \InvalidArgumentException if $request fails validation
+     * @throws \DomainException if the workflow does not exist or $userId is not its creator
+     */
     public function addTransition(
         string $workflowId,
         AddTransitionRequestInterface $request,
+        string $userId,
     ): WorkflowTransitionResponseInterface;
 
+    /**
+     * @throws \InvalidArgumentException if $request fails validation
+     * @throws \DomainException if the workflow does not exist or $userId is not its creator
+     */
     public function updateTransition(
         string $workflowId,
         string $transitionId,
         UpdateTransitionRequestInterface $request,
+        string $userId,
     ): WorkflowTransitionResponseInterface;
 
     public function getTransitionById(
@@ -90,4 +125,21 @@ interface WorkflowServiceInterface
      * subscriptions, along with the total number of transitions.
      */
     public function listTransactionByWorkflow(string $workflowId): WorkflowListMiniResponseInterface;
+
+    /**
+     * Attaches a workflow to a team, making it available for the team's members to pick.
+     * Idempotent when already attached.
+     *
+     * @throws \DomainException if the workflow does not exist, $userId is not its creator, or
+     *     the workflow is the caller's default workflow
+     */
+    public function attachToTeam(string $workflowId, string $teamId, string $userId): void;
+
+    /**
+     * Detaches a workflow from a team; existing tasks created with it keep their reference.
+     *
+     * @throws \DomainException if the workflow does not exist, $userId is not its creator, or it
+     *     is not attached to the team
+     */
+    public function detachFromTeam(string $workflowId, string $teamId, string $userId): void;
 }

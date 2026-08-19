@@ -59,8 +59,11 @@ final class WorkflowDataMapper
         );
     }
 
-    public function workflowToResponse(Workflow $workflow, ?string $description = null): WorkflowResponseDTO
-    {
+    public function workflowToResponse(
+        Workflow $workflow,
+        ?string $description = null,
+        ?string $teamTitle = null,
+    ): WorkflowResponseDTO {
         return new WorkflowResponseDTO(
             $workflow->id()->value(),
             $workflow->title()->value(),
@@ -68,6 +71,7 @@ final class WorkflowDataMapper
             $workflow->createdAt(),
             $workflow->isDefault(),
             $description,
+            $teamTitle,
         );
     }
 

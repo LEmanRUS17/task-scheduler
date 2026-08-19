@@ -17,4 +17,7 @@ interface WorkflowResponseInterface
     public function isDefault(): bool;
 
     public function getDescription(): ?string;
+
+    /** Name of the team this workflow was returned for, when obtained via team attachment. */
+    public function getTeamTitle(): ?string;
 }
