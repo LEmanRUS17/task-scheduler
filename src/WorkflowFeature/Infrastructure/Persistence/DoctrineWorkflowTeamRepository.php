@@ -37,6 +37,13 @@ final class DoctrineWorkflowTeamRepository implements WorkflowTeamRepositoryInte
         ]);
     }
 
+    public function findByWorkflowId(WorkflowId $workflowId): array
+    {
+        return $this->entityManager->getRepository(WorkflowTeam::class)->findBy([
+            'workflowId' => $workflowId->value(),
+        ]);
+    }
+
     public function delete(WorkflowTeam $link): void
     {
         $this->entityManager->remove($link);

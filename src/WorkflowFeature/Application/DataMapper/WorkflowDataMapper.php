@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\WorkflowFeature\Application\DataMapper;
 
+use App\WorkflowFeature\Application\DTOResponse\AttachedTeamResponseDTO;
+use App\WorkflowFeature\Application\DTOResponse\TeamWorkflowResponseDTO;
 use App\WorkflowFeature\Application\DTOResponse\WorkflowListMiniItemResponseDTO;
 use App\WorkflowFeature\Application\DTOResponse\WorkflowListMiniResponseDTO;
 use App\WorkflowFeature\Application\DTOResponse\WorkflowResponseDTO;
@@ -75,6 +77,28 @@ final class WorkflowDataMapper
             $teamTitle,
             $inTeam,
         );
+    }
+
+    public function workflowToTeamWorkflowResponse(
+        Workflow $workflow,
+        \DateTimeImmutable $attachedAt,
+        int $taskCount,
+    ): TeamWorkflowResponseDTO {
+        return new TeamWorkflowResponseDTO(
+            $workflow->id()->value(),
+            $workflow->title()->value(),
+            $workflow->createdBy(),
+            $attachedAt,
+            $taskCount,
+        );
+    }
+
+    public function linkToAttachedTeamResponse(
+        string $teamId,
+        ?string $teamTitle,
+        \DateTimeImmutable $attachedAt,
+    ): AttachedTeamResponseDTO {
+        return new AttachedTeamResponseDTO($teamId, $teamTitle, $attachedAt);
     }
 
     public function statusToResponse(WorkflowStatus $status, ?string $description = null): WorkflowStatusResponseDTO

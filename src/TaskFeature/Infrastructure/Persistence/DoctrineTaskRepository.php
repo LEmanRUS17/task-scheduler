@@ -78,6 +78,30 @@ final class DoctrineTaskRepository implements TaskRepositoryInterface
         return $this->entityManager->getRepository(Task::class)->findBy(['teamId' => $teamId]);
     }
 
+    public function countByWorkflowIdsAndTeamId(array $workflowIds, string $teamId): array
+    {
+        if ($workflowIds === []) {
+            return [];
+        }
+
+        $rows = $this->entityManager->createQuery(
+            'SELECT t.workflowDefinitionTitle AS workflowId, COUNT(t.id) AS taskCount
+             FROM ' . Task::class . ' t
+             WHERE t.teamId = :teamId AND t.workflowDefinitionTitle IN (:workflowIds)
+             GROUP BY t.workflowDefinitionTitle',
+        )
+            ->setParameter('teamId', $teamId)
+            ->setParameter('workflowIds', $workflowIds)
+            ->getResult();
+
+        $counts = [];
+        foreach ($rows as $row) {
+            $counts[$row['workflowId']] = (int) $row['taskCount'];
+        }
+
+        return $counts;
+    }
+
     public function findById(TaskId $id): ?Task
     {
         return $this->entityManager->find(Task::class, $id->value());

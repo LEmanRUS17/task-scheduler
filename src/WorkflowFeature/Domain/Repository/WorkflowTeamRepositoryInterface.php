@@ -16,5 +16,8 @@ interface WorkflowTeamRepositoryInterface
     /** @return WorkflowTeam[] */
     public function findByTeamId(string $teamId): array;
 
+    /** @return WorkflowTeam[] */
+    public function findByWorkflowId(WorkflowId $workflowId): array;
+
     public function delete(WorkflowTeam $link): void;
 }

@@ -10,6 +10,8 @@ use App\WorkflowFeatureApi\DTORequest\CreateWorkflowRequestInterface;
 use App\WorkflowFeatureApi\DTORequest\UpdateStatusRequestInterface;
 use App\WorkflowFeatureApi\DTORequest\UpdateTransitionRequestInterface;
 use App\WorkflowFeatureApi\DTORequest\UpdateWorkflowRequestInterface;
+use App\WorkflowFeatureApi\DTOResponse\AttachedTeamResponseInterface;
+use App\WorkflowFeatureApi\DTOResponse\TeamWorkflowResponseInterface;
 use App\WorkflowFeatureApi\DTOResponse\WorkflowListMiniResponseInterface;
 use App\WorkflowFeatureApi\DTOResponse\WorkflowResponseInterface;
 use App\WorkflowFeatureApi\DTOResponse\WorkflowStatusResponseInterface;
@@ -155,4 +157,20 @@ interface WorkflowServiceInterface
      *     is not attached to the team
      */
     public function detachFromTeam(string $workflowId, string $teamId, string $userId): void;
+
+    /**
+     * Returns every workflow attached to a team, together with who attached it (always the
+     * workflow's owner, see {@see attachToTeam()}) and how many of the team's tasks currently use
+     * it, newest attachment first.
+     *
+     * @return TeamWorkflowResponseInterface[]
+     */
+    public function getTeamWorkflows(string $teamId): array;
+
+    /**
+     * Returns every team a workflow is attached to, newest attachment first.
+     *
+     * @return AttachedTeamResponseInterface[]
+     */
+    public function getWorkflowTeams(string $workflowId): array;
 }

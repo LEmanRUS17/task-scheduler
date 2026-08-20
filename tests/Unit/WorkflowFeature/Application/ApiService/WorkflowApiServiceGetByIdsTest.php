@@ -30,6 +30,7 @@ use App\WorkflowFeature\Domain\Repository\WorkflowTransitionRepositoryInterface;
 use App\WorkflowFeature\Domain\ValueObject\WorkflowId;
 use App\WorkflowFeature\Domain\ValueObject\WorkflowTitle;
 use App\TeamFeatureApi\Service\TeamServiceInterface;
+use App\TaskFeatureApi\Service\TaskWorkflowUsageServiceInterface;
 use PHPUnit\Framework\TestCase;
 
 final class WorkflowApiServiceGetByIdsTest extends TestCase
@@ -149,6 +150,7 @@ final class WorkflowApiServiceGetByIdsTest extends TestCase
             $this->createStub(DescriptionServiceInterface::class),
             $tagService,
             $this->createStub(TeamServiceInterface::class),
+            $this->createStub(TaskWorkflowUsageServiceInterface::class),
         );
     }
 

@@ -31,6 +31,15 @@ interface TaskRepositoryInterface
     /** @return Task[] */
     public function findByTeamId(string $teamId): array;
 
+    /**
+     * Counts the team's tasks per workflow, for the given workflow ids. Workflow ids with no
+     * tasks are omitted from the result.
+     *
+     * @param list<string> $workflowIds
+     * @return array<string, int> workflow id => task count
+     */
+    public function countByWorkflowIdsAndTeamId(array $workflowIds, string $teamId): array;
+
     public function findById(TaskId $id): ?Task;
 
     public function delete(TaskId $id): void;

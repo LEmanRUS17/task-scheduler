@@ -34,6 +34,7 @@ use App\WorkflowFeature\Domain\ValueObject\WorkflowTransitionId;
 use App\WorkflowFeature\Domain\ValueObject\WorkflowTitle;
 use App\DescriptionFeatureApi\Contract\DescriptionServiceInterface;
 use App\TagFeatureApi\Contract\TagServiceInterface;
+use App\TaskFeatureApi\Service\TaskWorkflowUsageServiceInterface;
 use App\WorkflowFeature\Domain\Entity\Workflow;
 use App\WorkflowFeature\Domain\Entity\WorkflowStatus;
 use App\WorkflowFeature\Domain\Entity\WorkflowTransition;
@@ -65,6 +66,7 @@ final class WorkflowApiService implements WorkflowServiceInterface
         private readonly DescriptionServiceInterface $descriptions,
         private readonly TagServiceInterface $tagService,
         private readonly TeamServiceInterface $teamService,
+        private readonly TaskWorkflowUsageServiceInterface $taskWorkflowUsage,
     ) {
     }
 
@@ -477,5 +479,60 @@ final class WorkflowApiService implements WorkflowServiceInterface
     public function detachFromTeam(string $workflowId, string $teamId, string $userId): void
     {
         $this->detachFromTeamInteractor->detach(WorkflowId::fromString($workflowId), $teamId, $userId);
+    }
+
+    public function getTeamWorkflows(string $teamId): array
+    {
+        $links = $this->workflowTeams->findByTeamId($teamId);
+
+        if ($links === []) {
+            return [];
+        }
+
+        $workflowIds = array_map(static fn(WorkflowTeam $link) => $link->workflowId()->value(), $links);
+
+        $workflowsById = [];
+        foreach ($this->workflows->findByIds($workflowIds) as $workflow) {
+            $workflowsById[$workflow->id()->value()] = $workflow;
+        }
+
+        $taskCounts = $this->taskWorkflowUsage->countByWorkflowIds($workflowIds, $teamId);
+
+        $result = [];
+        foreach ($links as $link) {
+            $workflow = $workflowsById[$link->workflowId()->value()] ?? null;
+
+            if ($workflow === null) {
+                continue;
+            }
+
+            $result[] = $this->dataMapper->workflowToTeamWorkflowResponse(
+                $workflow,
+                $link->attachedAt(),
+                $taskCounts[$workflow->id()->value()] ?? 0,
+            );
+        }
+
+        usort($result, static fn($a, $b) => $b->getAttachedAt() <=> $a->getAttachedAt());
+
+        return $result;
+    }
+
+    public function getWorkflowTeams(string $workflowId): array
+    {
+        $links = $this->workflowTeams->findByWorkflowId(WorkflowId::fromString($workflowId));
+
+        $result = array_map(
+            fn(WorkflowTeam $link) => $this->dataMapper->linkToAttachedTeamResponse(
+                $link->teamId(),
+                $this->teamService->getById($link->teamId())?->getTitle(),
+                $link->attachedAt(),
+            ),
+            $links,
+        );
+
+        usort($result, static fn($a, $b) => $b->getAttachedAt() <=> $a->getAttachedAt());
+
+        return $result;
     }
 }

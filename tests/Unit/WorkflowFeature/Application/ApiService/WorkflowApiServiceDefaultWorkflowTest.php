@@ -29,6 +29,7 @@ use App\WorkflowFeature\Domain\ValueObject\WorkflowId;
 use App\WorkflowFeature\Domain\ValueObject\WorkflowTitle;
 use App\TeamFeatureApi\DTOResponse\TeamDataResponseInterface;
 use App\TeamFeatureApi\Service\TeamServiceInterface;
+use App\TaskFeatureApi\Service\TaskWorkflowUsageServiceInterface;
 use PHPUnit\Framework\TestCase;
 
 final class WorkflowApiServiceDefaultWorkflowTest extends TestCase
@@ -363,6 +364,176 @@ final class WorkflowApiServiceDefaultWorkflowTest extends TestCase
         );
     }
 
+    public function testGetTeamWorkflowsReturnsEmptyArrayWhenNoWorkflowsAttached(): void
+    {
+        $workflowTeams = $this->createStub(WorkflowTeamRepositoryInterface::class);
+        $workflowTeams->method('findByTeamId')->willReturn([]);
+
+        $repository = $this->createMock(WorkflowRepositoryInterface::class);
+        $repository->expects($this->never())->method('findByIds');
+
+        $taskService = $this->createMock(TaskWorkflowUsageServiceInterface::class);
+        $taskService->expects($this->never())->method('countByWorkflowIds');
+
+        $results = $this->makeService($repository, workflowTeams: $workflowTeams, taskService: $taskService)
+            ->getTeamWorkflows('team-1');
+
+        $this->assertSame([], $results);
+    }
+
+    public function testGetTeamWorkflowsReportsOwnerAsAttacherAndIncludesTaskCount(): void
+    {
+        $workflow = $this->makeWorkflow('Bug flow', createdBy: 'owner-1');
+        $attachedAt = new \DateTimeImmutable('2026-01-01 10:00:00');
+
+        $repository = $this->createStub(WorkflowRepositoryInterface::class);
+        $repository->method('findByIds')->willReturn([$workflow]);
+
+        $workflowTeams = $this->createStub(WorkflowTeamRepositoryInterface::class);
+        $workflowTeams->method('findByTeamId')->willReturn([
+            WorkflowTeam::attach($workflow->id(), 'team-1', $attachedAt),
+        ]);
+
+        $taskService = $this->createMock(TaskWorkflowUsageServiceInterface::class);
+        $taskService->expects($this->once())
+            ->method('countByWorkflowIds')
+            ->with([$workflow->id()->value()], 'team-1')
+            ->willReturn([$workflow->id()->value() => 4]);
+
+        $results = $this->makeService($repository, workflowTeams: $workflowTeams, taskService: $taskService)
+            ->getTeamWorkflows('team-1');
+
+        $this->assertCount(1, $results);
+        $this->assertSame($workflow->id()->value(), $results[0]->getWorkflowId());
+        $this->assertSame('Bug flow', $results[0]->getTitle());
+        $this->assertSame('owner-1', $results[0]->getAttachedBy());
+        $this->assertEquals($attachedAt, $results[0]->getAttachedAt());
+        $this->assertSame(4, $results[0]->getTaskCount());
+    }
+
+    public function testGetTeamWorkflowsDefaultsTaskCountToZeroWhenNoTasksUseIt(): void
+    {
+        $workflow = $this->makeWorkflow('Bug flow', createdBy: 'owner-1');
+
+        $repository = $this->createStub(WorkflowRepositoryInterface::class);
+        $repository->method('findByIds')->willReturn([$workflow]);
+
+        $workflowTeams = $this->createStub(WorkflowTeamRepositoryInterface::class);
+        $workflowTeams->method('findByTeamId')->willReturn([
+            WorkflowTeam::attach($workflow->id(), 'team-1', new \DateTimeImmutable('2026-01-01')),
+        ]);
+
+        $taskService = $this->createStub(TaskWorkflowUsageServiceInterface::class);
+        $taskService->method('countByWorkflowIds')->willReturn([]);
+
+        $results = $this->makeService($repository, workflowTeams: $workflowTeams, taskService: $taskService)
+            ->getTeamWorkflows('team-1');
+
+        $this->assertSame(0, $results[0]->getTaskCount());
+    }
+
+    public function testGetTeamWorkflowsOrdersByAttachedAtNewestFirst(): void
+    {
+        $older = $this->makeWorkflow('Older flow', createdBy: 'owner-1');
+        $newer = $this->makeWorkflow('Newer flow', createdBy: 'owner-2');
+
+        $repository = $this->createStub(WorkflowRepositoryInterface::class);
+        $repository->method('findByIds')->willReturn([$older, $newer]);
+
+        $workflowTeams = $this->createStub(WorkflowTeamRepositoryInterface::class);
+        $workflowTeams->method('findByTeamId')->willReturn([
+            WorkflowTeam::attach($older->id(), 'team-1', new \DateTimeImmutable('2025-01-01')),
+            WorkflowTeam::attach($newer->id(), 'team-1', new \DateTimeImmutable('2026-01-01')),
+        ]);
+
+        $taskService = $this->createStub(TaskWorkflowUsageServiceInterface::class);
+        $taskService->method('countByWorkflowIds')->willReturn([]);
+
+        $results = $this->makeService($repository, workflowTeams: $workflowTeams, taskService: $taskService)
+            ->getTeamWorkflows('team-1');
+
+        $this->assertSame(['Newer flow', 'Older flow'], array_map(static fn($r) => $r->getTitle(), $results));
+    }
+
+    public function testGetWorkflowTeamsReturnsEmptyArrayWhenNotAttachedToAnyTeam(): void
+    {
+        $workflow = $this->makeWorkflow('Bug flow');
+
+        $workflowTeams = $this->createStub(WorkflowTeamRepositoryInterface::class);
+        $workflowTeams->method('findByWorkflowId')->willReturn([]);
+
+        $repository = $this->createStub(WorkflowRepositoryInterface::class);
+        $results = $this->makeService($repository, workflowTeams: $workflowTeams)
+            ->getWorkflowTeams($workflow->id()->value());
+
+        $this->assertSame([], $results);
+    }
+
+    public function testGetWorkflowTeamsIncludesTeamTitleFromTeamService(): void
+    {
+        $workflow = $this->makeWorkflow('Bug flow');
+        $attachedAt = new \DateTimeImmutable('2026-01-01 10:00:00');
+
+        $workflowTeams = $this->createStub(WorkflowTeamRepositoryInterface::class);
+        $workflowTeams->method('findByWorkflowId')->willReturn([
+            WorkflowTeam::attach($workflow->id(), 'team-1', $attachedAt),
+        ]);
+
+        $team = $this->createStub(TeamDataResponseInterface::class);
+        $team->method('getTitle')->willReturn('Engineering');
+        $teamService = $this->createMock(TeamServiceInterface::class);
+        $teamService->expects($this->once())->method('getById')->with('team-1')->willReturn($team);
+
+        $results = $this->makeService(
+            $this->createStub(WorkflowRepositoryInterface::class),
+            workflowTeams: $workflowTeams,
+            teamService: $teamService,
+        )->getWorkflowTeams($workflow->id()->value());
+
+        $this->assertCount(1, $results);
+        $this->assertSame('team-1', $results[0]->getTeamId());
+        $this->assertSame('Engineering', $results[0]->getTeamTitle());
+        $this->assertEquals($attachedAt, $results[0]->getAttachedAt());
+    }
+
+    public function testGetWorkflowTeamsReturnsNullTitleWhenTeamNoLongerExists(): void
+    {
+        $workflow = $this->makeWorkflow('Bug flow');
+
+        $workflowTeams = $this->createStub(WorkflowTeamRepositoryInterface::class);
+        $workflowTeams->method('findByWorkflowId')->willReturn([
+            WorkflowTeam::attach($workflow->id(), 'team-1', new \DateTimeImmutable('2026-01-01')),
+        ]);
+
+        $teamService = $this->createStub(TeamServiceInterface::class);
+        $teamService->method('getById')->willReturn(null);
+
+        $results = $this->makeService(
+            $this->createStub(WorkflowRepositoryInterface::class),
+            workflowTeams: $workflowTeams,
+            teamService: $teamService,
+        )->getWorkflowTeams($workflow->id()->value());
+
+        $this->assertNull($results[0]->getTeamTitle());
+    }
+
+    public function testGetWorkflowTeamsOrdersByAttachedAtNewestFirst(): void
+    {
+        $workflow = $this->makeWorkflow('Bug flow');
+
+        $workflowTeams = $this->createStub(WorkflowTeamRepositoryInterface::class);
+        $workflowTeams->method('findByWorkflowId')->willReturn([
+            WorkflowTeam::attach($workflow->id(), 'team-old', new \DateTimeImmutable('2025-01-01')),
+            WorkflowTeam::attach($workflow->id(), 'team-new', new \DateTimeImmutable('2026-01-01')),
+        ]);
+
+        $repository = $this->createStub(WorkflowRepositoryInterface::class);
+        $results = $this->makeService($repository, workflowTeams: $workflowTeams)
+            ->getWorkflowTeams($workflow->id()->value());
+
+        $this->assertSame(['team-new', 'team-old'], array_map(static fn($r) => $r->getTeamId(), $results));
+    }
+
     private function makeWorkflow(string $title, bool $isDefault = false, string $createdBy = 'user-1'): Workflow
     {
         return Workflow::create(
@@ -379,11 +550,13 @@ final class WorkflowApiServiceDefaultWorkflowTest extends TestCase
         ?WorkflowStatusRepositoryInterface $statuses = null,
         ?WorkflowTeamRepositoryInterface $workflowTeams = null,
         ?TeamServiceInterface $teamService = null,
+        ?TaskWorkflowUsageServiceInterface $taskService = null,
     ): WorkflowApiService {
         $statuses ??= $this->createStub(WorkflowStatusRepositoryInterface::class);
         $transitions = $this->createStub(WorkflowTransitionRepositoryInterface::class);
         $workflowTeams ??= $this->createStub(WorkflowTeamRepositoryInterface::class);
         $teamService ??= $this->createStub(TeamServiceInterface::class);
+        $taskService ??= $this->createStub(TaskWorkflowUsageServiceInterface::class);
         $dispatcher = $this->createStub(DomainEventDispatcherInterface::class);
         $clock = $this->createStub(ClockInterface::class);
         $clock->method('now')->willReturn(new \DateTimeImmutable('2026-01-01 12:00:00'));
@@ -406,6 +579,7 @@ final class WorkflowApiServiceDefaultWorkflowTest extends TestCase
             $this->createStub(DescriptionServiceInterface::class),
             $this->createStub(TagServiceInterface::class),
             $teamService,
+            $taskService,
         );
     }
 }

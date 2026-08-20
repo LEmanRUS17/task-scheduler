@@ -29,6 +29,7 @@ use App\WorkflowFeature\Domain\ValueObject\WorkflowId;
 use App\WorkflowFeature\Domain\ValueObject\WorkflowStatusId;
 use App\WorkflowFeature\Domain\ValueObject\WorkflowTransitionId;
 use App\TeamFeatureApi\Service\TeamServiceInterface;
+use App\TaskFeatureApi\Service\TaskWorkflowUsageServiceInterface;
 use PHPUnit\Framework\TestCase;
 
 final class WorkflowApiServiceListTransactionByWorkflowTest extends TestCase
@@ -109,6 +110,7 @@ final class WorkflowApiServiceListTransactionByWorkflowTest extends TestCase
             $this->createStub(DescriptionServiceInterface::class),
             $this->createStub(TagServiceInterface::class),
             $this->createStub(TeamServiceInterface::class),
+            $this->createStub(TaskWorkflowUsageServiceInterface::class),
         );
     }
 }
