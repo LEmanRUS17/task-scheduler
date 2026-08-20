@@ -97,6 +97,9 @@ services:
     App\TaskFeatureApi\Service\TaskServiceInterface:
         class: App\TaskFeature\Application\ApiService\TaskApiService
 
+    App\TaskFeatureApi\Service\TaskWorkflowUsageServiceInterface:
+        class: App\TaskFeature\Application\ApiService\TaskWorkflowUsageService
+
     App\TaskFeature\Domain\Port\ClockInterface:
         class: App\TaskFeature\Infrastructure\Clock\SystemClock
 
