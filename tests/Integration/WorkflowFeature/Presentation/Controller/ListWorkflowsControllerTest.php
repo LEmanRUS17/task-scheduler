@@ -13,6 +13,7 @@ use App\UserFeature\Domain\ValueObject\Email;
 use App\UserFeature\Domain\ValueObject\HashedPassword;
 use App\UserFeature\Domain\ValueObject\UserId;
 use App\UserFeature\Infrastructure\Security\SecurityUser;
+use App\WorkflowFeature\Domain\Port\TeamMembershipInterface;
 use App\WorkflowFeatureApi\DTOResponse\WorkflowResponseInterface;
 use App\WorkflowFeatureApi\Service\WorkflowServiceInterface;
 use Lexik\Bundle\JWTAuthenticationBundle\Services\JWTTokenManagerInterface;
@@ -41,8 +42,8 @@ final class ListWorkflowsControllerTest extends WebTestCase
         $workflowService = $this->createMock(WorkflowServiceInterface::class);
         $workflowService->expects($this->once())
             ->method('getPage')
-            ->with(10, 0)
-            ->willReturn([$this->makeWorkflow('wf-1', 'Bug flow')]);
+            ->with(10, 0, self::USER_ID, null)
+            ->willReturn([$this->makeWorkflow('wf-1', 'Bug flow', isDefault: true)]);
         $workflowService->method('countAll')->willReturn(1);
         $workflowService->expects($this->never())->method('getByIds');
         static::getContainer()->set(WorkflowServiceInterface::class, $workflowService);
@@ -71,6 +72,7 @@ final class ListWorkflowsControllerTest extends WebTestCase
         $this->assertCount(1, $body['workflow']);
         $this->assertSame('wf-1', $body['workflow'][0]['id']);
         $this->assertSame('Bug flow', $body['workflow'][0]['title']);
+        $this->assertTrue($body['workflow'][0]['isDefault']);
         $this->assertArrayNotHasKey('description', $body['workflow'][0]);
         $this->assertSame(
             [
@@ -130,7 +132,7 @@ final class ListWorkflowsControllerTest extends WebTestCase
         $workflowService = $this->createMock(WorkflowServiceInterface::class);
         $workflowService->expects($this->once())
             ->method('getPage')
-            ->with($expected, 0)
+            ->with($expected, 0, self::USER_ID, null)
             ->willReturn([]);
         $workflowService->method('countAll')->willReturn(0);
         static::getContainer()->set(WorkflowServiceInterface::class, $workflowService);
@@ -154,7 +156,7 @@ final class ListWorkflowsControllerTest extends WebTestCase
         $workflowService = $this->createMock(WorkflowServiceInterface::class);
         $workflowService->expects($this->once())
             ->method('getPage')
-            ->with(20, 40) // page 3, limit 20 => offset 40
+            ->with(20, 40, self::USER_ID, null) // page 3, limit 20 => offset 40
             ->willReturn([]);
         $workflowService->method('countAll')->willReturn(45);
         static::getContainer()->set(WorkflowServiceInterface::class, $workflowService);
@@ -169,6 +171,66 @@ final class ListWorkflowsControllerTest extends WebTestCase
         $this->assertSame(20, $body['pagination']['limit']);
         $this->assertSame(3, $body['pagination']['pages']); // ceil(45 / 20)
         $this->assertSame(45, $body['count']);
+    }
+
+    public function testTeamIdIsRejectedWhenCallerIsNotAMember(): void
+    {
+        $user = $this->makeUser();
+        $client = static::createClient();
+        $this->stubUserRepository($user);
+
+        $membership = $this->createMock(TeamMembershipInterface::class);
+        $membership->expects($this->once())
+            ->method('isMember')
+            ->with('team-1', self::USER_ID)
+            ->willReturn(false);
+        static::getContainer()->set(TeamMembershipInterface::class, $membership);
+
+        $workflowService = $this->createMock(WorkflowServiceInterface::class);
+        $workflowService->expects($this->never())->method('getPage');
+        static::getContainer()->set(WorkflowServiceInterface::class, $workflowService);
+
+        $client->request('GET', '/workflows?teamId=team-1', server: [
+            'HTTP_AUTHORIZATION' => 'Bearer ' . $this->generateToken($user),
+        ]);
+
+        $this->assertResponseStatusCodeSame(Response::HTTP_FORBIDDEN);
+    }
+
+    public function testTeamIdIsPassedThroughAndTeamTitleIsReturnedWhenCallerIsAMember(): void
+    {
+        $user = $this->makeUser();
+        $client = static::createClient();
+        $this->stubUserRepository($user);
+
+        $membership = $this->createStub(TeamMembershipInterface::class);
+        $membership->method('isMember')->willReturn(true);
+        static::getContainer()->set(TeamMembershipInterface::class, $membership);
+
+        $workflow = $this->makeWorkflow('wf-1', 'Shared flow', teamTitle: 'Engineering');
+
+        $workflowService = $this->createMock(WorkflowServiceInterface::class);
+        $workflowService->expects($this->once())
+            ->method('getPage')
+            ->with(10, 0, self::USER_ID, 'team-1')
+            ->willReturn([$workflow]);
+        $workflowService->expects($this->once())
+            ->method('countAll')
+            ->with(self::USER_ID, 'team-1')
+            ->willReturn(1);
+        static::getContainer()->set(WorkflowServiceInterface::class, $workflowService);
+
+        $tagService = $this->createStub(TagServiceInterface::class);
+        $tagService->method('getEntityTagsByIds')->willReturn([]);
+        static::getContainer()->set(TagServiceInterface::class, $tagService);
+
+        $client->request('GET', '/workflows?teamId=team-1', server: [
+            'HTTP_AUTHORIZATION' => 'Bearer ' . $this->generateToken($user),
+        ]);
+
+        $this->assertResponseIsSuccessful();
+        $body = json_decode($client->getResponse()->getContent(), true);
+        $this->assertSame('Engineering', $body['workflow'][0]['teamTitle']);
     }
 
     public function testShortQueryFallsBackToList(): void
@@ -203,7 +265,7 @@ final class ListWorkflowsControllerTest extends WebTestCase
         $search = $this->createMock(SearchServiceInterface::class);
         $search->expects($this->once())
             ->method('searchWorkflows')
-            ->with('flow', self::USER_ID, false, 10, 0)
+            ->with('flow', self::USER_ID, 10, 0)
             ->willReturn(['ids' => ['wf-2', 'wf-1'], 'total' => 2]);
         static::getContainer()->set(SearchServiceInterface::class, $search);
 
@@ -249,7 +311,7 @@ final class ListWorkflowsControllerTest extends WebTestCase
         $search = $this->createMock(SearchServiceInterface::class);
         $search->expects($this->once())
             ->method('searchWorkflows')
-            ->with('flow', self::USER_ID, true, 20, 20)
+            ->with('flow', self::USER_ID, 20, 20)
             ->willReturn(['ids' => [], 'total' => 37]);
         static::getContainer()->set(SearchServiceInterface::class, $search);
 
@@ -257,7 +319,7 @@ final class ListWorkflowsControllerTest extends WebTestCase
         $workflowService->method('getByIds')->willReturn([]);
         static::getContainer()->set(WorkflowServiceInterface::class, $workflowService);
 
-        $client->request('GET', '/workflows?q=flow&owner=true&page=2&limit=20', server: [
+        $client->request('GET', '/workflows?q=flow&page=2&limit=20', server: [
             'HTTP_AUTHORIZATION' => 'Bearer ' . $this->generateToken($user),
         ]);
 
@@ -277,14 +339,20 @@ final class ListWorkflowsControllerTest extends WebTestCase
         return $tag;
     }
 
-    private function makeWorkflow(string $id, string $title): WorkflowResponseInterface
-    {
+    private function makeWorkflow(
+        string $id,
+        string $title,
+        bool $isDefault = false,
+        ?string $teamTitle = null,
+    ): WorkflowResponseInterface {
         $workflow = $this->createStub(WorkflowResponseInterface::class);
         $workflow->method('getId')->willReturn($id);
         $workflow->method('getTitle')->willReturn($title);
         $workflow->method('getCreatedBy')->willReturn(self::USER_ID);
         $workflow->method('getCreatedAt')->willReturn(new \DateTimeImmutable('2024-01-01 00:00:00'));
         $workflow->method('getDescription')->willReturn(null);
+        $workflow->method('isDefault')->willReturn($isDefault);
+        $workflow->method('getTeamTitle')->willReturn($teamTitle);
 
         return $workflow;
     }

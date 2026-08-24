@@ -7,6 +7,7 @@ namespace App\SearchFeature\Application\ApiService;
 use App\SearchFeature\Domain\Port\TagSearchRepositoryInterface;
 use App\SearchFeature\Domain\Port\TaskSearchRepositoryInterface;
 use App\SearchFeature\Domain\Port\TeamSearchRepositoryInterface;
+use App\SearchFeature\Domain\Port\UserSearchRepositoryInterface;
 use App\SearchFeature\Domain\Port\WorkflowSearchRepositoryInterface;
 use App\SearchFeatureApi\Contract\SearchServiceInterface;
 
@@ -17,6 +18,7 @@ final class SearchApiService implements SearchServiceInterface
         private readonly TeamSearchRepositoryInterface $teamRepository,
         private readonly WorkflowSearchRepositoryInterface $workflowRepository,
         private readonly TagSearchRepositoryInterface $tagRepository,
+        private readonly UserSearchRepositoryInterface $userRepository,
     ) {
         return;
     }
@@ -53,11 +55,10 @@ final class SearchApiService implements SearchServiceInterface
     public function searchWorkflows(
         string $query,
         string $userId,
-        bool $ownedOnly = false,
         int $limit = 10,
         int $offset = 0,
     ): array {
-        return $this->workflowRepository->search($query, $userId, $ownedOnly, $limit, $offset);
+        return $this->workflowRepository->search($query, $userId, $limit, $offset);
     }
 
     /** @return array{ids: list<string>, total: int} */
@@ -68,5 +69,15 @@ final class SearchApiService implements SearchServiceInterface
         int $offset = 0,
     ): array {
         return $this->tagRepository->search($query, $userId, $limit, $offset);
+    }
+
+    /** @return array{ids: list<string>, total: int} */
+    public function searchTeamUsers(
+        string $teamId,
+        string $query,
+        int $limit = 50,
+        int $offset = 0,
+    ): array {
+        return $this->userRepository->searchInTeam($teamId, $query, $limit, $offset);
     }
 }

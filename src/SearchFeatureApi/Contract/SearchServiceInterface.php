@@ -36,14 +36,14 @@ interface SearchServiceInterface
     ): array;
 
     /**
-     * Returns a page of matching workflow ids, ordered by relevance, plus the total match count.
+     * Returns a page of matching workflow ids owned by $userId, ordered by relevance, plus the
+     * total match count.
      *
      * @return array{ids: list<string>, total: int}
      */
     public function searchWorkflows(
         string $query,
         string $userId,
-        bool $ownedOnly = false,
         int $limit = 10,
         int $offset = 0,
     ): array;
@@ -58,6 +58,19 @@ interface SearchServiceInterface
         string $query,
         string $userId,
         int $limit = 10,
+        int $offset = 0,
+    ): array;
+
+    /**
+     * Returns a page of matching user ids that are members of the given team, ordered by
+     * relevance, plus the total match count. Matches against nickname and full name (ФИО).
+     *
+     * @return array{ids: list<string>, total: int}
+     */
+    public function searchTeamUsers(
+        string $teamId,
+        string $query,
+        int $limit = 50,
         int $offset = 0,
     ): array;
 }

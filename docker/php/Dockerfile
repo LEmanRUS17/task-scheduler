@@ -23,6 +23,3 @@ RUN chmod +x /usr/local/bin/docker-entrypoint.sh
 
 ENTRYPOINT ["docker-entrypoint.sh"]
 CMD ["php-fpm"]
-
-# Raise upload limits above the framework default (2M/8M) to match the app.
-COPY uploads.ini /usr/local/etc/php/conf.d/uploads.ini

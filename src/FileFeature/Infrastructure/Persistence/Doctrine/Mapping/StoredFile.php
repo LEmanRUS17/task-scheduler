@@ -11,7 +11,7 @@ use Doctrine\ORM\Mapping\Builder\ClassMetadataBuilder;
 $metadata->table = [
     'name' => 'stored_files',
     'indexes' => [
-        ['name' => 'idx_stored_file_entity', 'columns' => ['entity_class', 'entity_id', 'purpose']],
+        'idx_stored_file_entity' => ['columns' => ['entity_class', 'entity_id', 'purpose']],
     ],
 ];
 

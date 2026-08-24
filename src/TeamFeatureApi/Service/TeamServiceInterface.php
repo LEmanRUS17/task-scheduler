@@ -63,6 +63,19 @@ interface TeamServiceInterface
     /** @return MemberResponseDTO[] */
     public function getMembers(string $teamId): array;
 
+    /**
+     * Returns the team's members, optionally filtered by a case-insensitive substring
+     * match against nickname or full name (ФИО). The requesting user's own entry is
+     * placed first in the result when present among the members.
+     *
+     * @throws \DomainException if the team does not exist
+     * @return MemberResponseDTO[]
+     */
+    public function searchMembers(string $teamId, string $currentUserId, ?string $name = null): array;
+
+    /** @return list<string> user ids of team members with the owner role */
+    public function getOwners(string $teamId): array;
+
     public function addMember(string $teamId, TeamAddMemberRequestInterface $request): MemberResponseDTO;
 
     public function removeMember(string $teamId, string $userId): void;

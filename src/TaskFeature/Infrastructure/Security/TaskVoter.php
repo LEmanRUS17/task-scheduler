@@ -11,6 +11,12 @@ use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
 use Symfony\Component\Security\Core\Authorization\Voter\Vote;
 use Symfony\Component\Security\Core\Authorization\Voter\Voter;
 
+// TODO: a user must only work with their own tasks or tasks of a team they belong
+//       to. Add a VIEW permission (creator, assignee or team member) and enforce it
+//       in the read-side controllers, which currently have no check at all:
+//       GetTask, GetTaskStatusHistory, ListTaskComments, AddTaskComment,
+//       ListTaskAttachments, DownloadTaskAttachment, ListTaskFiles.
+//       EDIT/DELETE should also account for team membership.
 /** @extends Voter<string, TaskDataResponseInterface> */
 final class TaskVoter extends Voter
 {

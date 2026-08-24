@@ -14,5 +14,13 @@ interface WorkflowResponseInterface
 
     public function getCreatedAt(): \DateTimeImmutable;
 
+    public function isDefault(): bool;
+
     public function getDescription(): ?string;
+
+    /** Name of the team this workflow was returned for, when obtained via team attachment. */
+    public function getTeamTitle(): ?string;
+
+    /** Whether this workflow is attached to the team requested via $inTeamId in {@see WorkflowServiceInterface::getPage()}. */
+    public function isInTeam(): bool;
 }

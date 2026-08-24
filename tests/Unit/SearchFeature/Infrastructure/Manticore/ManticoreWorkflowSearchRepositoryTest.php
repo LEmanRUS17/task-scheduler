@@ -26,34 +26,34 @@ final class ManticoreWorkflowSearchRepositoryTest extends TestCase
     public function testSearchMatchesTitleAndDescription(): void
     {
         $body = [];
-        $this->buildRepository($body)->search('flow', 'user-1', false, 10, 0);
+        $this->buildRepository($body)->search('flow', 'user-1', 10, 0);
 
         $must = $body['query']['bool']['must'];
         $this->assertSame('flow', $must[0]['match']['title,description,tags']);
     }
 
-    public function testSearchWithoutFiltersHasNoFilter(): void
+    public function testSearchAlwaysScopesToOwnedByCaller(): void
     {
         $body = [];
-        $this->buildRepository($body)->search('flow', 'user-1', false, 10, 0);
-
-        $this->assertArrayNotHasKey('filter', $body['query']['bool']);
-    }
-
-    public function testSearchOwnedOnlyAddsCreatedByFilter(): void
-    {
-        $body = [];
-        $this->buildRepository($body)->search('flow', 'user-1', true, 10, 0);
+        $this->buildRepository($body)->search('flow', 'user-1', 10, 0);
 
         $filter = $body['query']['bool']['filter'];
         $this->assertCount(1, $filter);
         $this->assertSame('user-1', $filter[0]['equals']['created_by']);
     }
 
+    public function testSearchScopesToTheGivenCallerOnly(): void
+    {
+        $body = [];
+        $this->buildRepository($body)->search('flow', 'user-2', 10, 0);
+
+        $this->assertSame('user-2', $body['query']['bool']['filter'][0]['equals']['created_by']);
+    }
+
     public function testSearchForwardsLimitAndOffset(): void
     {
         $body = [];
-        $this->buildRepository($body)->search('flow', 'user-1', false, 20, 40);
+        $this->buildRepository($body)->search('flow', 'user-1', 20, 40);
 
         $this->assertSame(20, $body['limit']);
         $this->assertSame(40, $body['offset']);
@@ -72,7 +72,7 @@ final class ManticoreWorkflowSearchRepositoryTest extends TestCase
         ]);
 
         $body = [];
-        $result = $this->buildRepository($body, $hitsJson)->search('flow', 'user-1', false, 10, 0);
+        $result = $this->buildRepository($body, $hitsJson)->search('flow', 'user-1', 10, 0);
 
         $this->assertSame(['wf-1', 'wf-2'], $result['ids']);
         $this->assertSame(7, $result['total']);
@@ -81,7 +81,7 @@ final class ManticoreWorkflowSearchRepositoryTest extends TestCase
     public function testSearchReturnsEmptyResultWhenNoHits(): void
     {
         $body = [];
-        $result = $this->buildRepository($body)->search('nothing', 'user-1', false, 10, 0);
+        $result = $this->buildRepository($body)->search('nothing', 'user-1', 10, 0);
 
         $this->assertSame(['ids' => [], 'total' => 0], $result);
     }
@@ -89,7 +89,7 @@ final class ManticoreWorkflowSearchRepositoryTest extends TestCase
     public function testSearchPassesTableNameAsIndexInBody(): void
     {
         $body = [];
-        $this->buildRepository($body)->search('flow', 'user-1', false, 10, 0);
+        $this->buildRepository($body)->search('flow', 'user-1', 10, 0);
 
         $this->assertSame('workflows', $body['index']);
     }
@@ -97,7 +97,7 @@ final class ManticoreWorkflowSearchRepositoryTest extends TestCase
     public function testSearchSortsByScoreThenCreatedAt(): void
     {
         $body = [];
-        $this->buildRepository($body)->search('flow', 'user-1', false, 10, 0);
+        $this->buildRepository($body)->search('flow', 'user-1', 10, 0);
 
         $this->assertSame(
             [['_score' => 'desc'], ['created_at' => 'desc']],

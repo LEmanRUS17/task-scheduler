@@ -14,6 +14,7 @@ interface TaskDataResponseInterface
     public function getStatusId(): string;
     public function getPriority(): string;
     public function getTeamId(): ?string;
+    public function getWorkflowId(): string;
     public function getCreatedBy(): string;
     /** Profile (incl. avatar) of the task creator, or null when unavailable. */
     public function getCreatedByProfile(): ?ProfileDataResponseInterface;

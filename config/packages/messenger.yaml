@@ -32,6 +32,7 @@ framework:
             App\SearchFeature\Infrastructure\Messenger\Message\IndexTeamMessage: async
             App\SearchFeature\Infrastructure\Messenger\Message\IndexWorkflowMessage: async
             App\SearchFeature\Infrastructure\Messenger\Message\IndexTagMessage: async
+            App\SearchFeature\Infrastructure\Messenger\Message\IndexUserMessage: async
             App\AnalyticsFeature\Infrastructure\Messenger\Message\RecordTaskEventMessage: async
             App\AnalyticsFeature\Infrastructure\Messenger\Message\RecordTaskActionMessage: async
 

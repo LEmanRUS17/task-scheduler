@@ -14,6 +14,8 @@ if (!isset($metadata)) {
 
 $builder = new ClassMetadataBuilder($metadata);
 $builder->setTable('subscription');
+$builder->addIndex(['subject_type', 'subject_id'], 'idx_subscription_subject');
+$builder->addUniqueConstraint(['user_id', 'subject_type', 'subject_id'], 'uq_subscription_user_subject');
 
 $builder->createField('id', 'string')
     ->length(36)

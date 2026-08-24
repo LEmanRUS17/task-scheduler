@@ -34,4 +34,8 @@ final class TaskSearchIndexSubscriber
     {
         $this->defaultBus->dispatch(new IndexTaskMessage($event->taskId));
     }
+
+    // TODO: subscribe to TaskDeleted and remove the task from the Manticore index
+    //       (TaskSearchIndexInterface::delete() exists but is never called, so
+    //       deleted tasks currently stay searchable forever).
 }

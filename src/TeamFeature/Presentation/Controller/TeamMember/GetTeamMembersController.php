@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\TeamFeature\Presentation\Controller\TeamMember;
 
+use App\TeamFeature\Presentation\Formatter\TeamMemberFormatter;
 use App\TeamFeatureApi\Service\TeamServiceInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Response;
@@ -35,25 +36,7 @@ final class GetTeamMembersController
 
         return new JsonResponse([
             'members' => array_map(
-                function ($m) {
-                    $profile = $m->getProfile();
-
-                    return [
-                        'teamId' => $m->getTeamId(),
-                        'userId' => $m->getUserId(),
-                        'role' => $m->getRole(),
-                        'joinedAt' => $m->getJoinedAt()->format(\DateTimeInterface::ATOM),
-                        'user' => $profile === null ? null : [
-                            'userId' => $profile->getUserId(),
-                            'username' => $profile->getUsername(),
-                            'firstname' => $profile->getFirstname(),
-                            'lastname' => $profile->getLastname(),
-                            'midlname' => $profile->getMidlname(),
-                            'status' => $profile->getStatus(),
-                            'avatar' => $profile->getAvatar()?->getUrl(),
-                        ],
-                    ];
-                },
+                static fn($m) => ['teamId' => $m->getTeamId(), ...TeamMemberFormatter::format($m)],
                 $members,
             ),
         ], Response::HTTP_OK);

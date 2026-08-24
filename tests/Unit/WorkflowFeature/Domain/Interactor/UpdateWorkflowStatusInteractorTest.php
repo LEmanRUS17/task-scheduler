@@ -6,6 +6,7 @@ namespace App\Tests\Unit\WorkflowFeature\Domain\Interactor;
 
 use App\WorkflowFeature\Domain\Entity\Workflow;
 use App\WorkflowFeature\Domain\Entity\WorkflowStatus;
+use App\WorkflowFeature\Domain\Exception\WorkflowAccessDeniedException;
 use App\WorkflowFeature\Domain\Interactor\UpdateWorkflowStatusInteractor;
 use App\WorkflowFeature\Domain\Port\DomainEventDispatcherInterface;
 use App\WorkflowFeature\Domain\Repository\WorkflowRepositoryInterface;
@@ -71,7 +72,7 @@ final class UpdateWorkflowStatusInteractorTest extends TestCase
         $statuses->expects($this->once())->method('save');
 
         $result = $this->buildInteractor($this->workflowsWithFound(), $statuses)
-            ->update($this->workflowId, $this->statusId, StatusLabel::fromString('closed'));
+            ->update($this->workflowId, 'user-1', $this->statusId, StatusLabel::fromString('closed'));
 
         $this->assertSame('closed', $result->label()->value());
     }
@@ -86,7 +87,7 @@ final class UpdateWorkflowStatusInteractorTest extends TestCase
         $dispatcher->expects($this->once())->method('dispatch');
 
         $this->buildInteractor($this->workflowsWithFound(), $statuses, $dispatcher)
-            ->update($this->workflowId, $this->statusId, StatusLabel::fromString('closed'));
+            ->update($this->workflowId, 'user-1', $this->statusId, StatusLabel::fromString('closed'));
     }
 
     public function testUpdateAllowsKeepingSameLabel(): void
@@ -95,7 +96,7 @@ final class UpdateWorkflowStatusInteractorTest extends TestCase
         $statuses->method('findById')->willReturn($this->makeStatus('open'));
 
         $result = $this->buildInteractor($this->workflowsWithFound(), $statuses)
-            ->update($this->workflowId, $this->statusId, StatusLabel::fromString('open'));
+            ->update($this->workflowId, 'user-1', $this->statusId, StatusLabel::fromString('open'));
 
         $this->assertSame('open', $result->label()->value());
     }
@@ -107,7 +108,7 @@ final class UpdateWorkflowStatusInteractorTest extends TestCase
         $statuses->method('findByLabel')->willReturn(null);
 
         $result = $this->buildInteractor($this->workflowsWithFound(), $statuses)
-            ->update($this->workflowId, $this->statusId, StatusLabel::fromString('open'), true);
+            ->update($this->workflowId, 'user-1', $this->statusId, StatusLabel::fromString('open'), true);
 
         $this->assertTrue($result->isFinal());
     }
@@ -119,7 +120,7 @@ final class UpdateWorkflowStatusInteractorTest extends TestCase
         $statuses->method('findByLabel')->willReturn(null);
 
         $result = $this->buildInteractor($this->workflowsWithFound(), $statuses)
-            ->update($this->workflowId, $this->statusId, StatusLabel::fromString('open'));
+            ->update($this->workflowId, 'user-1', $this->statusId, StatusLabel::fromString('open'));
 
         $this->assertFalse($result->isFinal());
     }
@@ -133,7 +134,18 @@ final class UpdateWorkflowStatusInteractorTest extends TestCase
         $this->expectExceptionMessageMatches('/not found/');
 
         $this->buildInteractor($workflows, $this->createStub(WorkflowStatusRepositoryInterface::class))
-            ->update($this->workflowId, $this->statusId, StatusLabel::fromString('closed'));
+            ->update($this->workflowId, 'user-1', $this->statusId, StatusLabel::fromString('closed'));
+    }
+
+    public function testUpdateThrowsWhenCallerIsNotTheOwner(): void
+    {
+        $statuses = $this->createMock(WorkflowStatusRepositoryInterface::class);
+        $statuses->expects($this->never())->method('save');
+
+        $this->expectException(WorkflowAccessDeniedException::class);
+
+        $this->buildInteractor($this->workflowsWithFound(), $statuses)
+            ->update($this->workflowId, 'user-2', $this->statusId, StatusLabel::fromString('closed'));
     }
 
     public function testUpdateThrowsWhenStatusNotFound(): void
@@ -145,7 +157,7 @@ final class UpdateWorkflowStatusInteractorTest extends TestCase
         $this->expectExceptionMessageMatches('/not found/');
 
         $this->buildInteractor($this->workflowsWithFound(), $statuses)
-            ->update($this->workflowId, $this->statusId, StatusLabel::fromString('closed'));
+            ->update($this->workflowId, 'user-1', $this->statusId, StatusLabel::fromString('closed'));
     }
 
     public function testUpdateThrowsWhenNewLabelAlreadyExists(): void
@@ -166,6 +178,6 @@ final class UpdateWorkflowStatusInteractorTest extends TestCase
         $this->expectExceptionMessageMatches('/already exists/');
 
         $this->buildInteractor($this->workflowsWithFound(), $statuses)
-            ->update($this->workflowId, $this->statusId, StatusLabel::fromString('closed'));
+            ->update($this->workflowId, 'user-1', $this->statusId, StatusLabel::fromString('closed'));
     }
 }

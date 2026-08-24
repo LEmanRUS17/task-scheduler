@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\WorkflowFeature\Domain\Interactor;
 
 use App\WorkflowFeature\Domain\Entity\WorkflowTransition;
+use App\WorkflowFeature\Domain\Exception\WorkflowAccessDeniedException;
 use App\WorkflowFeature\Domain\Port\ClockInterface;
 use App\WorkflowFeature\Domain\Port\DomainEventDispatcherInterface;
 use App\WorkflowFeature\Domain\Repository\WorkflowRepositoryInterface;
@@ -28,12 +29,19 @@ final class AddWorkflowTransitionInteractor
 
     public function add(
         WorkflowId $workflowId,
+        string $userId,
         TransitionName $name,
         WorkflowStatusId $fromStatusId,
         WorkflowStatusId $toStatusId,
     ): WorkflowTransition {
-        if ($this->workflows->findById($workflowId) === null) {
+        $workflow = $this->workflows->findById($workflowId);
+
+        if ($workflow === null) {
             throw new \DomainException("Workflow \"{$workflowId->value()}\" not found");
+        }
+
+        if ($workflow->createdBy() !== $userId) {
+            throw WorkflowAccessDeniedException::notOwner($workflowId->value());
         }
 
         if ($this->statuses->findById($workflowId, $fromStatusId->value()) === null) {

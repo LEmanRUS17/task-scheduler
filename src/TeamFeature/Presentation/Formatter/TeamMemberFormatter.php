@@ -31,4 +31,22 @@ final class TeamMemberFormatter
             ],
         ];
     }
+
+    /**
+     * Formats a member as just the user identity: id, nickname, ФИО and avatar.
+     *
+     * @return array<string, mixed>
+     */
+    public static function formatUser(TeamMemberDataResponseInterface $member): array
+    {
+        $data = self::format($member);
+
+        unset($data['role'], $data['joinedAt']);
+
+        if ($data['user'] !== null) {
+            unset($data['user']['status']);
+        }
+
+        return $data;
+    }
 }

@@ -1,0 +1,56 @@
+version: '3'
+
+tasks:
+  up:
+    desc: Start all containers in the background
+    cmds:
+      - docker compose up -d
+
+  migration:generate:
+    desc: Generate a new Doctrine migration from entity changes
+    cmds:
+      - docker compose exec php bin/console doctrine:migrations:diff
+
+  migration:migrate:
+    desc: Apply pending Doctrine migrations (PostgreSQL)
+    cmds:
+      - docker compose exec php bin/console doctrine:migrations:migrate --no-interaction
+
+  clickhouse:migrate:
+    desc: Apply ClickHouse table migrations
+    cmds:
+      - docker compose exec php bin/console app:clickhouse:migrate
+
+  search:reindex:
+    desc: Recreate Manticore indexes and reindex all search data
+    cmds:
+      - docker compose exec php bin/console app:manticore:create-index
+      - docker compose exec php bin/console app:manticore:create-team-index
+      - docker compose exec php bin/console app:manticore:create-tag-index
+      - docker compose exec php bin/console app:manticore:create-workflow-index
+      - docker compose exec php bin/console app:manticore:reindex
+      - docker compose exec php bin/console app:manticore:reindex-teams
+      - docker compose exec php bin/console app:manticore:reindex-tags
+      - docker compose exec php bin/console app:manticore:reindex-workflows
+
+  test:
+    desc: Run the PHPUnit test suite
+    cmds:
+      - docker compose exec php composer phpunit
+
+  phpcbf:
+    desc: Auto-fix PSR-12 code style issues
+    cmds:
+      - docker compose exec php composer phpcbf
+
+  phpstan:
+    desc: Run static analysis with an increased memory limit
+    cmds:
+      - docker compose exec php composer phpstan -- --memory-limit=512M
+
+  check:
+    desc: Run code style fix, static analysis, and tests in sequence
+    cmds:
+      - task: phpcbf
+      - task: phpstan
+      - task: test

@@ -4,8 +4,11 @@ declare(strict_types=1);
 
 namespace App\WorkflowFeature\Presentation\Controller;
 
+use App\UserFeature\Infrastructure\Security\SecurityUser;
 use App\WorkflowFeature\Application\DTORequest\UpdateTransitionRequestDTO;
+use App\WorkflowFeature\Domain\Exception\WorkflowAccessDeniedException;
 use App\WorkflowFeatureApi\Service\WorkflowServiceInterface;
+use Symfony\Bundle\SecurityBundle\Security;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Attribute\AsController;
@@ -17,6 +20,7 @@ final class UpdateWorkflowTransitionController
 {
     public function __construct(
         private readonly WorkflowServiceInterface $workflowService,
+        private readonly Security $security,
     ) {
     }
 
@@ -26,8 +30,12 @@ final class UpdateWorkflowTransitionController
         string $transitionId,
         #[MapRequestPayload] UpdateTransitionRequestDTO $request,
     ): JsonResponse {
+        /** @var SecurityUser $securityUser */
+        $securityUser = $this->security->getUser();
+        $userId = $securityUser->getDomainUser()->id()->value();
+
         try {
-            $transition = $this->workflowService->updateTransition($id, $transitionId, $request);
+            $transition = $this->workflowService->updateTransition($id, $transitionId, $request, $userId);
         } catch (\InvalidArgumentException $e) {
             return new JsonResponse(
                 [
@@ -35,6 +43,11 @@ final class UpdateWorkflowTransitionController
                     'errors' => json_decode($e->getMessage(), true),
                 ],
                 Response::HTTP_UNPROCESSABLE_ENTITY,
+            );
+        } catch (WorkflowAccessDeniedException $e) {
+            return new JsonResponse(
+                ['message' => $e->getMessage()],
+                Response::HTTP_FORBIDDEN,
             );
         } catch (\DomainException $e) {
             return new JsonResponse(

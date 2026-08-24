@@ -89,6 +89,10 @@ final class GetTeamControllerTest extends WebTestCase
             ->method('getMembers')
             ->with(self::TEAM_ID)
             ->willReturn([$member]);
+        $service->expects($this->once())
+            ->method('getOwners')
+            ->with(self::TEAM_ID)
+            ->willReturn([self::USER_ID]);
         static::getContainer()->set(TeamServiceInterface::class, $service);
 
         $tagService = $this->createMock(TagServiceInterface::class);
@@ -112,6 +116,7 @@ final class GetTeamControllerTest extends WebTestCase
         $this->assertSame('member-1', $body['members'][0]['userId']);
         $this->assertSame('member', $body['members'][0]['role']);
         $this->assertSame('member1', $body['members'][0]['user']['username']);
+        $this->assertSame([self::USER_ID], $body['owners']);
     }
 
     private function makeUser(): User

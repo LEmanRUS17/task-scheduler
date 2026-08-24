@@ -8,6 +8,7 @@ use App\SubscriptionFeature\Domain\Exception\SubscriptionAccessDeniedException;
 use App\SubscriptionFeature\Domain\Exception\SubscriptionNotFoundException;
 use App\SubscriptionFeature\Domain\Port\DomainEventDispatcherInterface;
 use App\SubscriptionFeature\Domain\Port\UnitOfWorkInterface;
+use App\SubscriptionFeature\Domain\Repository\SubscriptionChannelRepositoryInterface;
 use App\SubscriptionFeature\Domain\Repository\SubscriptionRepositoryInterface;
 use App\SubscriptionFeature\Domain\Repository\SubscriptionTransitionRepositoryInterface;
 use App\SubscriptionFeature\Domain\ValueObject\SubscriptionId;
@@ -16,6 +17,7 @@ final class UnsubscribeInteractor
 {
     public function __construct(
         private readonly SubscriptionRepositoryInterface $subscriptions,
+        private readonly SubscriptionChannelRepositoryInterface $channels,
         private readonly SubscriptionTransitionRepositoryInterface $transitions,
         private readonly DomainEventDispatcherInterface $eventDispatcher,
         private readonly UnitOfWorkInterface $unitOfWork,
@@ -36,6 +38,7 @@ final class UnsubscribeInteractor
 
         $subscription->delete();
 
+        $this->channels->deleteBySubscriptionId($subscription->id()->value());
         $this->transitions->deleteBySubscriptionId($subscription->id()->value());
         $this->subscriptions->delete($subscription);
         $this->unitOfWork->flush();

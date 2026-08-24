@@ -17,6 +17,8 @@ $builder->createField('id', 'string')
     ->generatedValue('NONE')
     ->build();
 
+$builder->addIndex(['task_id'], 'idx_task_status_history_task_id');
+
 $builder->addField('taskId', 'string', ['columnName' => 'task_id', 'length' => 36]);
 $builder->addField('transitionId', 'string', ['columnName' => 'transition_id', 'length' => 36]);
 $builder->addField('changedBy', 'string', ['columnName' => 'changed_by', 'length' => 36, 'nullable' => true]);

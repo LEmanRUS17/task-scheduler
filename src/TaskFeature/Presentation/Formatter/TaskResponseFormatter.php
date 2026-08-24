@@ -33,6 +33,7 @@ final class TaskResponseFormatter
             'status_id' => $task->getStatusId(),
             'priority' => $task->getPriority(),
             'teamId' => $task->getTeamId(),
+            'workflowId' => $task->getWorkflowId(),
             'createdBy' => $task->getCreatedBy(),
             'createdByUser' => self::user($task->getCreatedBy(), $task->getCreatedByProfile()),
             'assigneeIds' => $task->getAssigneeIds(),

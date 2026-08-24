@@ -51,4 +51,10 @@ final class TaskNotificationSubscriber
             userId: $event->userId,
         ));
     }
+
+    // TODO: subscribe to TaskClosed and TaskReopened and send notifications —
+    //       closing/reopening a task is currently invisible to subscribers.
+    // TODO: subscribe to CommentAdded (CommentFeature) and notify about new
+    //       comments. Only comment creation should trigger a notification;
+    //       updates and deletions must stay silent.
 }

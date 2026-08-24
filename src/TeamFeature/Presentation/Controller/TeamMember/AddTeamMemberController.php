@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\TeamFeature\Presentation\Controller\TeamMember;
 
 use App\TeamFeature\Application\DTORequest\TeamAddMemberRequestDTO;
+use App\TeamFeature\Presentation\Formatter\TeamMemberFormatter;
 use App\TeamFeatureApi\Service\TeamServiceInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Response;
@@ -34,24 +35,8 @@ final class AddTeamMemberController
             );
         }
 
-        $profile = $member->getProfile();
-
         return new JsonResponse(
-            [
-                'teamId' => $member->getTeamId(),
-                'userId' => $member->getUserId(),
-                'role' => $member->getRole(),
-                'joinedAt' => $member->getJoinedAt()->format(\DateTimeInterface::ATOM),
-                'user' => $profile === null ? null : [
-                    'userId' => $profile->getUserId(),
-                    'username' => $profile->getUsername(),
-                    'firstname' => $profile->getFirstname(),
-                    'lastname' => $profile->getLastname(),
-                    'midlname' => $profile->getMidlname(),
-                    'status' => $profile->getStatus(),
-                    'avatar' => $profile->getAvatar()?->getUrl(),
-                ],
-            ],
+            ['teamId' => $member->getTeamId(), ...TeamMemberFormatter::format($member)],
             Response::HTTP_CREATED,
         );
     }

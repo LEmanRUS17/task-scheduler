@@ -17,6 +17,7 @@ final class Workflow implements DescribableInterface, TaggableInterface
     private string $title;
     private string $createdBy;
     private \DateTimeImmutable $createdAt;
+    private bool $isDefault;
 
     /** @var list<object> */
     private array $domainEvents = [];
@@ -26,11 +27,13 @@ final class Workflow implements DescribableInterface, TaggableInterface
         WorkflowTitle $title,
         string $createdBy,
         \DateTimeImmutable $createdAt,
+        bool $isDefault,
     ) {
         $this->id = $id->value();
         $this->title = $title->value();
         $this->createdBy = $createdBy;
         $this->createdAt = $createdAt;
+        $this->isDefault = $isDefault;
     }
 
     public static function create(
@@ -38,8 +41,9 @@ final class Workflow implements DescribableInterface, TaggableInterface
         WorkflowTitle $title,
         string $createdBy,
         \DateTimeImmutable $createdAt,
+        bool $isDefault = false,
     ): self {
-        $workflow = new self($id, $title, $createdBy, $createdAt);
+        $workflow = new self($id, $title, $createdBy, $createdAt, $isDefault);
         $workflow->recordEvent(new WorkflowCreated($id, $title, $createdBy));
 
         return $workflow;
@@ -69,6 +73,11 @@ final class Workflow implements DescribableInterface, TaggableInterface
     public function createdAt(): \DateTimeImmutable
     {
         return $this->createdAt;
+    }
+
+    public function isDefault(): bool
+    {
+        return $this->isDefault;
     }
 
     private function recordEvent(object $event): void

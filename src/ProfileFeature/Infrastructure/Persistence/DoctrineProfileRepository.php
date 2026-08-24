@@ -25,4 +25,10 @@ final class DoctrineProfileRepository implements ProfileRepositoryInterface
     {
         return $this->entityManager->find(Profile::class, $userId);
     }
+
+    /** @return Profile[] */
+    public function findAll(): array
+    {
+        return $this->entityManager->getRepository(Profile::class)->findAll();
+    }
 }

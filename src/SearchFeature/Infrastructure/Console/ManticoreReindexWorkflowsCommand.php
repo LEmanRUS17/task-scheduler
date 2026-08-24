@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\SearchFeature\Infrastructure\Console;
 
 use App\SearchFeature\Domain\Port\WorkflowSearchIndexInterface;
+use App\WorkflowFeatureApi\DTOResponse\WorkflowResponseInterface;
 use App\WorkflowFeatureApi\Service\WorkflowServiceInterface;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
@@ -26,7 +27,10 @@ final class ManticoreReindexWorkflowsCommand extends Command
     {
         $io = new SymfonyStyle($input, $output);
 
-        $workflows = $this->workflowService->getList();
+        $workflows = array_values(array_filter(
+            $this->workflowService->getList(),
+            static fn(WorkflowResponseInterface $workflow) => !$workflow->isDefault(),
+        ));
         $count = count($workflows);
 
         $io->progressStart($count);

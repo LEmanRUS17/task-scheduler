@@ -257,6 +257,9 @@ final class TaskApiService implements TaskServiceInterface
         $this->removeAssigneeInteractor->remove(TaskId::fromString($taskId), $userId);
     }
 
+    // TODO: delete ALL task-related data here, not only assignees/description/comments:
+    //       tag assignments (TagServiceInterface needs a delete-by-entity method)
+    //       and notification subscriptions referencing this task.
     public function deleteById(string $id): void
     {
         $task = $this->tasks->findById(TaskId::fromString($id));

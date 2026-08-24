@@ -7,6 +7,7 @@ namespace App\Tests\Unit\WorkflowFeature\Domain\Interactor;
 use App\WorkflowFeature\Domain\Entity\Workflow;
 use App\WorkflowFeature\Domain\Entity\WorkflowStatus;
 use App\WorkflowFeature\Domain\Entity\WorkflowTransition;
+use App\WorkflowFeature\Domain\Exception\WorkflowAccessDeniedException;
 use App\WorkflowFeature\Domain\Interactor\UpdateWorkflowTransitionInteractor;
 use App\WorkflowFeature\Domain\Port\DomainEventDispatcherInterface;
 use App\WorkflowFeature\Domain\Repository\WorkflowRepositoryInterface;
@@ -101,6 +102,7 @@ final class UpdateWorkflowTransitionInteractorTest extends TestCase
             $transitions,
         )->update(
             $this->workflowId,
+            'user-1',
             $this->transitionId,
             TransitionName::fromString('reopen'),
             $this->from,
@@ -122,6 +124,7 @@ final class UpdateWorkflowTransitionInteractorTest extends TestCase
             $transitions,
         )->update(
             $this->workflowId,
+            'user-1',
             $this->transitionId,
             TransitionName::fromString('start'),
             $this->from,
@@ -145,11 +148,30 @@ final class UpdateWorkflowTransitionInteractorTest extends TestCase
             $this->createStub(WorkflowTransitionRepositoryInterface::class),
         )->update(
             $this->workflowId,
+            'user-1',
             $this->transitionId,
             TransitionName::fromString('start'),
             $this->from,
             $this->to,
         );
+    }
+
+    public function testUpdateThrowsWhenCallerIsNotTheOwner(): void
+    {
+        $transitions = $this->createMock(WorkflowTransitionRepositoryInterface::class);
+        $transitions->expects($this->never())->method('save');
+
+        $this->expectException(WorkflowAccessDeniedException::class);
+
+        $this->buildInteractor($this->workflowsWithFound(), $this->statusesWithBothFound(), $transitions)
+            ->update(
+                $this->workflowId,
+                'user-2',
+                $this->transitionId,
+                TransitionName::fromString('start'),
+                $this->from,
+                $this->to,
+            );
     }
 
     public function testUpdateThrowsWhenTransitionNotFound(): void
@@ -166,6 +188,7 @@ final class UpdateWorkflowTransitionInteractorTest extends TestCase
             $transitions,
         )->update(
             $this->workflowId,
+            'user-1',
             $this->transitionId,
             TransitionName::fromString('start'),
             $this->from,
@@ -196,6 +219,7 @@ final class UpdateWorkflowTransitionInteractorTest extends TestCase
             $transitions,
         )->update(
             $this->workflowId,
+            'user-1',
             $this->transitionId,
             TransitionName::fromString('start'),
             $this->from,
@@ -217,6 +241,7 @@ final class UpdateWorkflowTransitionInteractorTest extends TestCase
         $this->buildInteractor($this->workflowsWithFound(), $statuses, $transitions)
             ->update(
                 $this->workflowId,
+                'user-1',
                 $this->transitionId,
                 TransitionName::fromString('start'),
                 $this->from,
@@ -239,6 +264,7 @@ final class UpdateWorkflowTransitionInteractorTest extends TestCase
             $transitions,
         )->update(
             $this->workflowId,
+            'user-1',
             $this->transitionId,
             TransitionName::fromString('reopen'),
             $this->from,

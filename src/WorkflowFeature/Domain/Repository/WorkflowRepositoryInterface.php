@@ -13,6 +13,8 @@ interface WorkflowRepositoryInterface
 
     public function findById(WorkflowId $id): ?Workflow;
 
+    public function findDefaultByCreatedBy(string $createdBy): ?Workflow;
+
     /**
      * @param list<string> $ids
      * @return Workflow[]
@@ -22,8 +24,13 @@ interface WorkflowRepositoryInterface
     /** @return Workflow[] */
     public function findAll(): array;
 
-    /** @return Workflow[] */
-    public function findPaginated(int $limit, int $offset): array;
+    /**
+     * Returns a page of the given user's own non-default workflows, newest first.
+     *
+     * @return Workflow[]
+     */
+    public function findByCreatedBy(string $createdBy, int $limit, int $offset): array;
 
-    public function count(): int;
+    /** Counts the same set as {@see findByCreatedBy()}. */
+    public function countByCreatedBy(string $createdBy): int;
 }

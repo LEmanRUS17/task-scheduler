@@ -58,6 +58,15 @@ services:
     App\ProfileFeature\Domain\Port\ClockInterface:
         class: App\ProfileFeature\Infrastructure\Clock\SystemClock
 
+    App\ProfileFeature\Domain\Port\DomainEventDispatcherInterface:
+        class: App\ProfileFeature\Infrastructure\Messenger\MessengerDomainEventDispatcher
+        arguments:
+            $eventBus: '@event.bus'
+
+    App\ProfileFeature\Infrastructure\Persistence\Doctrine\ProfileForeignKeySchemaListener:
+        tags:
+            - { name: doctrine.event_listener, event: postGenerateSchema }
+
     App\TeamFeatureApi\Service\TeamServiceInterface:
         class: App\TeamFeature\Application\ApiService\TeamApiService
 
@@ -81,8 +90,15 @@ services:
     App\TeamFeature\Domain\Repository\TeamInvitationRepositoryInterface:
         class: App\TeamFeature\Infrastructure\Persistence\RedisTeamInvitationRepository
 
+    App\NotificationFeature\Infrastructure\Messenger\Handler\TeamMemberInvitedHandler:
+        arguments:
+            $frontendUrl: '%env(FRONTEND_URL)%'
+
     App\TaskFeatureApi\Service\TaskServiceInterface:
         class: App\TaskFeature\Application\ApiService\TaskApiService
+
+    App\TaskFeatureApi\Service\TaskWorkflowUsageServiceInterface:
+        class: App\TaskFeature\Application\ApiService\TaskWorkflowUsageService
 
     App\TaskFeature\Domain\Port\ClockInterface:
         class: App\TaskFeature\Infrastructure\Clock\SystemClock
@@ -103,6 +119,10 @@ services:
 
     App\TaskFeature\Domain\Port\TeamMembershipInterface:
         class: App\TaskFeature\Infrastructure\Team\TeamMembershipChecker
+
+    App\TaskFeature\Infrastructure\Persistence\Doctrine\TaskForeignKeySchemaListener:
+        tags:
+            - { name: doctrine.event_listener, event: postGenerateSchema }
 
     Symfony\Component\Workflow\Registry: ~
 
@@ -125,6 +145,12 @@ services:
 
     App\WorkflowFeature\Domain\Repository\WorkflowTransitionRepositoryInterface:
         class: App\WorkflowFeature\Infrastructure\Persistence\DoctrineWorkflowTransitionRepository
+
+    App\WorkflowFeature\Domain\Repository\WorkflowTeamRepositoryInterface:
+        class: App\WorkflowFeature\Infrastructure\Persistence\DoctrineWorkflowTeamRepository
+
+    App\WorkflowFeature\Domain\Port\TeamMembershipInterface:
+        class: App\WorkflowFeature\Infrastructure\Team\TeamMembershipChecker
 
     App\WorkflowFeature\Application\DTORequestValidator\WorkflowValidatorInterface:
         class: App\WorkflowFeature\Application\DTORequestValidator\WorkflowValidator
@@ -160,6 +186,13 @@ services:
     App\SearchFeature\Domain\Port\TagSearchIndexInterface:
         class: App\SearchFeature\Infrastructure\Manticore\ManticoreTagSearchIndex
 
+    App\SearchFeature\Domain\Port\UserSearchIndexInterface:
+        class: App\SearchFeature\Infrastructure\Manticore\ManticoreUserSearchIndex
+
+    App\SearchFeature\Infrastructure\Messenger\EventSubscriber\UserSearchIndexSubscriber:
+        arguments:
+            $defaultBus: '@messenger.bus.default'
+
     App\SearchFeature\Infrastructure\Messenger\EventSubscriber\TaskSearchIndexSubscriber:
         arguments:
             $defaultBus: '@messenger.bus.default'
@@ -190,6 +223,9 @@ services:
 
     App\SearchFeature\Domain\Port\TagSearchRepositoryInterface:
         class: App\SearchFeature\Infrastructure\Manticore\ManticoreTagSearchRepository
+
+    App\SearchFeature\Domain\Port\UserSearchRepositoryInterface:
+        class: App\SearchFeature\Infrastructure\Manticore\ManticoreUserSearchRepository
     App\AnalyticsFeature\Infrastructure\ClickHouse\ClickHouseClient:
         arguments:
             $baseUrl: '%env(CLICKHOUSE_URL)%'
@@ -259,6 +295,14 @@ services:
 
     App\TagFeature\Domain\Port\TeamMembershipInterface:
         class: App\TagFeature\Infrastructure\Team\TagTeamMembershipChecker
+
+    App\TagFeature\Infrastructure\Persistence\Doctrine\TagForeignKeySchemaListener:
+        tags:
+            - { name: doctrine.event_listener, event: postGenerateSchema }
+
+    App\SubscriptionFeature\Infrastructure\Persistence\Doctrine\SubscriptionForeignKeySchemaListener:
+        tags:
+            - { name: doctrine.event_listener, event: postGenerateSchema }
 
     App\SearchFeature\Infrastructure\Messenger\EventSubscriber\TagAssignmentSearchIndexSubscriber:
         arguments:

@@ -16,6 +16,9 @@ interface TeamMemberRepositoryInterface
     public function findByTeamId(TeamId $teamId): array;
 
     /** @return list<TeamMember> */
+    public function findByTeamIdAndRole(TeamId $teamId, TeamMemberRole $role): array;
+
+    /** @return list<TeamMember> */
     public function findByUserId(string $userId): array;
 
     public function findByTeamAndUser(TeamId $teamId, string $userId): ?TeamMember;

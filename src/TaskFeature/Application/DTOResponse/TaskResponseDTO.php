@@ -21,6 +21,7 @@ final class TaskResponseDTO implements TaskDataResponseInterface
         private readonly string $statusId,
         private readonly string $priority,
         private readonly ?string $teamId,
+        private readonly string $workflowId,
         private readonly string $createdBy,
         private readonly array $assigneeIds,
         private readonly \DateTimeImmutable $createdAt,
@@ -66,6 +67,11 @@ final class TaskResponseDTO implements TaskDataResponseInterface
     public function getTeamId(): ?string
     {
         return $this->teamId;
+    }
+
+    public function getWorkflowId(): string
+    {
+        return $this->workflowId;
     }
 
     public function getCreatedBy(): string

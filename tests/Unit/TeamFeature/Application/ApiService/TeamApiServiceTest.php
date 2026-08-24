@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace App\Tests\Unit\TeamFeature\Application\ApiService;
 
 use App\DescriptionFeatureApi\Contract\DescriptionServiceInterface;
+use App\ProfileFeatureApi\DTOResponse\ProfileDataResponseInterface;
 use App\ProfileFeatureApi\Service\ProfileServiceInterface;
+use App\SearchFeatureApi\Contract\SearchServiceInterface;
 use App\TagFeatureApi\Contract\TagServiceInterface;
 use App\TeamFeature\Application\ApiService\TeamApiService;
 use App\TeamFeature\Application\DataMapper\TeamDataMapper;
@@ -13,6 +15,7 @@ use App\TeamFeature\Application\DTORequest\TeamCreateRequestDTO;
 use App\TeamFeature\Application\DTORequest\TeamInviteMemberRequestDTO;
 use App\TeamFeature\Application\DTORequestValidator\TeamValidatorInterface;
 use App\TeamFeature\Domain\Entity\Team;
+use App\TeamFeature\Domain\Entity\TeamMember;
 use App\TeamFeature\Domain\Interactor\AcceptTeamInvitationInteractor;
 use App\TeamFeature\Domain\Interactor\AddTeamMemberInteractor;
 use App\TeamFeature\Domain\Interactor\InviteTeamMemberInteractor;
@@ -27,6 +30,7 @@ use App\TeamFeature\Domain\Repository\TeamInvitationRepositoryInterface;
 use App\TeamFeature\Domain\Repository\TeamMemberRepositoryInterface;
 use App\TeamFeature\Domain\Repository\TeamRepositoryInterface;
 use App\TeamFeature\Domain\ValueObject\TeamId;
+use App\TeamFeature\Domain\ValueObject\TeamMemberRole;
 use App\TeamFeature\Domain\ValueObject\Title;
 use App\UserFeatureApi\DTOResponse\UserDataResponseInterface;
 use App\UserFeatureApi\Service\UserServiceInterface;
@@ -108,6 +112,29 @@ final class TeamApiServiceTest extends TestCase
         $this->assertSame([], $this->makeService($teams)->getByIds([]));
     }
 
+    public function testGetOwnersQueriesRepositoryByOwnerRole(): void
+    {
+        $team = $this->makeTeam('11111111-1111-4111-8111-111111111111', 'Backend');
+        $owner = TeamMember::add(
+            $team->id(),
+            'owner-1',
+            TeamMemberRole::OWNER,
+            new \DateTimeImmutable('2026-01-01 00:00:00'),
+        );
+
+        $teams = $this->createStub(TeamRepositoryInterface::class);
+
+        $members = $this->createMock(TeamMemberRepositoryInterface::class);
+        $members->expects($this->once())
+            ->method('findByTeamIdAndRole')
+            ->with($team->id(), TeamMemberRole::OWNER)
+            ->willReturn([$owner]);
+
+        $result = $this->makeService($teams, members: $members)->getOwners($team->id()->value());
+
+        $this->assertSame(['owner-1'], $result);
+    }
+
     private function makeTeam(string $id, string $title): Team
     {
         return Team::create(
@@ -125,6 +152,8 @@ final class TeamApiServiceTest extends TestCase
         ?UserServiceInterface $userService = null,
         ?TeamMemberRepositoryInterface $members = null,
         ?TeamInvitationRepositoryInterface $invitations = null,
+        ?ProfileServiceInterface $profiles = null,
+        ?SearchServiceInterface $searchService = null,
     ): TeamApiService {
         // Interactors are final and cannot be doubled; build real ones with stubbed ports.
         // The paginated/getByIds reads do not touch them, so their wiring is irrelevant here.
@@ -135,6 +164,8 @@ final class TeamApiServiceTest extends TestCase
         $validator ??= $this->createStub(TeamValidatorInterface::class);
         $tagService ??= $this->createStub(TagServiceInterface::class);
         $userService ??= $this->createStub(UserServiceInterface::class);
+        $profiles ??= $this->createStub(ProfileServiceInterface::class);
+        $searchService ??= $this->createStub(SearchServiceInterface::class);
 
         return new TeamApiService(
             new TeamCreateInteractor($teams, $members, $dispatcher, $clock),
@@ -150,9 +181,10 @@ final class TeamApiServiceTest extends TestCase
             new TeamDataMapper(),
             $validator,
             $this->createStub(DescriptionServiceInterface::class),
-            $this->createStub(ProfileServiceInterface::class),
+            $profiles,
             $tagService,
             $userService,
+            $searchService,
         );
     }
 
@@ -295,5 +327,126 @@ final class TeamApiServiceTest extends TestCase
         } catch (\InvalidArgumentException $e) {
             $this->assertStringContainsString('missing-tag', $e->getMessage());
         }
+    }
+
+    // --- searchMembers ---
+
+    public function testSearchMembersThrowsWhenTeamNotFound(): void
+    {
+        $teams = $this->createStub(TeamRepositoryInterface::class);
+        $teams->method('findById')->willReturn(null);
+
+        $this->expectException(\DomainException::class);
+
+        $this->makeService($teams)->searchMembers('99999999-9999-4999-8999-999999999999', 'user-1');
+    }
+
+    public function testSearchMembersPlacesCurrentUserFirst(): void
+    {
+        $team = $this->makeTeam('11111111-1111-4111-8111-111111111111', 'Backend');
+        $teams = $this->createStub(TeamRepositoryInterface::class);
+        $teams->method('findById')->willReturn($team);
+
+        $memberOther = TeamMember::add(
+            $team->id(),
+            'user-other',
+            TeamMemberRole::MEMBER,
+            new \DateTimeImmutable('2026-01-01 00:00:00'),
+        );
+        $memberCurrent = TeamMember::add(
+            $team->id(),
+            'user-current',
+            TeamMemberRole::MEMBER,
+            new \DateTimeImmutable('2026-01-02 00:00:00'),
+        );
+
+        $members = $this->createStub(TeamMemberRepositoryInterface::class);
+        $members->method('findByTeamId')->willReturn([$memberOther, $memberCurrent]);
+
+        $profiles = $this->createStub(ProfileServiceInterface::class);
+        $profiles->method('getByUserId')->willReturnCallback(
+            fn(string $userId) => $this->makeProfile($userId),
+        );
+
+        $result = $this->makeService($teams, members: $members, profiles: $profiles)
+            ->searchMembers($team->id()->value(), 'user-current');
+
+        $this->assertCount(2, $result);
+        $this->assertSame('user-current', $result[0]->getUserId());
+        $this->assertSame('user-other', $result[1]->getUserId());
+    }
+
+    public function testSearchMembersFiltersByIdsReturnedFromManticore(): void
+    {
+        $team = $this->makeTeam('11111111-1111-4111-8111-111111111111', 'Backend');
+        $teams = $this->createStub(TeamRepositoryInterface::class);
+        $teams->method('findById')->willReturn($team);
+
+        $matching = TeamMember::add(
+            $team->id(),
+            'user-ivanov',
+            TeamMemberRole::MEMBER,
+            new \DateTimeImmutable('2026-01-01 00:00:00'),
+        );
+        $notMatching = TeamMember::add(
+            $team->id(),
+            'user-petrov',
+            TeamMemberRole::MEMBER,
+            new \DateTimeImmutable('2026-01-01 00:00:00'),
+        );
+
+        $members = $this->createStub(TeamMemberRepositoryInterface::class);
+        $members->method('findByTeamId')->willReturn([$matching, $notMatching]);
+
+        $profiles = $this->createStub(ProfileServiceInterface::class);
+        $profiles->method('getByUserId')->willReturnMap([
+            ['user-ivanov', $this->makeProfile('user-ivanov', 'ivan.k', 'Ivan', 'Ivanov')],
+            ['user-petrov', $this->makeProfile('user-petrov', 'petya', 'Petr', 'Petrov')],
+        ]);
+
+        $searchService = $this->createMock(SearchServiceInterface::class);
+        $searchService->expects($this->once())
+            ->method('searchTeamUsers')
+            ->with($team->id()->value(), 'ivanov', 500)
+            ->willReturn(['ids' => ['user-ivanov'], 'total' => 1]);
+
+        $result = $this->makeService($teams, members: $members, profiles: $profiles, searchService: $searchService)
+            ->searchMembers($team->id()->value(), 'someone-else', 'ivanov');
+
+        $this->assertCount(1, $result);
+        $this->assertSame('user-ivanov', $result[0]->getUserId());
+    }
+
+    public function testSearchMembersWithoutNameDoesNotCallManticore(): void
+    {
+        $team = $this->makeTeam('11111111-1111-4111-8111-111111111111', 'Backend');
+        $teams = $this->createStub(TeamRepositoryInterface::class);
+        $teams->method('findById')->willReturn($team);
+
+        $members = $this->createStub(TeamMemberRepositoryInterface::class);
+        $members->method('findByTeamId')->willReturn([]);
+
+        $searchService = $this->createMock(SearchServiceInterface::class);
+        $searchService->expects($this->never())->method('searchTeamUsers');
+
+        $this->makeService($teams, members: $members, searchService: $searchService)
+            ->searchMembers($team->id()->value(), 'user-1');
+    }
+
+    private function makeProfile(
+        string $userId,
+        string $username = 'nick',
+        string $firstname = 'First',
+        string $lastname = 'Last',
+    ): ProfileDataResponseInterface {
+        $profile = $this->createStub(ProfileDataResponseInterface::class);
+        $profile->method('getUserId')->willReturn($userId);
+        $profile->method('getUsername')->willReturn($username);
+        $profile->method('getFirstname')->willReturn($firstname);
+        $profile->method('getLastname')->willReturn($lastname);
+        $profile->method('getMidlname')->willReturn(null);
+        $profile->method('getAvatar')->willReturn(null);
+
+        return $profile;
     }
 }

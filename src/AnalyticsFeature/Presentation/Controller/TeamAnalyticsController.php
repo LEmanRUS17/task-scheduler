@@ -11,6 +11,9 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Attribute\AsController;
 use Symfony\Component\Routing\Attribute\Route;
 
+// TODO: scope the analytics to the current user: a user may only see analytics of
+//       their own actions, never of other users. The only exception is teams —
+//       team analytics must be available to the team's members.
 #[AsController]
 final class TeamAnalyticsController
 {

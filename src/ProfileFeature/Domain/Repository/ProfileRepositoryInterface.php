@@ -11,4 +11,7 @@ interface ProfileRepositoryInterface
     public function save(Profile $profile): void;
 
     public function findByUserId(string $userId): ?Profile;
+
+    /** @return Profile[] */
+    public function findAll(): array;
 }

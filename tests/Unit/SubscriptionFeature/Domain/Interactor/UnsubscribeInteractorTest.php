@@ -10,6 +10,7 @@ use App\SubscriptionFeature\Domain\Exception\SubscriptionNotFoundException;
 use App\SubscriptionFeature\Domain\Interactor\UnsubscribeInteractor;
 use App\SubscriptionFeature\Domain\Port\DomainEventDispatcherInterface;
 use App\SubscriptionFeature\Domain\Port\UnitOfWorkInterface;
+use App\SubscriptionFeature\Domain\Repository\SubscriptionChannelRepositoryInterface;
 use App\SubscriptionFeature\Domain\Repository\SubscriptionRepositoryInterface;
 use App\SubscriptionFeature\Domain\Repository\SubscriptionTransitionRepositoryInterface;
 use App\SubscriptionFeature\Domain\ValueObject\SubjectType;
@@ -38,13 +39,32 @@ final class UnsubscribeInteractorTest extends TestCase
         SubscriptionTransitionRepositoryInterface $transitions,
         ?DomainEventDispatcherInterface $dispatcher = null,
         ?UnitOfWorkInterface $unitOfWork = null,
+        ?SubscriptionChannelRepositoryInterface $channels = null,
     ): UnsubscribeInteractor {
         return new UnsubscribeInteractor(
             $subscriptions,
+            $channels ?? $this->createStub(SubscriptionChannelRepositoryInterface::class),
             $transitions,
             $dispatcher ?? $this->createStub(DomainEventDispatcherInterface::class),
             $unitOfWork ?? $this->createStub(UnitOfWorkInterface::class),
         );
+    }
+
+    public function testUnsubscribeDeletesChannels(): void
+    {
+        $subscriptions = $this->createStub(SubscriptionRepositoryInterface::class);
+        $subscriptions->method('findById')->willReturn($this->subscription);
+
+        $channels = $this->createMock(SubscriptionChannelRepositoryInterface::class);
+        $channels->expects($this->once())
+            ->method('deleteBySubscriptionId')
+            ->with($this->subscriptionId->value());
+
+        $this->buildInteractor(
+            $subscriptions,
+            $this->createStub(SubscriptionTransitionRepositoryInterface::class),
+            channels: $channels,
+        )->unsubscribe($this->subscriptionId, 'user-1');
     }
 
     public function testUnsubscribeDeletesTransitions(): void

@@ -10,6 +10,9 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Attribute\AsController;
 use Symfony\Component\Routing\Attribute\Route;
 
+// TODO: restrict comment viewing the same way as task access: a comment may only
+//       be read by users who can see the entity it belongs to (own task or a task
+//       of a team the user is a member of).
 #[AsController]
 final class GetCommentController
 {

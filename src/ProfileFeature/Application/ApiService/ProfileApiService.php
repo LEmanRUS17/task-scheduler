@@ -6,6 +6,7 @@ namespace App\ProfileFeature\Application\ApiService;
 
 use App\ProfileFeature\Application\DataMapper\ProfileDataMapper;
 use App\ProfileFeature\Application\DTORequestValidator\ProfileValidatorInterface;
+use App\ProfileFeature\Domain\Entity\Profile;
 use App\ProfileFeature\Domain\Interactor\CreateProfileInteractor;
 use App\ProfileFeature\Domain\Interactor\UpdateProfileInteractor;
 use App\ProfileFeature\Domain\Repository\ProfileRepositoryInterface;
@@ -27,6 +28,15 @@ final class ProfileApiService implements ProfileServiceInterface
     public function createForUser(string $userId): void
     {
         $this->createProfileInteractor->create($userId);
+    }
+
+    /** @return list<string> */
+    public function getAllUserIds(): array
+    {
+        return array_map(
+            static fn(Profile $profile) => $profile->userId(),
+            $this->profiles->findAll(),
+        );
     }
 
     public function getByUserId(string $userId): ProfileDataResponseInterface

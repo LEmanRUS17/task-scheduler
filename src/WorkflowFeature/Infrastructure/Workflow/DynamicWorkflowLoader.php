@@ -73,10 +73,13 @@ final class DynamicWorkflowLoader implements EventSubscriberInterface
 
             $markingStore = new MethodMarkingStore(true, 'workflowStatus');
 
+            // Keyed by workflow id, not title: titles aren't unique (every user's personal
+            // default workflow is titled "Базовый"), which would make the registry unable to
+            // tell same-named workflows apart when looking one up by (subject, name).
             $stateMachine = new StateMachine(
                 $sfDefinition,
                 $markingStore,
-                name: $workflow->title()->value(),
+                name: $workflow->id()->value(),
             );
 
             $this->registry->addWorkflow(
