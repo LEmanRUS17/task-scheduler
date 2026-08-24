@@ -133,16 +133,37 @@ final class TeamApiService implements TeamServiceInterface
     {
         $violations = $this->validator->validate($dtoRequest);
 
-        if (!empty($violations)) {
-            throw new \InvalidArgumentException(json_encode($violations));
+        $tagIds = array_values(array_unique($dtoRequest->getTagIds()));
+        if ($tagIds !== []) {
+            $tagsById = [];
+            foreach ($this->tagService->getByIds($tagIds) as $tag) {
+                $tagsById[$tag->getId()] = $tag;
+            }
+
+            $missingTagIds = [];
+            $forbiddenTagIds = [];
+            foreach ($tagIds as $tagId) {
+                $tag = $tagsById[$tagId] ?? null;
+                if ($tag === null) {
+                    $missingTagIds[] = $tagId;
+                } elseif ($tag->getOwnerId() !== $creatorUserId) {
+                    $forbiddenTagIds[] = $tagId;
+                }
+            }
+
+            if ($missingTagIds !== []) {
+                $violations['tagIds'][] = sprintf('Unknown tag ids: %s', implode(', ', $missingTagIds));
+            }
+            if ($forbiddenTagIds !== []) {
+                $violations['tagIds'][] = sprintf(
+                    'You are not the owner of tag ids: %s',
+                    implode(', ', $forbiddenTagIds),
+                );
+            }
         }
 
-        $tagIds = array_values(array_unique($dtoRequest->getTagIds()));
-        $missingTagIds = array_values(array_diff($tagIds, $this->tagService->filterExistingTagIds($tagIds)));
-        if ($missingTagIds !== []) {
-            throw new \InvalidArgumentException(json_encode([
-                'tagIds' => sprintf('Unknown tag ids: %s', implode(', ', $missingTagIds)),
-            ]));
+        if (!empty($violations)) {
+            throw new \InvalidArgumentException(json_encode($violations));
         }
 
         $title = $this->dataMapper->requestToTitle($dtoRequest);

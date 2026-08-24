@@ -9,6 +9,7 @@ use App\ProfileFeatureApi\DTOResponse\ProfileDataResponseInterface;
 use App\ProfileFeatureApi\Service\ProfileServiceInterface;
 use App\SearchFeatureApi\Contract\SearchServiceInterface;
 use App\TagFeatureApi\Contract\TagServiceInterface;
+use App\TagFeatureApi\DTOResponse\TagResponseInterface;
 use App\TeamFeature\Application\ApiService\TeamApiService;
 use App\TeamFeature\Application\DataMapper\TeamDataMapper;
 use App\TeamFeature\Application\DTORequest\TeamCreateRequestDTO;
@@ -281,7 +282,10 @@ final class TeamApiServiceTest extends TestCase
         $validator->method('validate')->willReturn([]);
 
         $tagService = $this->createMock(TagServiceInterface::class);
-        $tagService->method('filterExistingTagIds')->willReturn(['tag-1', 'tag-2']);
+        $tagService->method('getByIds')->willReturn([
+            $this->makeTagResponse('tag-1', 'user-creator'),
+            $this->makeTagResponse('tag-2', 'user-creator'),
+        ]);
 
         $assignedTagIds = [];
         $tagService->expects($this->exactly(2))
@@ -316,7 +320,7 @@ final class TeamApiServiceTest extends TestCase
         $validator->method('validate')->willReturn([]);
 
         $tagService = $this->createMock(TagServiceInterface::class);
-        $tagService->method('filterExistingTagIds')->willReturn(['tag-1']);
+        $tagService->method('getByIds')->willReturn([$this->makeTagResponse('tag-1', 'user-creator')]);
         $tagService->expects($this->never())->method('assign');
 
         $request = new TeamCreateRequestDTO(title: 'Tagged team', tagIds: ['tag-1', 'missing-tag']);
@@ -327,6 +331,38 @@ final class TeamApiServiceTest extends TestCase
         } catch (\InvalidArgumentException $e) {
             $this->assertStringContainsString('missing-tag', $e->getMessage());
         }
+    }
+
+    public function testCreateRejectsTagIdsNotOwnedByCreatorAndDoesNotPersistTeam(): void
+    {
+        $teams = $this->createMock(TeamRepositoryInterface::class);
+        $teams->expects($this->never())->method('save');
+
+        $validator = $this->createStub(TeamValidatorInterface::class);
+        $validator->method('validate')->willReturn([]);
+
+        $tagService = $this->createMock(TagServiceInterface::class);
+        $tagService->method('getByIds')->willReturn([$this->makeTagResponse('tag-1', 'someone-else')]);
+        $tagService->expects($this->never())->method('assign');
+
+        $request = new TeamCreateRequestDTO(title: 'Tagged team', tagIds: ['tag-1']);
+
+        try {
+            $this->makeService($teams, $validator, $tagService)->create($request, 'user-creator');
+            $this->fail('Expected InvalidArgumentException was not thrown');
+        } catch (\InvalidArgumentException $e) {
+            $this->assertStringContainsString('tag-1', $e->getMessage());
+            $this->assertStringContainsString('not the owner', $e->getMessage());
+        }
+    }
+
+    private function makeTagResponse(string $id, string $ownerId): TagResponseInterface
+    {
+        $tag = $this->createStub(TagResponseInterface::class);
+        $tag->method('getId')->willReturn($id);
+        $tag->method('getOwnerId')->willReturn($ownerId);
+
+        return $tag;
     }
 
     // --- searchMembers ---
