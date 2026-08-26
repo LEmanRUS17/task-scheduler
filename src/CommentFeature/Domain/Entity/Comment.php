@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\CommentFeature\Domain\Entity;
 
+use App\AuditLogFeatureApi\Contract\AuditableInterface;
 use App\CommentFeature\Domain\Event\CommentAdded;
 use App\CommentFeature\Domain\Event\CommentDeleted;
 use App\CommentFeature\Domain\Event\CommentUpdated;
@@ -14,7 +15,7 @@ use App\CommentFeature\Domain\ValueObject\CommentId;
 // TODO: comment activity is not tracked by the ClickHouse analytics. Add a
 //       subscriber in AnalyticsFeature for CommentAdded/CommentUpdated/CommentDeleted
 //       and record them the way task events already are.
-final class Comment
+final class Comment implements AuditableInterface
 {
     private string $id;
     private string $entityType;

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\WorkflowFeature\Domain\Entity;
 
+use App\AuditLogFeatureApi\Contract\AuditableInterface;
 use App\DescriptionFeatureApi\Contract\DescribableInterface;
 use App\WorkflowFeature\Domain\Event\WorkflowTransitionAdded;
 use App\WorkflowFeature\Domain\Event\WorkflowTransitionUpdated;
@@ -12,7 +13,7 @@ use App\WorkflowFeature\Domain\ValueObject\WorkflowId;
 use App\WorkflowFeature\Domain\ValueObject\WorkflowStatusId;
 use App\WorkflowFeature\Domain\ValueObject\WorkflowTransitionId;
 
-final class WorkflowTransition implements DescribableInterface
+final class WorkflowTransition implements DescribableInterface, AuditableInterface
 {
     private string $id;
     private string $workflowId;

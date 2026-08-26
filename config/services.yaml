@@ -162,6 +162,9 @@ services:
         tags:
             - { name: doctrine.event_listener, event: onFlush }
 
+    App\AuditLogFeatureApi\Contract\AuditLogServiceInterface:
+        class: App\AuditLogFeature\Application\ApiService\AuditLogApiService
+
 
     App\NotificationFeature\Infrastructure\Messenger\EventSubscriber\TaskNotificationSubscriber:
         arguments:

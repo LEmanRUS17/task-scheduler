@@ -60,3 +60,9 @@ comment_controllers:
         path: ../src/CommentFeature/Presentation/Controller/
         namespace: App\CommentFeature\Presentation\Controller
     type: attribute
+
+audit_log_controllers:
+    resource:
+        path: ../src/AuditLogFeature/Presentation/Controller/
+        namespace: App\AuditLogFeature\Presentation\Controller
+    type: attribute

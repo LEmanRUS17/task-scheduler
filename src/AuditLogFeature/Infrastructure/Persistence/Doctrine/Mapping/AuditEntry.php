@@ -17,6 +17,8 @@ $builder->createField('id', 'string')
     ->generatedValue('NONE')
     ->build();
 
+$builder->addIndex(['actor_id', 'occurred_at'], 'idx_audit_log_actor_id_occurred_at');
+
 $builder->addField('entityClass', 'string', ['columnName' => 'entity_class', 'length' => 255]);
 $builder->addField('entityId', 'string', ['columnName' => 'entity_id', 'length' => 255]);
 $builder->addField('action', 'string', ['length' => 10]);
