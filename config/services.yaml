@@ -159,8 +159,14 @@ services:
         class: App\AuditLogFeature\Infrastructure\Persistence\DoctrineAuditEntryRepository
 
     App\AuditLogFeature\Infrastructure\Doctrine\Subscriber\AuditDoctrineSubscriber:
+        arguments:
+            $defaultBus: '@messenger.bus.default'
         tags:
             - { name: doctrine.event_listener, event: onFlush }
+            - { name: doctrine.event_listener, event: postFlush }
+
+    App\AuditLogFeature\Domain\Port\AuditEntryStorageInterface:
+        class: App\AuditLogFeature\Infrastructure\ClickHouse\ClickHouseAuditEntryStorage
 
     App\AuditLogFeatureApi\Contract\AuditLogServiceInterface:
         class: App\AuditLogFeature\Application\ApiService\AuditLogApiService
@@ -229,7 +235,7 @@ services:
 
     App\SearchFeature\Domain\Port\UserSearchRepositoryInterface:
         class: App\SearchFeature\Infrastructure\Manticore\ManticoreUserSearchRepository
-    App\AnalyticsFeature\Infrastructure\ClickHouse\ClickHouseClient:
+    App\Shared\ClickHouse\ClickHouseClient:
         arguments:
             $baseUrl: '%env(CLICKHOUSE_URL)%'
             $user: '%env(CLICKHOUSE_USER)%'

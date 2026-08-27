@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace App\Tests\Unit\AnalyticsFeature\Infrastructure\ClickHouse;
 
 use App\AnalyticsFeature\Infrastructure\ClickHouse\ClickHouseAnalyticsQuery;
-use App\AnalyticsFeature\Infrastructure\ClickHouse\ClickHouseClient;
+use App\Shared\ClickHouse\ClickHouseClient;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\HttpClient\MockHttpClient;
 use Symfony\Component\HttpClient\Response\MockResponse;

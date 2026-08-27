@@ -35,6 +35,7 @@ framework:
             App\SearchFeature\Infrastructure\Messenger\Message\IndexUserMessage: async
             App\AnalyticsFeature\Infrastructure\Messenger\Message\RecordTaskEventMessage: async
             App\AnalyticsFeature\Infrastructure\Messenger\Message\RecordTaskActionMessage: async
+            App\AuditLogFeature\Infrastructure\Messenger\Message\RecordAuditEntryMessage: async
 
 when@test:
     framework:

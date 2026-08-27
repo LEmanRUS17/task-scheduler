@@ -6,6 +6,7 @@ namespace App\Tests\Unit\AuditLogFeature\Infrastructure\Doctrine\Subscriber;
 
 use App\AuditLogFeature\Domain\Entity\AuditEntry;
 use App\AuditLogFeature\Infrastructure\Doctrine\Subscriber\AuditDoctrineSubscriber;
+use App\AuditLogFeature\Infrastructure\Messenger\Message\RecordAuditEntryMessage;
 use App\UserFeature\Domain\Entity\User;
 use App\UserFeature\Domain\ValueObject\Email;
 use App\UserFeature\Domain\ValueObject\HashedPassword;
@@ -13,10 +14,13 @@ use App\UserFeature\Domain\ValueObject\UserId;
 use App\UserFeature\Infrastructure\Security\SecurityUser;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Event\OnFlushEventArgs;
+use Doctrine\ORM\Event\PostFlushEventArgs;
 use Doctrine\ORM\Mapping\ClassMetadata;
 use Doctrine\ORM\UnitOfWork;
 use PHPUnit\Framework\TestCase;
 use Symfony\Bundle\SecurityBundle\Security;
+use Symfony\Component\Messenger\Envelope;
+use Symfony\Component\Messenger\MessageBusInterface;
 use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
 
@@ -66,12 +70,30 @@ final class AuditDoctrineSubscriberTest extends TestCase
         return $args;
     }
 
+    private function buildPostFlushArgs(): PostFlushEventArgs
+    {
+        return $this->createStub(PostFlushEventArgs::class);
+    }
+
     private function noTokenSecurity(): Security
     {
         $security = $this->createStub(Security::class);
         $security->method('getToken')->willReturn(null);
 
         return $security;
+    }
+
+    private function noOpBus(): MessageBusInterface
+    {
+        $bus = $this->createStub(MessageBusInterface::class);
+        $bus->method('dispatch')->willReturnCallback(static fn (object $m): Envelope => new Envelope($m));
+
+        return $bus;
+    }
+
+    private function buildSubscriber(Security $security, ?MessageBusInterface $bus = null): AuditDoctrineSubscriber
+    {
+        return new AuditDoctrineSubscriber($security, $bus ?? $this->noOpBus());
     }
 
     // --- Guard: skip AuditEntry itself ---
@@ -83,7 +105,7 @@ final class AuditDoctrineSubscriberTest extends TestCase
         $persisted = [];
         $em = $this->buildEm($uow, $persisted);
 
-        (new AuditDoctrineSubscriber($this->noTokenSecurity()))
+        $this->buildSubscriber($this->noTokenSecurity())
             ->onFlush($this->buildArgs($em));
 
         $this->assertEmpty($persisted);
@@ -97,7 +119,7 @@ final class AuditDoctrineSubscriberTest extends TestCase
         $persisted = [];
         $em = $this->buildEm($uow, $persisted);
 
-        (new AuditDoctrineSubscriber($this->noTokenSecurity()))
+        $this->buildSubscriber($this->noTokenSecurity())
             ->onFlush($this->buildArgs($em));
 
         $this->assertEmpty($persisted);
@@ -111,7 +133,7 @@ final class AuditDoctrineSubscriberTest extends TestCase
         $persisted = [];
         $em = $this->buildEm($uow, $persisted);
 
-        (new AuditDoctrineSubscriber($this->noTokenSecurity()))
+        $this->buildSubscriber($this->noTokenSecurity())
             ->onFlush($this->buildArgs($em));
 
         $this->assertCount(1, $persisted);
@@ -129,7 +151,7 @@ final class AuditDoctrineSubscriberTest extends TestCase
         $persisted = [];
         $em = $this->buildEm($uow, $persisted);
 
-        (new AuditDoctrineSubscriber($this->noTokenSecurity()))
+        $this->buildSubscriber($this->noTokenSecurity())
             ->onFlush($this->buildArgs($em));
 
         $this->assertSame('stub-title', $persisted[0]->title());
@@ -144,7 +166,7 @@ final class AuditDoctrineSubscriberTest extends TestCase
         $persisted = [];
         $em = $this->buildEm($uow, $persisted);
 
-        (new AuditDoctrineSubscriber($this->noTokenSecurity()))
+        $this->buildSubscriber($this->noTokenSecurity())
             ->onFlush($this->buildArgs($em));
 
         $this->assertCount(1, $persisted);
@@ -161,7 +183,7 @@ final class AuditDoctrineSubscriberTest extends TestCase
         $persisted = [];
         $em = $this->buildEm($uow, $persisted);
 
-        (new AuditDoctrineSubscriber($this->noTokenSecurity()))
+        $this->buildSubscriber($this->noTokenSecurity())
             ->onFlush($this->buildArgs($em));
 
         $this->assertCount(1, $persisted);
@@ -176,7 +198,7 @@ final class AuditDoctrineSubscriberTest extends TestCase
         $persisted = [];
         $em = $this->buildEm($uow, $persisted);
 
-        (new AuditDoctrineSubscriber($this->noTokenSecurity()))
+        $this->buildSubscriber($this->noTokenSecurity())
             ->onFlush($this->buildArgs($em));
 
         $this->assertCount(1, $persisted);
@@ -190,7 +212,7 @@ final class AuditDoctrineSubscriberTest extends TestCase
         $persisted = [];
         $em = $this->buildEm($uow, $persisted);
 
-        (new AuditDoctrineSubscriber($this->noTokenSecurity()))
+        $this->buildSubscriber($this->noTokenSecurity())
             ->onFlush($this->buildArgs($em));
 
         $this->assertNull($persisted[0]->actorId());
@@ -207,7 +229,7 @@ final class AuditDoctrineSubscriberTest extends TestCase
         $security = $this->createStub(Security::class);
         $security->method('getToken')->willReturn($token);
 
-        (new AuditDoctrineSubscriber($security))
+        $this->buildSubscriber($security)
             ->onFlush($this->buildArgs($em));
 
         $this->assertNull($persisted[0]->actorId());
@@ -232,7 +254,7 @@ final class AuditDoctrineSubscriberTest extends TestCase
         $persisted = [];
         $em = $this->buildEm($uow, $persisted);
 
-        (new AuditDoctrineSubscriber($security))
+        $this->buildSubscriber($security)
             ->onFlush($this->buildArgs($em));
 
         $this->assertSame($userId->value(), $persisted[0]->actorId());
@@ -247,7 +269,7 @@ final class AuditDoctrineSubscriberTest extends TestCase
         $persisted = [];
         $em = $this->buildEm($uow, $persisted);
 
-        (new AuditDoctrineSubscriber($this->noTokenSecurity()))
+        $this->buildSubscriber($this->noTokenSecurity())
             ->onFlush($this->buildArgs($em));
 
         $this->assertSame(
@@ -263,7 +285,7 @@ final class AuditDoctrineSubscriberTest extends TestCase
         $persisted = [];
         $em = $this->buildEm($uow, $persisted);
 
-        (new AuditDoctrineSubscriber($this->noTokenSecurity()))
+        $this->buildSubscriber($this->noTokenSecurity())
             ->onFlush($this->buildArgs($em));
 
         $this->assertNull($persisted[0]->changedData()['field'][0]);
@@ -276,7 +298,7 @@ final class AuditDoctrineSubscriberTest extends TestCase
         $persisted = [];
         $em = $this->buildEm($uow, $persisted);
 
-        (new AuditDoctrineSubscriber($this->noTokenSecurity()))
+        $this->buildSubscriber($this->noTokenSecurity())
             ->onFlush($this->buildArgs($em));
 
         $this->assertSame(42, $persisted[0]->changedData()['count'][0]);
@@ -292,7 +314,7 @@ final class AuditDoctrineSubscriberTest extends TestCase
         $persisted = [];
         $em = $this->buildEm($uow, $persisted);
 
-        (new AuditDoctrineSubscriber($this->noTokenSecurity()))
+        $this->buildSubscriber($this->noTokenSecurity())
             ->onFlush($this->buildArgs($em));
 
         $this->assertSame('high', $persisted[0]->changedData()['priority'][0]);
@@ -308,7 +330,7 @@ final class AuditDoctrineSubscriberTest extends TestCase
         $persisted = [];
         $em = $this->buildEm($uow, $persisted);
 
-        (new AuditDoctrineSubscriber($this->noTokenSecurity()))
+        $this->buildSubscriber($this->noTokenSecurity())
             ->onFlush($this->buildArgs($em));
 
         $this->assertSame('Red', $persisted[0]->changedData()['color'][0]);
@@ -322,9 +344,85 @@ final class AuditDoctrineSubscriberTest extends TestCase
         $persisted = [];
         $em = $this->buildEm($uow, $persisted);
 
-        (new AuditDoctrineSubscriber($this->noTokenSecurity()))
+        $this->buildSubscriber($this->noTokenSecurity())
             ->onFlush($this->buildArgs($em));
 
         $this->assertSame('object-value', $persisted[0]->changedData()['obj'][0]);
+    }
+
+    // --- postFlush: relay to ClickHouse ---
+
+    public function testPostFlushDispatchesRecordAuditEntryMessageForEachPendingEntry(): void
+    {
+        $uow = $this->buildUow(insertions: [new AuditableStub()], entityId: 'eid-1');
+        $persisted = [];
+        $em = $this->buildEm($uow, $persisted);
+
+        $bus = $this->createMock(MessageBusInterface::class);
+        $bus->expects($this->once())
+            ->method('dispatch')
+            ->with($this->isInstanceOf(RecordAuditEntryMessage::class))
+            ->willReturnCallback(static fn (object $m): Envelope => new Envelope($m));
+
+        $subscriber = $this->buildSubscriber($this->noTokenSecurity(), $bus);
+        $subscriber->onFlush($this->buildArgs($em));
+        $subscriber->postFlush($this->buildPostFlushArgs());
+    }
+
+    public function testPostFlushMessageCarriesEntryDataWithNullsAsEmptyStrings(): void
+    {
+        $uow = $this->buildUow(insertions: [new AuditableStub()], entityId: 'eid-1');
+        $persisted = [];
+        $em = $this->buildEm($uow, $persisted);
+
+        $dispatched = null;
+        $bus = $this->createStub(MessageBusInterface::class);
+        $bus->method('dispatch')->willReturnCallback(function (object $m) use (&$dispatched): Envelope {
+            $dispatched = $m;
+
+            return new Envelope($m);
+        });
+
+        $subscriber = $this->buildSubscriber($this->noTokenSecurity(), $bus);
+        $subscriber->onFlush($this->buildArgs($em));
+        $subscriber->postFlush($this->buildPostFlushArgs());
+
+        $this->assertInstanceOf(RecordAuditEntryMessage::class, $dispatched);
+        $this->assertSame('eid-1', $dispatched->entityId);
+        $this->assertSame(AuditableStub::class, $dispatched->entityClass);
+        $this->assertSame('create', $dispatched->action);
+        $this->assertSame('stub-title', $dispatched->title);
+        $this->assertSame('', $dispatched->actorId);
+    }
+
+    public function testPostFlushDoesNotRedispatchAfterClearing(): void
+    {
+        $uow = $this->buildUow(insertions: [new AuditableStub()]);
+        $persisted = [];
+        $em = $this->buildEm($uow, $persisted);
+
+        $bus = $this->createMock(MessageBusInterface::class);
+        $bus->expects($this->once())
+            ->method('dispatch')
+            ->willReturnCallback(static fn (object $m): Envelope => new Envelope($m));
+
+        $subscriber = $this->buildSubscriber($this->noTokenSecurity(), $bus);
+        $subscriber->onFlush($this->buildArgs($em));
+        $subscriber->postFlush($this->buildPostFlushArgs());
+        $subscriber->postFlush($this->buildPostFlushArgs());
+    }
+
+    public function testPostFlushDispatchesNothingWhenNoEntitiesWereAudited(): void
+    {
+        $uow = $this->buildUow();
+        $persisted = [];
+        $em = $this->buildEm($uow, $persisted);
+
+        $bus = $this->createMock(MessageBusInterface::class);
+        $bus->expects($this->never())->method('dispatch');
+
+        $subscriber = $this->buildSubscriber($this->noTokenSecurity(), $bus);
+        $subscriber->onFlush($this->buildArgs($em));
+        $subscriber->postFlush($this->buildPostFlushArgs());
     }
 }

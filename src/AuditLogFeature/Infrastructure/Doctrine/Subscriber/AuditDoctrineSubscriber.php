@@ -5,17 +5,25 @@ declare(strict_types=1);
 namespace App\AuditLogFeature\Infrastructure\Doctrine\Subscriber;
 
 use App\AuditLogFeature\Domain\Entity\AuditEntry;
+use App\AuditLogFeature\Infrastructure\Messenger\Message\RecordAuditEntryMessage;
 use App\AuditLogFeatureApi\Contract\AuditableInterface;
 use App\UserFeature\Infrastructure\Security\SecurityUser;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Event\OnFlushEventArgs;
+use Doctrine\ORM\Event\PostFlushEventArgs;
 use Doctrine\ORM\UnitOfWork;
 use Symfony\Bundle\SecurityBundle\Security;
+use Symfony\Component\Messenger\MessageBusInterface;
 
 final class AuditDoctrineSubscriber
 {
-    public function __construct(private readonly Security $security)
-    {
+    /** @var list<AuditEntry> entries recorded during this flush, relayed to ClickHouse once it commits */
+    private array $pendingEntries = [];
+
+    public function __construct(
+        private readonly Security $security,
+        private readonly MessageBusInterface $defaultBus,
+    ) {
     }
 
     public function onFlush(OnFlushEventArgs $args): void
@@ -35,6 +43,28 @@ final class AuditDoctrineSubscriber
         foreach ($uow->getScheduledEntityDeletions() as $entity) {
             $this->audit($em, $uow, $entity, 'delete', [], $actorId);
         }
+    }
+
+    /**
+     * Relays entries recorded by this flush to ClickHouse, async and only once Postgres has
+     * actually committed them — postFlush does not run if the flush failed.
+     */
+    public function postFlush(PostFlushEventArgs $args): void
+    {
+        foreach ($this->pendingEntries as $entry) {
+            $this->defaultBus->dispatch(new RecordAuditEntryMessage(
+                $entry->id(),
+                $entry->entityClass(),
+                $entry->entityId(),
+                $entry->action(),
+                json_encode($entry->changedData(), JSON_THROW_ON_ERROR),
+                $entry->actorId() ?? '',
+                $entry->occurredAt(),
+                $entry->title() ?? '',
+            ));
+        }
+
+        $this->pendingEntries = [];
     }
 
     /**
@@ -72,6 +102,7 @@ final class AuditDoctrineSubscriber
 
         $em->persist($entry);
         $uow->computeChangeSet($em->getClassMetadata(AuditEntry::class), $entry);
+        $this->pendingEntries[] = $entry;
     }
 
     /**
