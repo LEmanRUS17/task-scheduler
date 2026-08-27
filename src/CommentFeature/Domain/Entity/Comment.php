@@ -118,6 +118,11 @@ final class Comment implements AuditableInterface
         return CommentContent::fromString($this->content);
     }
 
+    public function auditTitle(): string
+    {
+        return mb_strlen($this->content) > 80 ? mb_substr($this->content, 0, 80) . '…' : $this->content;
+    }
+
     public function parentId(): ?CommentId
     {
         return $this->parentId !== null ? CommentId::fromString($this->parentId) : null;

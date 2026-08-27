@@ -64,6 +64,11 @@ final class TeamMember implements AuditableInterface
         return $this->role;
     }
 
+    public function auditTitle(): ?string
+    {
+        return null;
+    }
+
     public function joinedAt(): \DateTimeImmutable
     {
         return $this->joinedAt;

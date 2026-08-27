@@ -59,6 +59,7 @@ final class GetMyAuditLogController
                     'id' => $entry->getId(),
                     'entityClass' => $entry->getEntityClass(),
                     'entityId' => $entry->getEntityId(),
+                    'title' => $entry->getTitle(),
                     'action' => $entry->getAction(),
                     'changedData' => $entry->getChangedData(),
                     'occurredAt' => $entry->getOccurredAt()->format(\DateTimeInterface::ATOM),

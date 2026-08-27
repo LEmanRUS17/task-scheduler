@@ -20,4 +20,6 @@ interface AuditEntryResponseInterface
     public function getActorId(): ?string;
 
     public function getOccurredAt(): \DateTimeImmutable;
+
+    public function getTitle(): ?string;
 }

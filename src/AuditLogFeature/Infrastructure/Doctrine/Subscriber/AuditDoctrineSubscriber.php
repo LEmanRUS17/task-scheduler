@@ -67,6 +67,7 @@ final class AuditDoctrineSubscriber
             $this->normalizeChangeSet($changedData),
             $actorId,
             new \DateTimeImmutable(),
+            $entity->auditTitle(),
         );
 
         $em->persist($entry);

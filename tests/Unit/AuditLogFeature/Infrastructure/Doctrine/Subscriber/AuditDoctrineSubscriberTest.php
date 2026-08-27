@@ -123,6 +123,18 @@ final class AuditDoctrineSubscriberTest extends TestCase
         $this->assertSame([], $entry->changedData());
     }
 
+    public function testCapturesEntityAuditTitle(): void
+    {
+        $uow = $this->buildUow(insertions: [new AuditableStub()]);
+        $persisted = [];
+        $em = $this->buildEm($uow, $persisted);
+
+        (new AuditDoctrineSubscriber($this->noTokenSecurity()))
+            ->onFlush($this->buildArgs($em));
+
+        $this->assertSame('stub-title', $persisted[0]->title());
+    }
+
     // --- Updates ---
 
     public function testAuditsUpdatedAuditableEntity(): void

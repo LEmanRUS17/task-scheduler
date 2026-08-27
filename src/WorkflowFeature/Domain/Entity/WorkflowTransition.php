@@ -76,6 +76,11 @@ final class WorkflowTransition implements DescribableInterface, AuditableInterfa
         return WorkflowId::fromString($this->workflowId);
     }
 
+    public function auditTitle(): string
+    {
+        return $this->name;
+    }
+
     public function name(): TransitionName
     {
         return TransitionName::fromString($this->name);

@@ -25,3 +25,4 @@ $builder->addField('action', 'string', ['length' => 10]);
 $builder->addField('changedData', 'json', ['columnName' => 'changed_data']);
 $builder->addField('actorId', 'string', ['columnName' => 'actor_id', 'length' => 36, 'nullable' => true]);
 $builder->addField('occurredAt', 'datetime_immutable', ['columnName' => 'occurred_at']);
+$builder->addField('title', 'string', ['length' => 255, 'nullable' => true]);

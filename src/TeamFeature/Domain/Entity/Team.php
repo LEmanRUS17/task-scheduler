@@ -59,6 +59,11 @@ final class Team implements AuditableInterface, DescribableInterface, TaggableIn
         return $this->status;
     }
 
+    public function auditTitle(): string
+    {
+        return $this->title;
+    }
+
     public function createdAt(): \DateTimeImmutable
     {
         return $this->createdAt;

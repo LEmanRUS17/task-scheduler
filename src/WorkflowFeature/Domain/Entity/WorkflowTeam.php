@@ -39,4 +39,9 @@ final class WorkflowTeam implements AuditableInterface
     {
         return $this->attachedAt;
     }
+
+    public function auditTitle(): ?string
+    {
+        return null;
+    }
 }

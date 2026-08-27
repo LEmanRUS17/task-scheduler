@@ -191,6 +191,11 @@ final class Task implements
         return $this->workflowDefinitionTitle;
     }
 
+    public function auditTitle(): string
+    {
+        return $this->title;
+    }
+
     public function isClosed(): bool
     {
         return $this->closedAt !== null;

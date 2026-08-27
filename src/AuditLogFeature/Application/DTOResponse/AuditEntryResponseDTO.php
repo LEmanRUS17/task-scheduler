@@ -17,6 +17,7 @@ final class AuditEntryResponseDTO implements AuditEntryResponseInterface
         private readonly array $changedData,
         private readonly ?string $actorId,
         private readonly \DateTimeImmutable $occurredAt,
+        private readonly ?string $title = null,
     ) {
     }
 
@@ -53,5 +54,10 @@ final class AuditEntryResponseDTO implements AuditEntryResponseInterface
     public function getOccurredAt(): \DateTimeImmutable
     {
         return $this->occurredAt;
+    }
+
+    public function getTitle(): ?string
+    {
+        return $this->title;
     }
 }

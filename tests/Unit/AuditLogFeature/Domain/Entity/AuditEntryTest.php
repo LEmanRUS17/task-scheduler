@@ -33,6 +33,37 @@ final class AuditEntryTest extends TestCase
         $this->assertSame($occurredAt, $entry->occurredAt());
     }
 
+    public function testTitleCanBeSet(): void
+    {
+        $entry = AuditEntry::record(
+            'entry-id-1',
+            'App\SomeEntity',
+            'entity-id-1',
+            'update',
+            [],
+            'actor-id-1',
+            new \DateTimeImmutable(),
+            'My Task',
+        );
+
+        $this->assertSame('My Task', $entry->title());
+    }
+
+    public function testTitleDefaultsToNull(): void
+    {
+        $entry = AuditEntry::record(
+            'entry-id-1',
+            'App\SomeEntity',
+            'entity-id-1',
+            'create',
+            [],
+            null,
+            new \DateTimeImmutable(),
+        );
+
+        $this->assertNull($entry->title());
+    }
+
     public function testActorIdCanBeNull(): void
     {
         $entry = AuditEntry::record(

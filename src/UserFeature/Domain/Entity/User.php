@@ -185,6 +185,11 @@ final class User implements AuditableInterface
         return HashedPassword::fromHash($this->password);
     }
 
+    public function auditTitle(): string
+    {
+        return $this->email;
+    }
+
     public function status(): UserStatus
     {
         return $this->status;
