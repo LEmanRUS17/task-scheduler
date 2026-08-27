@@ -21,6 +21,7 @@ final class AuditActivityEventCatalog
     private const ENTITY_CLASS_BY_EVENT = [
         'task_created' => self::TASK_CLASS,
         'task_closed' => self::TASK_CLASS,
+        'task_completed' => self::TASK_CLASS,
         'team_created' => self::TEAM_CLASS,
         'comment_created' => self::COMMENT_CLASS,
     ];
@@ -46,6 +47,11 @@ final class AuditActivityEventCatalog
     /**
      * Classifies an audit entry into one of the known event types.
      *
+     * A task closing is split into two events by how it happened, both detectable from the
+     * same audit entry: ApplyTaskTransitionInteractor sets workflowStatus and closedAt in one
+     * flush when a transition lands on a final status ("task_completed"), while
+     * CloseTaskInteractor only ever sets closedAt on its own ("task_closed").
+     *
      * @return string|null the matched event type, or null if the entry isn't a tracked business event
      */
     public static function classify(AuditEntry $entry): ?string
@@ -53,6 +59,10 @@ final class AuditActivityEventCatalog
         return match (true) {
             $entry->entityClass() === self::TASK_CLASS
                 && $entry->action() === 'create' => 'task_created',
+            $entry->entityClass() === self::TASK_CLASS
+                && $entry->action() === 'update'
+                && self::isFieldSetTransition($entry, 'closedAt')
+                && isset($entry->changedData()['workflowStatus']) => 'task_completed',
             $entry->entityClass() === self::TASK_CLASS
                 && $entry->action() === 'update'
                 && self::isFieldSetTransition($entry, 'closedAt') => 'task_closed',
