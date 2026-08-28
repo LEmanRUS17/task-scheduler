@@ -50,6 +50,7 @@ final class TaskResponseFormatter
             'description' => $task->getDescription(),
             'isClosed' => $task->isClosed(),
             'closedAt' => $task->getClosedAt()?->format(\DateTimeInterface::ATOM),
+            'state' => $task->getState(),
         ];
     }
 

@@ -81,6 +81,7 @@ final class TaskApiServiceTest extends TestCase
             $this->createStub(DescriptionServiceInterface::class),
             $tagService,
             $commentService ?? $this->createStub(CommentServiceInterface::class),
+            $clock,
         );
     }
 

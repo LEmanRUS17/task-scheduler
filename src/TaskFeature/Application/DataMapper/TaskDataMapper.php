@@ -10,6 +10,7 @@ use App\TaskFeature\Application\DTOResponse\TaskStatusHistoryResponseDTO;
 use App\TaskFeature\Domain\Entity\Task;
 use App\TaskFeature\Domain\Entity\TaskStatusHistory;
 use App\TaskFeature\Domain\ValueObject\TaskPriority;
+use App\TaskFeature\Domain\ValueObject\TaskState;
 use App\TaskFeature\Domain\ValueObject\TaskTitle;
 use App\TaskFeatureApi\DTORequest\TaskCreateRequestInterface;
 
@@ -40,7 +41,17 @@ final class TaskDataMapper
         ?string $description = null,
         ?ProfileDataResponseInterface $createdByProfile = null,
         array $assigneeProfiles = [],
+        bool $isStatusFinal = false,
+        ?\DateTimeImmutable $now = null,
     ): TaskResponseDTO {
+        $state = TaskState::resolve(
+            $task->isClosed(),
+            $isStatusFinal,
+            $task->scheduledStart(),
+            $task->scheduledEnd(),
+            $now ?? new \DateTimeImmutable(),
+        );
+
         return new TaskResponseDTO(
             $task->id()->value(),
             $task->title()->value(),
@@ -62,6 +73,7 @@ final class TaskDataMapper
             $assigneeProfiles,
             $task->isClosed(),
             $task->closedAt(),
+            $state->value,
         );
     }
 

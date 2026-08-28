@@ -14,6 +14,7 @@ use App\TaskFeature\Domain\Interactor\RemoveTaskAssigneeInteractor;
 use App\TaskFeature\Domain\Interactor\ReopenTaskInteractor;
 use App\TaskFeature\Domain\Event\TaskDeleted;
 use App\TaskFeature\Domain\Interactor\UpdateTaskInteractor;
+use App\TaskFeature\Domain\Port\ClockInterface;
 use App\TaskFeature\Domain\Port\DomainEventDispatcherInterface;
 use App\TaskFeature\Domain\Port\TeamMembershipInterface;
 use App\TaskFeature\Domain\Port\TaskWorkflowInterface;
@@ -33,6 +34,7 @@ use App\TagFeatureApi\Contract\TagServiceInterface;
 use App\ProfileFeatureApi\DTOResponse\ProfileDataResponseInterface;
 use App\ProfileFeatureApi\Service\ProfileServiceInterface;
 use App\TaskFeature\Domain\Entity\Task;
+use App\WorkflowFeature\Domain\Entity\WorkflowStatus;
 use App\WorkflowFeature\Domain\Repository\WorkflowStatusRepositoryInterface;
 use App\WorkflowFeature\Domain\Repository\WorkflowTransitionRepositoryInterface;
 use App\WorkflowFeature\Domain\ValueObject\WorkflowId;
@@ -62,6 +64,7 @@ final class TaskApiService implements TaskServiceInterface
         private readonly DescriptionServiceInterface $descriptions,
         private readonly TagServiceInterface $tagService,
         private readonly CommentServiceInterface $comments,
+        private readonly ClockInterface $clock,
     ) {
     }
 
@@ -302,7 +305,7 @@ final class TaskApiService implements TaskServiceInterface
         }, $this->statusHistory->findByTaskId($taskId));
     }
 
-    private function resolveStatusLabel(Task $task): ?string
+    private function resolveStatus(Task $task): ?WorkflowStatus
     {
         $statusId = $task->getWorkflowStatus();
 
@@ -310,22 +313,24 @@ final class TaskApiService implements TaskServiceInterface
             return null;
         }
 
-        $status = $this->statuses->findById(
+        return $this->statuses->findById(
             WorkflowId::fromString($task->getWorkflowDefinitionTitle()),
             $statusId,
         );
-
-        return $status?->label()->value();
     }
 
     private function taskToFullResponse(Task $task): TaskDataResponseInterface
     {
+        $status = $this->resolveStatus($task);
+
         return $this->dataMapper->taskToResponse(
             $task,
             $this->loadAssigneeIds($task->id()),
             $this->workflow->getEnabledTransitions($task),
-            $this->resolveStatusLabel($task),
+            $status?->label()->value(),
             $this->descriptions->get(Task::class, $task->id()->value()),
+            isStatusFinal: $status?->isFinal() ?? false,
+            now: $this->clock->now(),
         );
     }
 
@@ -339,15 +344,18 @@ final class TaskApiService implements TaskServiceInterface
     {
         $assigneeIds = $this->loadAssigneeIds($task->id());
         $profiles = $this->resolveProfiles([$task->createdBy(), ...$assigneeIds]);
+        $status = $this->resolveStatus($task);
 
         return $this->dataMapper->taskToResponse(
             $task,
             $assigneeIds,
             $task->isClosed() ? [] : $transitions,
-            $this->resolveStatusLabel($task),
+            $status?->label()->value(),
             $description,
             $profiles[$task->createdBy()] ?? null,
             array_intersect_key($profiles, array_flip($assigneeIds)),
+            $status?->isFinal() ?? false,
+            $this->clock->now(),
         );
     }
 

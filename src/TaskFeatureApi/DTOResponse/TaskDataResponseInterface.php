@@ -32,4 +32,6 @@ interface TaskDataResponseInterface
     public function getDescription(): ?string;
     public function isClosed(): bool;
     public function getClosedAt(): ?\DateTimeImmutable;
+    /** One of "planned", "active", "closed", "completed"; see {@see \App\TaskFeature\Domain\ValueObject\TaskState}. */
+    public function getState(): string;
 }
