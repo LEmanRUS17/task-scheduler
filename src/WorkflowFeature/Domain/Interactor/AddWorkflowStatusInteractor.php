@@ -41,6 +41,10 @@ final class AddWorkflowStatusInteractor
             throw WorkflowAccessDeniedException::notOwner($workflowId->value());
         }
 
+        if ($workflow->isDefault()) {
+            throw WorkflowAccessDeniedException::isDefaultWorkflow($workflowId->value());
+        }
+
         if ($this->statuses->findByLabel($workflowId, $label->value()) !== null) {
             throw new \DomainException("Status \"{$label->value()}\" already exists in this workflow");
         }

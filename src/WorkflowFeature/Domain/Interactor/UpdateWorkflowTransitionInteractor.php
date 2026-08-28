@@ -43,6 +43,10 @@ final class UpdateWorkflowTransitionInteractor
             throw WorkflowAccessDeniedException::notOwner($workflowId->value());
         }
 
+        if ($workflow->isDefault()) {
+            throw WorkflowAccessDeniedException::isDefaultWorkflow($workflowId->value());
+        }
+
         $transition = $this->transitions->findById($transitionId);
 
         if ($transition === null || $transition->workflowId()->value() !== $workflowId->value()) {

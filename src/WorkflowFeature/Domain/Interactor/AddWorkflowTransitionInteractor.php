@@ -44,6 +44,10 @@ final class AddWorkflowTransitionInteractor
             throw WorkflowAccessDeniedException::notOwner($workflowId->value());
         }
 
+        if ($workflow->isDefault()) {
+            throw WorkflowAccessDeniedException::isDefaultWorkflow($workflowId->value());
+        }
+
         if ($this->statuses->findById($workflowId, $fromStatusId->value()) === null) {
             throw new \DomainException("Status \"{$fromStatusId->value()}\" not found in this workflow");
         }

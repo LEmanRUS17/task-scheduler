@@ -31,6 +31,10 @@ final class UpdateWorkflowInteractor
             throw WorkflowAccessDeniedException::notOwner($workflowId->value());
         }
 
+        if ($workflow->isDefault()) {
+            throw WorkflowAccessDeniedException::isDefaultWorkflow($workflowId->value());
+        }
+
         $workflow->updateTitle($title);
 
         $this->workflows->save($workflow);

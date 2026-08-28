@@ -39,6 +39,10 @@ final class UpdateWorkflowStatusInteractor
             throw WorkflowAccessDeniedException::notOwner($workflowId->value());
         }
 
+        if ($workflow->isDefault()) {
+            throw WorkflowAccessDeniedException::isDefaultWorkflow($workflowId->value());
+        }
+
         $status = $this->statuses->findById($workflowId, $statusId->value());
 
         if ($status === null) {
