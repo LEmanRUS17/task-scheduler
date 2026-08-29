@@ -19,12 +19,12 @@ enum TaskState: string
         ?\DateTimeImmutable $scheduledEnd,
         \DateTimeImmutable $now,
     ): self {
-        if ($isClosed) {
-            return self::CLOSED;
-        }
-
         if ($isCompleted) {
             return self::COMPLETED;
+        }
+
+        if ($isClosed) {
+            return self::CLOSED;
         }
 
         if ($scheduledEnd !== null && $now > $scheduledEnd) {
