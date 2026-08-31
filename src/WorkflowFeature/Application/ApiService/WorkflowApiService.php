@@ -366,6 +366,16 @@ final class WorkflowApiService implements WorkflowServiceInterface
             : null;
     }
 
+    public function getStatusLabelsByIds(array $statusIds): array
+    {
+        $labels = [];
+        foreach ($this->statuses->findByIds($statusIds) as $status) {
+            $labels[$status->id()->value()] = $status->label()->value();
+        }
+
+        return $labels;
+    }
+
     public function getStatuses(string $workflowId): array
     {
         return array_map(

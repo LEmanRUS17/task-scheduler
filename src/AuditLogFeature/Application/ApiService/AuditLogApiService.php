@@ -11,11 +11,16 @@ use App\AuditLogFeature\Domain\Repository\AuditEntryRepositoryInterface;
 use App\AuditLogFeature\Domain\Service\AuditActivityEventCatalog;
 use App\AuditLogFeature\Domain\Service\AuditEntityTypeCatalog;
 use App\AuditLogFeatureApi\Contract\AuditLogServiceInterface;
+use App\WorkflowFeatureApi\Service\WorkflowServiceInterface;
 
 final class AuditLogApiService implements AuditLogServiceInterface
 {
+    private const TASK_CLASS = 'App\TaskFeature\Domain\Entity\Task';
+    private const WORKFLOW_STATUS_FIELD = 'workflowStatus';
+
     public function __construct(
         private readonly AuditEntryRepositoryInterface $auditEntryRepository,
+        private readonly WorkflowServiceInterface $workflowService,
     ) {
     }
 
@@ -31,15 +36,16 @@ final class AuditLogApiService implements AuditLogServiceInterface
 
         $entries = $this->auditEntryRepository->findByActor($userId, $from, $to, $limit, $offset, $entityClasses);
         $count = $this->auditEntryRepository->countByActor($userId, $from, $to, $entityClasses);
+        $statusLabels = $this->resolveWorkflowStatusLabels($entries);
 
         return [
             'entries' => array_map(
-                static fn (AuditEntry $entry): AuditEntryResponseDTO => new AuditEntryResponseDTO(
+                fn (AuditEntry $entry): AuditEntryResponseDTO => new AuditEntryResponseDTO(
                     $entry->id(),
                     $entry->entityClass(),
                     $entry->entityId(),
                     $entry->action(),
-                    $entry->changedData(),
+                    $this->withWorkflowStatusLabels($entry, $statusLabels),
                     $entry->actorId(),
                     $entry->occurredAt(),
                     $entry->title(),
@@ -49,6 +55,49 @@ final class AuditLogApiService implements AuditLogServiceInterface
             ),
             'count' => $count,
         ];
+    }
+
+    /**
+     * @param AuditEntry[] $entries
+     * @return array<string, string> workflow status id => label
+     */
+    private function resolveWorkflowStatusLabels(array $entries): array
+    {
+        $ids = [];
+        foreach ($entries as $entry) {
+            if ($entry->entityClass() !== self::TASK_CLASS) {
+                continue;
+            }
+
+            foreach ($entry->changedData()[self::WORKFLOW_STATUS_FIELD] ?? [] as $statusId) {
+                if (is_string($statusId) && $statusId !== '') {
+                    $ids[$statusId] = true;
+                }
+            }
+        }
+
+        return $ids === [] ? [] : $this->workflowService->getStatusLabelsByIds(array_keys($ids));
+    }
+
+    /**
+     * @param array<string, string> $statusLabels
+     * @return array<string, array{0: mixed, 1: mixed}>
+     */
+    private function withWorkflowStatusLabels(AuditEntry $entry, array $statusLabels): array
+    {
+        $changedData = $entry->changedData();
+
+        if ($statusLabels === [] || !isset($changedData[self::WORKFLOW_STATUS_FIELD])) {
+            return $changedData;
+        }
+
+        [$old, $new] = $changedData[self::WORKFLOW_STATUS_FIELD];
+        $changedData[self::WORKFLOW_STATUS_FIELD] = [
+            is_string($old) ? ($statusLabels[$old] ?? $old) : $old,
+            is_string($new) ? ($statusLabels[$new] ?? $new) : $new,
+        ];
+
+        return $changedData;
     }
 
     public function getMyActivityCalendar(

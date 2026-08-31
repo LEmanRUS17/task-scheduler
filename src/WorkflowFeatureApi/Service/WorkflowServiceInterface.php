@@ -107,6 +107,15 @@ interface WorkflowServiceInterface
     public function getStatuses(string $workflowId): array;
 
     /**
+     * Resolves status labels for reporting/statistics, independent of which workflow each
+     * status belongs to (status ids are globally unique).
+     *
+     * @param string[] $statusIds
+     * @return array<string, string> status id => label, omitting ids that no longer exist
+     */
+    public function getStatusLabelsByIds(array $statusIds): array;
+
+    /**
      * @throws \InvalidArgumentException if $request fails validation
      * @throws \DomainException if the workflow does not exist or $userId is not its creator
      */

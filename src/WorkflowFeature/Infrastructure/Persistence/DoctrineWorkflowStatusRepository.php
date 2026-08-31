@@ -45,6 +45,15 @@ final class DoctrineWorkflowStatusRepository implements WorkflowStatusRepository
         ]);
     }
 
+    public function findByIds(array $ids): array
+    {
+        if ($ids === []) {
+            return [];
+        }
+
+        return $this->entityManager->getRepository(WorkflowStatus::class)->findBy(['id' => $ids]);
+    }
+
     public function findInitial(WorkflowId $workflowId): ?WorkflowStatus
     {
         return $this->entityManager->getRepository(WorkflowStatus::class)->findOneBy([
