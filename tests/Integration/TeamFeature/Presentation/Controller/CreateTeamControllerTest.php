@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Tests\Integration\TeamFeature\Presentation\Controller;
 
 use App\TagFeatureApi\Contract\TagServiceInterface;
+use App\TagFeatureApi\DTOResponse\TagResponseInterface;
 use App\TeamFeatureApi\DTORequest\TeamCreateRequestInterface;
 use App\TeamFeatureApi\DTOResponse\TeamDataResponseInterface;
 use App\TeamFeatureApi\Service\TeamServiceInterface;
@@ -46,7 +47,7 @@ final class CreateTeamControllerTest extends WebTestCase
         $workflow->method('isDefault')->willReturn(false);
 
         $workflowService = $this->createMock(WorkflowServiceInterface::class);
-        $workflowService->method('getById')->with(self::WORKFLOW_ID)->willReturn($workflow);
+        $workflowService->expects($this->any())->method('getById')->with(self::WORKFLOW_ID)->willReturn($workflow);
         $workflowService->expects($this->once())
             ->method('attachToTeam')
             ->with(self::WORKFLOW_ID, self::TEAM_ID, $user->id()->value());
@@ -98,7 +99,7 @@ final class CreateTeamControllerTest extends WebTestCase
         $workflow->method('isDefault')->willReturn(false);
 
         $workflowService = $this->createMock(WorkflowServiceInterface::class);
-        $workflowService->method('getById')->with(self::WORKFLOW_ID)->willReturn($workflow);
+        $workflowService->expects($this->any())->method('getById')->with(self::WORKFLOW_ID)->willReturn($workflow);
         $workflowService->expects($this->never())->method('attachToTeam');
         static::getContainer()->set(WorkflowServiceInterface::class, $workflowService);
 
@@ -130,7 +131,7 @@ final class CreateTeamControllerTest extends WebTestCase
         $this->stubUserRepository($user);
 
         $workflowService = $this->createMock(WorkflowServiceInterface::class);
-        $workflowService->method('getById')->with(self::WORKFLOW_ID)->willReturn(null);
+        $workflowService->expects($this->any())->method('getById')->with(self::WORKFLOW_ID)->willReturn(null);
         static::getContainer()->set(WorkflowServiceInterface::class, $workflowService);
 
         $teamService = $this->createMock(TeamServiceInterface::class);
@@ -162,7 +163,7 @@ final class CreateTeamControllerTest extends WebTestCase
         $workflow->method('isDefault')->willReturn(true);
 
         $workflowService = $this->createMock(WorkflowServiceInterface::class);
-        $workflowService->method('getById')->with(self::WORKFLOW_ID)->willReturn($workflow);
+        $workflowService->expects($this->any())->method('getById')->with(self::WORKFLOW_ID)->willReturn($workflow);
         $workflowService->expects($this->never())->method('attachToTeam');
         static::getContainer()->set(WorkflowServiceInterface::class, $workflowService);
 
@@ -183,6 +184,9 @@ final class CreateTeamControllerTest extends WebTestCase
         $this->assertResponseStatusCodeSame(Response::HTTP_UNPROCESSABLE_ENTITY);
     }
 
+    /**
+     * @param array<string, list<TagResponseInterface>> $tagsByTeam
+     */
     private function stubTagService(array $tagsByTeam): void
     {
         $tagService = $this->createStub(TagServiceInterface::class);

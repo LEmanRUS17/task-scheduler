@@ -18,6 +18,7 @@ final class AuditEntryResponseDTO implements AuditEntryResponseInterface
         private readonly ?string $actorId,
         private readonly \DateTimeImmutable $occurredAt,
         private readonly ?string $title = null,
+        private readonly ?string $eventType = null,
     ) {
     }
 
@@ -59,5 +60,10 @@ final class AuditEntryResponseDTO implements AuditEntryResponseInterface
     public function getTitle(): ?string
     {
         return $this->title;
+    }
+
+    public function getEventType(): ?string
+    {
+        return $this->eventType;
     }
 }

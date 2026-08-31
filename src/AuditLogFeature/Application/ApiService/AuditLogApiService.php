@@ -43,6 +43,7 @@ final class AuditLogApiService implements AuditLogServiceInterface
                     $entry->actorId(),
                     $entry->occurredAt(),
                     $entry->title(),
+                    AuditActivityEventCatalog::classify($entry),
                 ),
                 $entries,
             ),

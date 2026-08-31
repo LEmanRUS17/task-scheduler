@@ -22,4 +22,6 @@ interface AuditEntryResponseInterface
     public function getOccurredAt(): \DateTimeImmutable;
 
     public function getTitle(): ?string;
+
+    public function getEventType(): ?string;
 }
