@@ -38,13 +38,23 @@ final class AuditActivityEventCatalogTest extends TestCase
         $this->assertSame('task_completed', AuditActivityEventCatalog::classify($entry));
     }
 
-    public function testDoesNotClassifyPlainWorkflowTransitionAsClosingEvent(): void
+    public function testClassifiesPlainWorkflowTransitionAsStatusChanged(): void
     {
         $entry = $this->makeEntry(self::TASK_CLASS, 'update', [
             'workflowStatus' => ['todo', 'in_progress'],
         ]);
 
-        $this->assertNull(AuditActivityEventCatalog::classify($entry));
+        $this->assertSame('task_status_changed', AuditActivityEventCatalog::classify($entry));
+    }
+
+    public function testClassifiesStatusChangeAlongsideReopenAsStatusChanged(): void
+    {
+        $entry = $this->makeEntry(self::TASK_CLASS, 'update', [
+            'workflowStatus' => ['done', 'in_progress'],
+            'closedAt' => ['2024-05-01T10:00:00+00:00', null],
+        ]);
+
+        $this->assertSame('task_status_changed', AuditActivityEventCatalog::classify($entry));
     }
 
     public function testDoesNotClassifyReopeningAsClosingEvent(): void
@@ -66,6 +76,11 @@ final class AuditActivityEventCatalogTest extends TestCase
     public function testAllEventTypesIncludesTaskCompleted(): void
     {
         $this->assertContains('task_completed', AuditActivityEventCatalog::allEventTypes());
+    }
+
+    public function testAllEventTypesIncludesTaskStatusChanged(): void
+    {
+        $this->assertContains('task_status_changed', AuditActivityEventCatalog::allEventTypes());
     }
 
     /**

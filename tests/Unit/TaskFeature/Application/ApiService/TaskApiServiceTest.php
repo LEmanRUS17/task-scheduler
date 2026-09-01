@@ -7,6 +7,7 @@ namespace App\Tests\Unit\TaskFeature\Application\ApiService;
 use App\TaskFeature\Application\ApiService\TaskApiService;
 use App\TaskFeature\Application\DataMapper\TaskDataMapper;
 use App\TaskFeature\Application\DTORequest\TaskCreateRequestDTO;
+use App\TaskFeature\Application\DTORequest\TaskUpdateRequestDTO;
 use App\TaskFeature\Application\DTORequestValidator\TaskValidatorInterface;
 use App\TaskFeature\Domain\Entity\Task;
 use App\TaskFeature\Domain\Interactor\AddTaskAssigneeInteractor;
@@ -45,6 +46,7 @@ final class TaskApiServiceTest extends TestCase
         ?TagServiceInterface $tagService = null,
         ?ClockInterface $clock = null,
         ?CommentServiceInterface $commentService = null,
+        ?DescriptionServiceInterface $descriptions = null,
     ): TaskApiService {
         $dispatcher = $this->createStub(DomainEventDispatcherInterface::class);
         $clock ??= $this->createStub(ClockInterface::class);
@@ -76,7 +78,7 @@ final class TaskApiServiceTest extends TestCase
             $dispatcher,
             $workflow,
             $teamMembership,
-            $this->createStub(DescriptionServiceInterface::class),
+            $descriptions ?? $this->createStub(DescriptionServiceInterface::class),
             $tagService,
             $commentService ?? $this->createStub(CommentServiceInterface::class),
             $clock,
@@ -347,6 +349,68 @@ final class TaskApiServiceTest extends TestCase
             null,
             $commentService,
         )->deleteById($task->id()->value());
+    }
+
+    // --- update ---
+
+    public function testUpdateSetsDescriptionWhenProvided(): void
+    {
+        $task = $this->makeTask();
+
+        $tasks = $this->createStub(TaskRepositoryInterface::class);
+        $tasks->method('findById')->willReturn($task);
+
+        $validator = $this->createStub(TaskValidatorInterface::class);
+        $validator->method('validateUpdate')->willReturn([]);
+
+        $descriptions = $this->createMock(DescriptionServiceInterface::class);
+        $descriptions->expects($this->once())
+            ->method('set')
+            ->with(Task::class, $task->id()->value(), 'Updated description');
+        $descriptions->method('get')->willReturn('Updated description');
+
+        $service = $this->buildService(
+            $tasks,
+            $this->createStub(TaskAssigneeRepositoryInterface::class),
+            $this->createStub(TeamMembershipInterface::class),
+            validator: $validator,
+            descriptions: $descriptions,
+        );
+
+        $request = new TaskUpdateRequestDTO(description: 'Updated description');
+
+        $response = $service->update($task->id()->value(), $request);
+
+        $this->assertSame('Updated description', $response->getDescription());
+    }
+
+    public function testUpdateLeavesDescriptionUntouchedWhenNotProvided(): void
+    {
+        $task = $this->makeTask();
+
+        $tasks = $this->createStub(TaskRepositoryInterface::class);
+        $tasks->method('findById')->willReturn($task);
+
+        $validator = $this->createStub(TaskValidatorInterface::class);
+        $validator->method('validateUpdate')->willReturn([]);
+
+        $descriptions = $this->createMock(DescriptionServiceInterface::class);
+        $descriptions->expects($this->never())->method('set');
+        $descriptions->method('get')->willReturn('Existing description');
+
+        $service = $this->buildService(
+            $tasks,
+            $this->createStub(TaskAssigneeRepositoryInterface::class),
+            $this->createStub(TeamMembershipInterface::class),
+            validator: $validator,
+            descriptions: $descriptions,
+        );
+
+        $request = new TaskUpdateRequestDTO(title: 'New title');
+
+        $response = $service->update($task->id()->value(), $request);
+
+        $this->assertSame('Existing description', $response->getDescription());
     }
 
     // --- create with tags ---

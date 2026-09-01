@@ -22,6 +22,7 @@ final class AuditLogApiService implements AuditLogServiceInterface
         private readonly AuditEntryRepositoryInterface $auditEntryRepository,
         private readonly WorkflowServiceInterface $workflowService,
     ) {
+        return;
     }
 
     public function getMyActivity(
@@ -40,7 +41,7 @@ final class AuditLogApiService implements AuditLogServiceInterface
 
         return [
             'entries' => array_map(
-                fn (AuditEntry $entry): AuditEntryResponseDTO => new AuditEntryResponseDTO(
+                fn(AuditEntry $entry): AuditEntryResponseDTO => new AuditEntryResponseDTO(
                     $entry->id(),
                     $entry->entityClass(),
                     $entry->entityId(),
@@ -87,7 +88,7 @@ final class AuditLogApiService implements AuditLogServiceInterface
     {
         $changedData = $entry->changedData();
 
-        if ($statusLabels === [] || !isset($changedData[self::WORKFLOW_STATUS_FIELD])) {
+        if (!isset($changedData[self::WORKFLOW_STATUS_FIELD])) {
             return $changedData;
         }
 

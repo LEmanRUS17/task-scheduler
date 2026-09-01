@@ -43,7 +43,7 @@ final class AuditLogApiServiceTest extends TestCase
         self::assertSame('task_completed', $result['entries'][0]->getEventType());
     }
 
-    public function testGetMyActivityLeavesEventTypeNullForUnclassifiedEntry(): void
+    public function testGetMyActivityExposesEventTypeForPlainStatusTransition(): void
     {
         $entry = AuditEntry::record(
             'entry-id-2',
@@ -51,6 +51,32 @@ final class AuditLogApiServiceTest extends TestCase
             'task-id-2',
             'update',
             ['workflowStatus' => ['todo', 'in_progress']],
+            'actor-id-1',
+            new \DateTimeImmutable('2024-05-01 10:00:00'),
+        );
+
+        $repository = $this->createStub(AuditEntryRepositoryInterface::class);
+        $repository->method('findByActor')->willReturn([$entry]);
+        $repository->method('countByActor')->willReturn(1);
+
+        $workflowService = $this->createStub(WorkflowServiceInterface::class);
+        $workflowService->method('getStatusLabelsByIds')->willReturn([]);
+
+        $service = new AuditLogApiService($repository, $workflowService);
+
+        $result = $service->getMyActivity('actor-id-1', null, null, 20, 0);
+
+        self::assertSame('task_status_changed', $result['entries'][0]->getEventType());
+    }
+
+    public function testGetMyActivityLeavesEventTypeNullForUnclassifiedEntry(): void
+    {
+        $entry = AuditEntry::record(
+            'entry-id-5',
+            'App\SomeFeature\Domain\Entity\Other',
+            'other-id-1',
+            'update',
+            ['name' => ['old', 'new']],
             'actor-id-1',
             new \DateTimeImmutable('2024-05-01 10:00:00'),
         );
