@@ -12,6 +12,7 @@ use App\TaskFeature\Domain\Interactor\CloseTaskInteractor;
 use App\TaskFeature\Domain\Interactor\CreateTaskInteractor;
 use App\TaskFeature\Domain\Interactor\RemoveTaskAssigneeInteractor;
 use App\TaskFeature\Domain\Interactor\ReopenTaskInteractor;
+use App\TaskFeature\Domain\Interactor\SetTaskAssigneesInteractor;
 use App\TaskFeature\Domain\Event\TaskDeleted;
 use App\TaskFeature\Domain\Interactor\UpdateTaskInteractor;
 use App\TaskFeature\Domain\Port\ClockInterface;
@@ -50,6 +51,7 @@ final class TaskApiService implements TaskServiceInterface
         private readonly ReopenTaskInteractor $reopenInteractor,
         private readonly AddTaskAssigneeInteractor $addAssigneeInteractor,
         private readonly RemoveTaskAssigneeInteractor $removeAssigneeInteractor,
+        private readonly SetTaskAssigneesInteractor $setAssigneesInteractor,
         private readonly TaskRepositoryInterface $tasks,
         private readonly TaskAssigneeRepositoryInterface $assignees,
         private readonly TaskStatusHistoryRepositoryInterface $statusHistory,
@@ -192,6 +194,17 @@ final class TaskApiService implements TaskServiceInterface
     {
         $violations = $this->validator->validateUpdate($dtoRequest);
 
+        $assigneeIds = $dtoRequest->getAssigneeIds();
+        if ($assigneeIds !== null) {
+            $existingTask = $this->tasks->findById(TaskId::fromString($id));
+            if ($existingTask !== null) {
+                $violations = array_merge_recursive(
+                    $violations,
+                    $this->validateAssigneeIds($existingTask->teamId(), $assigneeIds),
+                );
+            }
+        }
+
         if (!empty($violations)) {
             throw new \InvalidArgumentException(json_encode($violations));
         }
@@ -205,6 +218,10 @@ final class TaskApiService implements TaskServiceInterface
             $dtoRequest->getEstimatedTime(),
         );
 
+        if ($assigneeIds !== null) {
+            $this->setAssigneesInteractor->set(TaskId::fromString($id), $assigneeIds);
+        }
+
         $description = $dtoRequest->getDescription();
         if ($description !== null) {
             $this->descriptions->set(Task::class, $id, $description);
@@ -215,6 +232,30 @@ final class TaskApiService implements TaskServiceInterface
             $this->workflow->getEnabledTransitions($task),
             $this->descriptions->get(Task::class, $id),
         );
+    }
+
+    /**
+     * @param string[] $assigneeIds
+     * @return array<string, string[]>
+     */
+    private function validateAssigneeIds(?string $teamId, array $assigneeIds): array
+    {
+        if ($assigneeIds === []) {
+            return [];
+        }
+
+        if ($teamId === null) {
+            return ['assigneeIds' => ['Cannot assign users to a task without a team']];
+        }
+
+        $violations = [];
+        foreach ($assigneeIds as $assigneeId) {
+            if (!$this->teamMembership->isMember($teamId, $assigneeId)) {
+                $violations['assigneeIds'][] = sprintf('User "%s" is not a member of the task team', $assigneeId);
+            }
+        }
+
+        return $violations;
     }
 
     public function applyTransition(string $id, string $transition): TaskDataResponseInterface

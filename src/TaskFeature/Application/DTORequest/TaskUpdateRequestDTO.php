@@ -22,6 +22,12 @@ final class TaskUpdateRequestDTO implements TaskUpdateRequestInterface
         #[Assert\PositiveOrZero(message: 'Estimated time must be a non-negative integer')]
         private readonly ?int $estimatedTime = null,
         private readonly ?string $description = null,
+        /** @var string[]|null */
+        #[Assert\All([
+            new Assert\Type(type: 'string', message: 'Assignee id must be a string'),
+            new Assert\NotBlank(message: 'Assignee id must not be blank'),
+        ])]
+        private readonly ?array $assigneeIds = null,
     ) {
     }
 
@@ -53,5 +59,10 @@ final class TaskUpdateRequestDTO implements TaskUpdateRequestInterface
     public function getDescription(): ?string
     {
         return $this->description;
+    }
+
+    public function getAssigneeIds(): ?array
+    {
+        return $this->assigneeIds;
     }
 }

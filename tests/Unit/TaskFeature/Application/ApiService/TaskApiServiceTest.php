@@ -10,12 +10,14 @@ use App\TaskFeature\Application\DTORequest\TaskCreateRequestDTO;
 use App\TaskFeature\Application\DTORequest\TaskUpdateRequestDTO;
 use App\TaskFeature\Application\DTORequestValidator\TaskValidatorInterface;
 use App\TaskFeature\Domain\Entity\Task;
+use App\TaskFeature\Domain\Entity\TaskAssignee;
 use App\TaskFeature\Domain\Interactor\AddTaskAssigneeInteractor;
 use App\TaskFeature\Domain\Interactor\ApplyTaskTransitionInteractor;
 use App\TaskFeature\Domain\Interactor\CloseTaskInteractor;
 use App\TaskFeature\Domain\Interactor\CreateTaskInteractor;
 use App\TaskFeature\Domain\Interactor\RemoveTaskAssigneeInteractor;
 use App\TaskFeature\Domain\Interactor\ReopenTaskInteractor;
+use App\TaskFeature\Domain\Interactor\SetTaskAssigneesInteractor;
 use App\TaskFeature\Domain\Interactor\UpdateTaskInteractor;
 use App\TaskFeature\Domain\Port\ClockInterface;
 use App\TaskFeature\Domain\Port\DomainEventDispatcherInterface;
@@ -67,6 +69,7 @@ final class TaskApiServiceTest extends TestCase
             new ReopenTaskInteractor($tasks, $this->createStub(WorkflowStatusRepositoryInterface::class), $dispatcher),
             new AddTaskAssigneeInteractor($tasks, $assignees, $teamMembership, $dispatcher, $clock),
             new RemoveTaskAssigneeInteractor($tasks, $assignees, $dispatcher),
+            new SetTaskAssigneesInteractor($tasks, $assignees, $dispatcher, $clock),
             $tasks,
             $assignees,
             $this->createStub(TaskStatusHistoryRepositoryInterface::class),
@@ -86,7 +89,7 @@ final class TaskApiServiceTest extends TestCase
     }
 
     private function makeTask(
-        string $teamId = 'team-1',
+        ?string $teamId = 'team-1',
         string $id = 'a1b2c3d4-e5f6-4789-8abc-def012345678',
         string $title = 'Test Task',
     ): Task {
@@ -411,6 +414,114 @@ final class TaskApiServiceTest extends TestCase
         $response = $service->update($task->id()->value(), $request);
 
         $this->assertSame('Existing description', $response->getDescription());
+    }
+
+    public function testUpdateSyncsAssigneesWhenProvided(): void
+    {
+        $task = $this->makeTask();
+
+        $tasks = $this->createStub(TaskRepositoryInterface::class);
+        $tasks->method('findById')->willReturn($task);
+
+        $validator = $this->createStub(TaskValidatorInterface::class);
+        $validator->method('validateUpdate')->willReturn([]);
+
+        $teamMembership = $this->createStub(TeamMembershipInterface::class);
+        $teamMembership->method('isMember')->willReturn(true);
+
+        $existingAssignee = TaskAssignee::assign($task->id(), 'user-old', new \DateTimeImmutable());
+
+        $assignees = $this->createMock(TaskAssigneeRepositoryInterface::class);
+        $assignees->method('findByTaskId')->willReturn([$existingAssignee]);
+        $assignees->expects($this->once())->method('save');
+        $assignees->expects($this->once())->method('delete')->with($existingAssignee);
+
+        $service = $this->buildService(
+            $tasks,
+            $assignees,
+            $teamMembership,
+            validator: $validator,
+        );
+
+        $service->update($task->id()->value(), new TaskUpdateRequestDTO(assigneeIds: ['user-new']));
+    }
+
+    public function testUpdateLeavesAssigneesUntouchedWhenNotProvided(): void
+    {
+        $task = $this->makeTask();
+
+        $tasks = $this->createStub(TaskRepositoryInterface::class);
+        $tasks->method('findById')->willReturn($task);
+
+        $validator = $this->createStub(TaskValidatorInterface::class);
+        $validator->method('validateUpdate')->willReturn([]);
+
+        $assignees = $this->createMock(TaskAssigneeRepositoryInterface::class);
+        $assignees->method('findByTaskId')->willReturn([]);
+        $assignees->expects($this->never())->method('save');
+        $assignees->expects($this->never())->method('delete');
+
+        $service = $this->buildService(
+            $tasks,
+            $assignees,
+            $this->createStub(TeamMembershipInterface::class),
+            validator: $validator,
+        );
+
+        $service->update($task->id()->value(), new TaskUpdateRequestDTO(title: 'New title'));
+    }
+
+    public function testUpdateRejectsAssigneesNotInTeam(): void
+    {
+        $task = $this->makeTask();
+
+        $tasks = $this->createStub(TaskRepositoryInterface::class);
+        $tasks->method('findById')->willReturn($task);
+
+        $validator = $this->createStub(TaskValidatorInterface::class);
+        $validator->method('validateUpdate')->willReturn([]);
+
+        $teamMembership = $this->createStub(TeamMembershipInterface::class);
+        $teamMembership->method('isMember')->willReturn(false);
+
+        $assignees = $this->createMock(TaskAssigneeRepositoryInterface::class);
+        $assignees->expects($this->never())->method('save');
+
+        $service = $this->buildService(
+            $tasks,
+            $assignees,
+            $teamMembership,
+            validator: $validator,
+        );
+
+        $this->expectException(\InvalidArgumentException::class);
+
+        $service->update($task->id()->value(), new TaskUpdateRequestDTO(assigneeIds: ['user-outsider']));
+    }
+
+    public function testUpdateRejectsAssigneesWhenTaskHasNoTeam(): void
+    {
+        $task = $this->makeTask(teamId: null);
+
+        $tasks = $this->createStub(TaskRepositoryInterface::class);
+        $tasks->method('findById')->willReturn($task);
+
+        $validator = $this->createStub(TaskValidatorInterface::class);
+        $validator->method('validateUpdate')->willReturn([]);
+
+        $assignees = $this->createMock(TaskAssigneeRepositoryInterface::class);
+        $assignees->expects($this->never())->method('save');
+
+        $service = $this->buildService(
+            $tasks,
+            $assignees,
+            $this->createStub(TeamMembershipInterface::class),
+            validator: $validator,
+        );
+
+        $this->expectException(\InvalidArgumentException::class);
+
+        $service->update($task->id()->value(), new TaskUpdateRequestDTO(assigneeIds: ['user-new']));
     }
 
     // --- create with tags ---

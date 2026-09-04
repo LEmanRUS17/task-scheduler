@@ -97,6 +97,75 @@ final class UpdateTaskControllerTest extends WebTestCase
         $this->assertSame('Kept description', $body['description']);
     }
 
+    public function testAssigneeIdsSentOverHttpReachTheTaskService(): void
+    {
+        $user = $this->makeUser();
+        $client = static::createClient();
+        $this->stubUserRepository($user);
+
+        $existingTask = $this->makeTask(self::USER_ID, 'Description');
+
+        $taskService = $this->createMock(TaskServiceInterface::class);
+        $taskService->method('getById')->with(self::TASK_ID)->willReturn($existingTask);
+        $taskService->expects($this->once())
+            ->method('update')
+            ->with(
+                self::TASK_ID,
+                self::callback(
+                    static fn (TaskUpdateRequestInterface $request): bool =>
+                        $request->getAssigneeIds() === ['user-a', 'user-b'],
+                ),
+            )
+            ->willReturn($existingTask);
+        static::getContainer()->set(TaskServiceInterface::class, $taskService);
+
+        $client->request(
+            'PATCH',
+            '/task/' . self::TASK_ID,
+            server: [
+                'HTTP_AUTHORIZATION' => 'Bearer ' . $this->generateToken($user),
+                'CONTENT_TYPE' => 'application/json',
+            ],
+            content: json_encode(['assigneeIds' => ['user-a', 'user-b']], JSON_THROW_ON_ERROR),
+        );
+
+        $this->assertResponseIsSuccessful();
+    }
+
+    public function testUpdatingOtherFieldsDoesNotTouchAssignees(): void
+    {
+        $user = $this->makeUser();
+        $client = static::createClient();
+        $this->stubUserRepository($user);
+
+        $existingTask = $this->makeTask(self::USER_ID, 'Description');
+
+        $taskService = $this->createMock(TaskServiceInterface::class);
+        $taskService->method('getById')->with(self::TASK_ID)->willReturn($existingTask);
+        $taskService->expects($this->once())
+            ->method('update')
+            ->with(
+                self::TASK_ID,
+                self::callback(
+                    static fn (TaskUpdateRequestInterface $request): bool => $request->getAssigneeIds() === null,
+                ),
+            )
+            ->willReturn($existingTask);
+        static::getContainer()->set(TaskServiceInterface::class, $taskService);
+
+        $client->request(
+            'PATCH',
+            '/task/' . self::TASK_ID,
+            server: [
+                'HTTP_AUTHORIZATION' => 'Bearer ' . $this->generateToken($user),
+                'CONTENT_TYPE' => 'application/json',
+            ],
+            content: json_encode(['title' => 'New title'], JSON_THROW_ON_ERROR),
+        );
+
+        $this->assertResponseIsSuccessful();
+    }
+
     private function makeTask(string $createdBy, ?string $description): TaskDataResponseInterface
     {
         $task = $this->createStub(TaskDataResponseInterface::class);

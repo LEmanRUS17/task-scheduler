@@ -17,4 +17,7 @@ interface TaskUpdateRequestInterface
     public function getEstimatedTime(): ?int;
 
     public function getDescription(): ?string;
+
+    /** @return string[]|null */
+    public function getAssigneeIds(): ?array;
 }
