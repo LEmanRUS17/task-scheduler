@@ -49,7 +49,7 @@ interface TaskServiceInterface
         string $creatorUserId
     ): ResponseDTO;
 
-    public function update(string $id, TaskUpdateRequestInterface $dtoRequest): ResponseDTO;
+    public function update(string $id, TaskUpdateRequestInterface $dtoRequest, string $userId): ResponseDTO;
 
     public function applyTransition(string $id, string $transition): ResponseDTO;
 

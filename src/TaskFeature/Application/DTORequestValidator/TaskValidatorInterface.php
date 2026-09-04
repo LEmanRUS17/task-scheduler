@@ -13,5 +13,5 @@ interface TaskValidatorInterface
     public function validate(TaskCreateRequestInterface $dto, string $userId): array;
 
     /** @return array<string, string[]> */
-    public function validateUpdate(TaskUpdateRequestInterface $dto): array;
+    public function validateUpdate(TaskUpdateRequestInterface $dto, string $userId): array;
 }

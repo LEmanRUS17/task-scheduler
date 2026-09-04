@@ -58,7 +58,7 @@ final class TaskApiServiceTest extends TestCase
 
         return new TaskApiService(
             new CreateTaskInteractor($tasks, $assignees, $dispatcher, $clock, $workflow),
-            new UpdateTaskInteractor($tasks, $dispatcher),
+            new UpdateTaskInteractor($tasks, $dispatcher, $workflow),
             new ApplyTaskTransitionInteractor(
                 $tasks,
                 $workflow,
@@ -382,7 +382,7 @@ final class TaskApiServiceTest extends TestCase
 
         $request = new TaskUpdateRequestDTO(description: 'Updated description');
 
-        $response = $service->update($task->id()->value(), $request);
+        $response = $service->update($task->id()->value(), $request, 'user-1');
 
         $this->assertSame('Updated description', $response->getDescription());
     }
@@ -411,7 +411,7 @@ final class TaskApiServiceTest extends TestCase
 
         $request = new TaskUpdateRequestDTO(title: 'New title');
 
-        $response = $service->update($task->id()->value(), $request);
+        $response = $service->update($task->id()->value(), $request, 'user-1');
 
         $this->assertSame('Existing description', $response->getDescription());
     }
@@ -443,7 +443,7 @@ final class TaskApiServiceTest extends TestCase
             validator: $validator,
         );
 
-        $service->update($task->id()->value(), new TaskUpdateRequestDTO(assigneeIds: ['user-new']));
+        $service->update($task->id()->value(), new TaskUpdateRequestDTO(assigneeIds: ['user-new']), 'user-1');
     }
 
     public function testUpdateLeavesAssigneesUntouchedWhenNotProvided(): void
@@ -468,7 +468,7 @@ final class TaskApiServiceTest extends TestCase
             validator: $validator,
         );
 
-        $service->update($task->id()->value(), new TaskUpdateRequestDTO(title: 'New title'));
+        $service->update($task->id()->value(), new TaskUpdateRequestDTO(title: 'New title'), 'user-1');
     }
 
     public function testUpdateRejectsAssigneesNotInTeam(): void
@@ -496,7 +496,7 @@ final class TaskApiServiceTest extends TestCase
 
         $this->expectException(\InvalidArgumentException::class);
 
-        $service->update($task->id()->value(), new TaskUpdateRequestDTO(assigneeIds: ['user-outsider']));
+        $service->update($task->id()->value(), new TaskUpdateRequestDTO(assigneeIds: ['user-outsider']), 'user-1');
     }
 
     public function testUpdateRejectsAssigneesWhenTaskHasNoTeam(): void
@@ -521,7 +521,7 @@ final class TaskApiServiceTest extends TestCase
 
         $this->expectException(\InvalidArgumentException::class);
 
-        $service->update($task->id()->value(), new TaskUpdateRequestDTO(assigneeIds: ['user-new']));
+        $service->update($task->id()->value(), new TaskUpdateRequestDTO(assigneeIds: ['user-new']), 'user-1');
     }
 
     // --- create with tags ---

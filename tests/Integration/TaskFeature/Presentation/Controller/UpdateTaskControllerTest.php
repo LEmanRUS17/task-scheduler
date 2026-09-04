@@ -41,6 +41,7 @@ final class UpdateTaskControllerTest extends WebTestCase
                     static fn (TaskUpdateRequestInterface $request): bool =>
                         $request->getDescription() === 'New description',
                 ),
+                self::USER_ID,
             )
             ->willReturn($updatedTask);
         static::getContainer()->set(TaskServiceInterface::class, $taskService);
@@ -78,6 +79,7 @@ final class UpdateTaskControllerTest extends WebTestCase
                     static fn (TaskUpdateRequestInterface $request): bool => $request->getDescription() === null
                         && $request->getTitle() === 'New title',
                 ),
+                self::USER_ID,
             )
             ->willReturn($existingTask);
         static::getContainer()->set(TaskServiceInterface::class, $taskService);
@@ -115,6 +117,7 @@ final class UpdateTaskControllerTest extends WebTestCase
                     static fn (TaskUpdateRequestInterface $request): bool =>
                         $request->getAssigneeIds() === ['user-a', 'user-b'],
                 ),
+                self::USER_ID,
             )
             ->willReturn($existingTask);
         static::getContainer()->set(TaskServiceInterface::class, $taskService);
@@ -149,6 +152,7 @@ final class UpdateTaskControllerTest extends WebTestCase
                 self::callback(
                     static fn (TaskUpdateRequestInterface $request): bool => $request->getAssigneeIds() === null,
                 ),
+                self::USER_ID,
             )
             ->willReturn($existingTask);
         static::getContainer()->set(TaskServiceInterface::class, $taskService);

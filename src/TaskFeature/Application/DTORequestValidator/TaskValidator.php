@@ -44,9 +44,19 @@ final class TaskValidator implements TaskValidatorInterface
     }
 
     /** @return array<string, string[]> */
-    public function validateUpdate(TaskUpdateRequestInterface $dto): array
+    public function validateUpdate(TaskUpdateRequestInterface $dto, string $userId): array
     {
-        return $this->collectViolations($dto);
+        $violations = $this->collectViolations($dto);
+
+        if ($dto->getWorkflow() !== null && !$this->workflowExists($dto->getWorkflow())) {
+            $violations['workflow'][] = 'Workflow not found';
+        }
+
+        if ($dto->getTeamId() !== null && !$this->teamMembership->isMember($dto->getTeamId(), $userId)) {
+            $violations['teamId'][] = 'User is not a member of the specified team';
+        }
+
+        return $violations;
     }
 
     private function workflowExists(string $workflowId): bool

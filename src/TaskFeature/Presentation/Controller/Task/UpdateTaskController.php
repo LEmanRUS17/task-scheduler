@@ -8,6 +8,7 @@ use App\TaskFeature\Application\DTORequest\TaskUpdateRequestDTO;
 use App\TaskFeature\Domain\ValueObject\TaskPermission;
 use App\TaskFeature\Presentation\Formatter\TaskResponseFormatter;
 use App\TaskFeatureApi\Service\TaskServiceInterface;
+use App\UserFeature\Infrastructure\Security\SecurityUser;
 use Symfony\Bundle\SecurityBundle\Security;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Response;
@@ -39,8 +40,12 @@ final class UpdateTaskController
             return new JsonResponse(['message' => 'Access denied'], Response::HTTP_FORBIDDEN);
         }
 
+        /** @var SecurityUser $securityUser */
+        $securityUser = $this->security->getUser();
+        $userId = $securityUser->getDomainUser()->id()->value();
+
         try {
-            $task = $this->taskService->update($id, $request);
+            $task = $this->taskService->update($id, $request, $userId);
         } catch (\InvalidArgumentException $e) {
             $errors = json_decode($e->getMessage(), true);
 

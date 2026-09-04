@@ -7,6 +7,7 @@ namespace App\TaskFeature\Domain\Interactor;
 use App\TaskFeature\Domain\Entity\Task;
 use App\TaskFeature\Domain\Event\TaskUpdated;
 use App\TaskFeature\Domain\Port\DomainEventDispatcherInterface;
+use App\TaskFeature\Domain\Port\TaskWorkflowInterface;
 use App\TaskFeature\Domain\Repository\TaskRepositoryInterface;
 use App\TaskFeature\Domain\ValueObject\TaskId;
 use App\TaskFeature\Domain\ValueObject\TaskPriority;
@@ -17,6 +18,7 @@ final class UpdateTaskInteractor
     public function __construct(
         private readonly TaskRepositoryInterface $tasks,
         private readonly DomainEventDispatcherInterface $eventDispatcher,
+        private readonly TaskWorkflowInterface $workflow,
     ) {
     }
 
@@ -27,6 +29,8 @@ final class UpdateTaskInteractor
         ?\DateTimeImmutable $scheduledStart,
         ?\DateTimeImmutable $scheduledEnd,
         ?int $estimatedTime,
+        ?string $teamId = null,
+        ?string $workflowDefinitionTitle = null,
     ): Task {
         $task = $this->tasks->findById(TaskId::fromString($id));
 
@@ -34,7 +38,22 @@ final class UpdateTaskInteractor
             throw new \DomainException("Task {$id} not found");
         }
 
-        $task->update($title, $priority, $scheduledStart, $scheduledEnd, $estimatedTime);
+        $workflowChanged = $workflowDefinitionTitle !== null
+            && $workflowDefinitionTitle !== $task->getWorkflowDefinitionTitle();
+
+        $task->update(
+            $title,
+            $priority,
+            $scheduledStart,
+            $scheduledEnd,
+            $estimatedTime,
+            $teamId,
+            $workflowDefinitionTitle,
+        );
+
+        if ($workflowChanged) {
+            $this->workflow->initialize($task);
+        }
 
         $this->tasks->save($task);
 

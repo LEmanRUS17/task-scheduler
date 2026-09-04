@@ -190,17 +190,21 @@ final class TaskApiService implements TaskServiceInterface
         );
     }
 
-    public function update(string $id, TaskUpdateRequestInterface $dtoRequest): TaskDataResponseInterface
-    {
-        $violations = $this->validator->validateUpdate($dtoRequest);
+    public function update(
+        string $id,
+        TaskUpdateRequestInterface $dtoRequest,
+        string $userId,
+    ): TaskDataResponseInterface {
+        $violations = $this->validator->validateUpdate($dtoRequest, $userId);
 
         $assigneeIds = $dtoRequest->getAssigneeIds();
         if ($assigneeIds !== null) {
             $existingTask = $this->tasks->findById(TaskId::fromString($id));
             if ($existingTask !== null) {
+                $effectiveTeamId = $dtoRequest->getTeamId() ?? $existingTask->teamId();
                 $violations = array_merge_recursive(
                     $violations,
-                    $this->validateAssigneeIds($existingTask->teamId(), $assigneeIds),
+                    $this->validateAssigneeIds($effectiveTeamId, $assigneeIds),
                 );
             }
         }
@@ -216,6 +220,8 @@ final class TaskApiService implements TaskServiceInterface
             $dtoRequest->getScheduledStart(),
             $dtoRequest->getScheduledEnd(),
             $dtoRequest->getEstimatedTime(),
+            $dtoRequest->getTeamId(),
+            $dtoRequest->getWorkflow(),
         );
 
         if ($assigneeIds !== null) {
