@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Tests\Unit\TaskFeature\Application\DTORequestValidator;
 
 use App\TaskFeature\Application\DTORequest\TaskCreateRequestDTO;
+use App\TaskFeature\Application\DTORequest\TaskUpdateRequestDTO;
 use App\TaskFeature\Application\DTORequestValidator\TaskValidator;
 use App\TaskFeature\Domain\Port\TeamMembershipInterface;
 use App\WorkflowFeatureApi\DTOResponse\WorkflowResponseInterface;
@@ -85,9 +86,59 @@ final class TaskValidatorTest extends TestCase
         $this->assertSame(['Workflow is required'], $violations['workflow']);
     }
 
+    public function testValidateUpdateAddsWorkflowNotFoundWhenWorkflowDoesNotExist(): void
+    {
+        $workflowService = $this->createStub(WorkflowServiceInterface::class);
+        $workflowService->method('getById')->willReturn(null);
+
+        $violations = $this->makeValidator($workflowService)->validateUpdate(
+            new TaskUpdateRequestDTO(workflow: self::WORKFLOW_ID),
+            'user-1',
+        );
+
+        $this->assertSame(['Workflow not found'], $violations['workflow']);
+    }
+
+    public function testValidateUpdateHasNoViolationsWhenWorkflowAndTeamAreNotProvided(): void
+    {
+        $violations = $this->makeValidator($this->createStub(WorkflowServiceInterface::class))->validateUpdate(
+            new TaskUpdateRequestDTO(title: 'New title'),
+            'user-1',
+        );
+
+        $this->assertSame([], $violations);
+    }
+
+    public function testValidateUpdateAddsTeamViolationWhenUserIsNotAMember(): void
+    {
+        $teamMembership = $this->createStub(TeamMembershipInterface::class);
+        $teamMembership->method('isMember')->willReturn(false);
+
+        $validator = new TaskValidator(
+            $this->stubSymfonyValidator(),
+            $teamMembership,
+            $this->createStub(WorkflowServiceInterface::class),
+        );
+
+        $violations = $validator->validateUpdate(
+            new TaskUpdateRequestDTO(teamId: 'team-2'),
+            'user-1',
+        );
+
+        $this->assertSame(['User is not a member of the specified team'], $violations['teamId']);
+    }
+
     private function makeRequest(string $workflow): TaskCreateRequestDTO
     {
         return new TaskCreateRequestDTO(title: 'Fix bug', workflow: $workflow);
+    }
+
+    private function stubSymfonyValidator(): ValidatorInterface
+    {
+        $stub = $this->createStub(ValidatorInterface::class);
+        $stub->method('validate')->willReturn(new ConstraintViolationList());
+
+        return $stub;
     }
 
     private function makeValidator(

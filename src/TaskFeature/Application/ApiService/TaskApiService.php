@@ -12,8 +12,10 @@ use App\TaskFeature\Domain\Interactor\CloseTaskInteractor;
 use App\TaskFeature\Domain\Interactor\CreateTaskInteractor;
 use App\TaskFeature\Domain\Interactor\RemoveTaskAssigneeInteractor;
 use App\TaskFeature\Domain\Interactor\ReopenTaskInteractor;
+use App\TaskFeature\Domain\Interactor\SetTaskAssigneesInteractor;
 use App\TaskFeature\Domain\Event\TaskDeleted;
 use App\TaskFeature\Domain\Interactor\UpdateTaskInteractor;
+use App\TaskFeature\Domain\Port\ClockInterface;
 use App\TaskFeature\Domain\Port\DomainEventDispatcherInterface;
 use App\TaskFeature\Domain\Port\TeamMembershipInterface;
 use App\TaskFeature\Domain\Port\TaskWorkflowInterface;
@@ -33,6 +35,7 @@ use App\TagFeatureApi\Contract\TagServiceInterface;
 use App\ProfileFeatureApi\DTOResponse\ProfileDataResponseInterface;
 use App\ProfileFeatureApi\Service\ProfileServiceInterface;
 use App\TaskFeature\Domain\Entity\Task;
+use App\WorkflowFeature\Domain\Entity\WorkflowStatus;
 use App\WorkflowFeature\Domain\Repository\WorkflowStatusRepositoryInterface;
 use App\WorkflowFeature\Domain\Repository\WorkflowTransitionRepositoryInterface;
 use App\WorkflowFeature\Domain\ValueObject\WorkflowId;
@@ -48,6 +51,7 @@ final class TaskApiService implements TaskServiceInterface
         private readonly ReopenTaskInteractor $reopenInteractor,
         private readonly AddTaskAssigneeInteractor $addAssigneeInteractor,
         private readonly RemoveTaskAssigneeInteractor $removeAssigneeInteractor,
+        private readonly SetTaskAssigneesInteractor $setAssigneesInteractor,
         private readonly TaskRepositoryInterface $tasks,
         private readonly TaskAssigneeRepositoryInterface $assignees,
         private readonly TaskStatusHistoryRepositoryInterface $statusHistory,
@@ -62,6 +66,7 @@ final class TaskApiService implements TaskServiceInterface
         private readonly DescriptionServiceInterface $descriptions,
         private readonly TagServiceInterface $tagService,
         private readonly CommentServiceInterface $comments,
+        private readonly ClockInterface $clock,
     ) {
     }
 
@@ -185,9 +190,24 @@ final class TaskApiService implements TaskServiceInterface
         );
     }
 
-    public function update(string $id, TaskUpdateRequestInterface $dtoRequest): TaskDataResponseInterface
-    {
-        $violations = $this->validator->validateUpdate($dtoRequest);
+    public function update(
+        string $id,
+        TaskUpdateRequestInterface $dtoRequest,
+        string $userId,
+    ): TaskDataResponseInterface {
+        $violations = $this->validator->validateUpdate($dtoRequest, $userId);
+
+        $assigneeIds = $dtoRequest->getAssigneeIds();
+        if ($assigneeIds !== null) {
+            $existingTask = $this->tasks->findById(TaskId::fromString($id));
+            if ($existingTask !== null) {
+                $effectiveTeamId = $dtoRequest->getTeamId() ?? $existingTask->teamId();
+                $violations = array_merge_recursive(
+                    $violations,
+                    $this->validateAssigneeIds($effectiveTeamId, $assigneeIds),
+                );
+            }
+        }
 
         if (!empty($violations)) {
             throw new \InvalidArgumentException(json_encode($violations));
@@ -200,7 +220,13 @@ final class TaskApiService implements TaskServiceInterface
             $dtoRequest->getScheduledStart(),
             $dtoRequest->getScheduledEnd(),
             $dtoRequest->getEstimatedTime(),
+            $dtoRequest->getTeamId(),
+            $dtoRequest->getWorkflow(),
         );
+
+        if ($assigneeIds !== null) {
+            $this->setAssigneesInteractor->set(TaskId::fromString($id), $assigneeIds);
+        }
 
         $description = $dtoRequest->getDescription();
         if ($description !== null) {
@@ -212,6 +238,30 @@ final class TaskApiService implements TaskServiceInterface
             $this->workflow->getEnabledTransitions($task),
             $this->descriptions->get(Task::class, $id),
         );
+    }
+
+    /**
+     * @param string[] $assigneeIds
+     * @return array<string, string[]>
+     */
+    private function validateAssigneeIds(?string $teamId, array $assigneeIds): array
+    {
+        if ($assigneeIds === []) {
+            return [];
+        }
+
+        if ($teamId === null) {
+            return ['assigneeIds' => ['Cannot assign users to a task without a team']];
+        }
+
+        $violations = [];
+        foreach ($assigneeIds as $assigneeId) {
+            if (!$this->teamMembership->isMember($teamId, $assigneeId)) {
+                $violations['assigneeIds'][] = sprintf('User "%s" is not a member of the task team', $assigneeId);
+            }
+        }
+
+        return $violations;
     }
 
     public function applyTransition(string $id, string $transition): TaskDataResponseInterface
@@ -302,7 +352,7 @@ final class TaskApiService implements TaskServiceInterface
         }, $this->statusHistory->findByTaskId($taskId));
     }
 
-    private function resolveStatusLabel(Task $task): ?string
+    private function resolveStatus(Task $task): ?WorkflowStatus
     {
         $statusId = $task->getWorkflowStatus();
 
@@ -310,22 +360,24 @@ final class TaskApiService implements TaskServiceInterface
             return null;
         }
 
-        $status = $this->statuses->findById(
+        return $this->statuses->findById(
             WorkflowId::fromString($task->getWorkflowDefinitionTitle()),
             $statusId,
         );
-
-        return $status?->label()->value();
     }
 
     private function taskToFullResponse(Task $task): TaskDataResponseInterface
     {
+        $status = $this->resolveStatus($task);
+
         return $this->dataMapper->taskToResponse(
             $task,
             $this->loadAssigneeIds($task->id()),
             $this->workflow->getEnabledTransitions($task),
-            $this->resolveStatusLabel($task),
+            $status?->label()->value(),
             $this->descriptions->get(Task::class, $task->id()->value()),
+            isStatusFinal: $status?->isFinal() ?? false,
+            now: $this->clock->now(),
         );
     }
 
@@ -339,15 +391,18 @@ final class TaskApiService implements TaskServiceInterface
     {
         $assigneeIds = $this->loadAssigneeIds($task->id());
         $profiles = $this->resolveProfiles([$task->createdBy(), ...$assigneeIds]);
+        $status = $this->resolveStatus($task);
 
         return $this->dataMapper->taskToResponse(
             $task,
             $assigneeIds,
             $task->isClosed() ? [] : $transitions,
-            $this->resolveStatusLabel($task),
+            $status?->label()->value(),
             $description,
             $profiles[$task->createdBy()] ?? null,
             array_intersect_key($profiles, array_flip($assigneeIds)),
+            $status?->isFinal() ?? false,
+            $this->clock->now(),
         );
     }
 

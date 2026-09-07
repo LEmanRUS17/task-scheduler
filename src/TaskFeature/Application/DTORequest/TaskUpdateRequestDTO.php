@@ -12,6 +12,8 @@ final class TaskUpdateRequestDTO implements TaskUpdateRequestInterface
     public function __construct(
         #[Assert\Length(max: 255, maxMessage: 'Title must not exceed 255 characters')]
         private readonly ?string $title = null,
+        private readonly ?string $workflow = null,
+        private readonly ?string $teamId = null,
         #[Assert\Choice(
             choices: ['no_priority', 'low', 'normal', 'high', 'critical'],
             message: 'Invalid priority value',
@@ -22,12 +24,28 @@ final class TaskUpdateRequestDTO implements TaskUpdateRequestInterface
         #[Assert\PositiveOrZero(message: 'Estimated time must be a non-negative integer')]
         private readonly ?int $estimatedTime = null,
         private readonly ?string $description = null,
+        /** @var string[]|null */
+        #[Assert\All([
+            new Assert\Type(type: 'string', message: 'Assignee id must be a string'),
+            new Assert\NotBlank(message: 'Assignee id must not be blank'),
+        ])]
+        private readonly ?array $assigneeIds = null,
     ) {
     }
 
     public function getTitle(): ?string
     {
         return $this->title;
+    }
+
+    public function getWorkflow(): ?string
+    {
+        return $this->workflow;
+    }
+
+    public function getTeamId(): ?string
+    {
+        return $this->teamId;
     }
 
     public function getPriority(): ?string
@@ -53,5 +71,10 @@ final class TaskUpdateRequestDTO implements TaskUpdateRequestInterface
     public function getDescription(): ?string
     {
         return $this->description;
+    }
+
+    public function getAssigneeIds(): ?array
+    {
+        return $this->assigneeIds;
     }
 }

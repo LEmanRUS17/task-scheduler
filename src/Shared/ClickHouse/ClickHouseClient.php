@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\AnalyticsFeature\Infrastructure\ClickHouse;
+namespace App\Shared\ClickHouse;
 
 use Symfony\Contracts\HttpClient\HttpClientInterface;
 

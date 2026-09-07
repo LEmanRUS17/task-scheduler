@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\AnalyticsFeature\Infrastructure\ClickHouse;
 
 use App\AnalyticsFeature\Domain\Port\TaskActionStorageInterface;
+use App\Shared\ClickHouse\ClickHouseClient;
 
 final class ClickHouseTaskActionStorage implements TaskActionStorageInterface
 {

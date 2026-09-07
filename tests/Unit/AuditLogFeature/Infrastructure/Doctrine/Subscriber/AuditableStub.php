@@ -8,4 +8,8 @@ use App\AuditLogFeatureApi\Contract\AuditableInterface;
 
 class AuditableStub implements AuditableInterface
 {
+    public function auditTitle(): ?string
+    {
+        return 'stub-title';
+    }
 }

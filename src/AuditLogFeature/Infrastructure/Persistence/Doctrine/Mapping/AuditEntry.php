@@ -17,9 +17,12 @@ $builder->createField('id', 'string')
     ->generatedValue('NONE')
     ->build();
 
+$builder->addIndex(['actor_id', 'occurred_at'], 'idx_audit_log_actor_id_occurred_at');
+
 $builder->addField('entityClass', 'string', ['columnName' => 'entity_class', 'length' => 255]);
 $builder->addField('entityId', 'string', ['columnName' => 'entity_id', 'length' => 255]);
 $builder->addField('action', 'string', ['length' => 10]);
 $builder->addField('changedData', 'json', ['columnName' => 'changed_data']);
 $builder->addField('actorId', 'string', ['columnName' => 'actor_id', 'length' => 36, 'nullable' => true]);
 $builder->addField('occurredAt', 'datetime_immutable', ['columnName' => 'occurred_at']);
+$builder->addField('title', 'string', ['length' => 255, 'nullable' => true]);

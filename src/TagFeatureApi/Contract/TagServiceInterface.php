@@ -55,6 +55,15 @@ interface TagServiceInterface
     public function filterExistingTagIds(array $tagIds): array;
 
     /**
+     * Returns tags for the given ids, preserving the order of the ids. Ids that do not
+     * correspond to an existing tag are omitted.
+     *
+     * @param list<string> $ids
+     * @return TagResponseInterface[]
+     */
+    public function getByIds(array $ids): array;
+
+    /**
      * Returns the tags assigned to the entity.
      *
      * Entities without tags are excluded from the result.

@@ -8,6 +8,10 @@ interface TaskUpdateRequestInterface
 {
     public function getTitle(): ?string;
 
+    public function getWorkflow(): ?string;
+
+    public function getTeamId(): ?string;
+
     public function getPriority(): ?string;
 
     public function getScheduledStart(): ?\DateTimeImmutable;
@@ -17,4 +21,7 @@ interface TaskUpdateRequestInterface
     public function getEstimatedTime(): ?int;
 
     public function getDescription(): ?string;
+
+    /** @return string[]|null */
+    public function getAssigneeIds(): ?array;
 }

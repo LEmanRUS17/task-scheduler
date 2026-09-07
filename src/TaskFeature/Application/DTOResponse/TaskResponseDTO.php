@@ -35,6 +35,7 @@ final class TaskResponseDTO implements TaskDataResponseInterface
         private readonly array $assigneeProfiles = [],
         private readonly bool $isClosed = false,
         private readonly ?\DateTimeImmutable $closedAt = null,
+        private readonly string $state = 'planned',
     ) {
         return;
     }
@@ -137,5 +138,10 @@ final class TaskResponseDTO implements TaskDataResponseInterface
     public function getClosedAt(): ?\DateTimeImmutable
     {
         return $this->closedAt;
+    }
+
+    public function getState(): string
+    {
+        return $this->state;
     }
 }

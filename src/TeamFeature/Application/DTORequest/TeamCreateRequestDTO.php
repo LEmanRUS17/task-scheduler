@@ -24,6 +24,8 @@ final class TeamCreateRequestDTO implements TeamCreateRequestInterface
             new Assert\NotBlank(message: 'Tag id must not be blank'),
         ])]
         private readonly array $tagIds = [],
+        #[Assert\NotBlank(allowNull: true, message: 'Workflow id must not be blank')]
+        private readonly ?string $workflowId = null,
     ) {
     }
 
@@ -44,5 +46,10 @@ final class TeamCreateRequestDTO implements TeamCreateRequestInterface
     public function getTagIds(): array
     {
         return $this->tagIds;
+    }
+
+    public function getWorkflowId(): ?string
+    {
+        return $this->workflowId;
     }
 }

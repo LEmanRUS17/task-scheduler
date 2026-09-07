@@ -151,6 +151,8 @@ final class Task implements
         ?\DateTimeImmutable $scheduledStart,
         ?\DateTimeImmutable $scheduledEnd,
         ?int $estimatedTime,
+        ?string $teamId = null,
+        ?string $workflowDefinitionTitle = null,
     ): void {
         if ($title !== null) {
             $this->title = $title->value();
@@ -166,6 +168,12 @@ final class Task implements
         }
         if ($estimatedTime !== null) {
             $this->estimatedTime = $estimatedTime;
+        }
+        if ($teamId !== null) {
+            $this->teamId = $teamId;
+        }
+        if ($workflowDefinitionTitle !== null) {
+            $this->workflowDefinitionTitle = $workflowDefinitionTitle;
         }
 
         $this->recordEvent(new TaskUpdated($this->id()->value()));
@@ -189,6 +197,11 @@ final class Task implements
     public function getWorkflowDefinitionTitle(): string
     {
         return $this->workflowDefinitionTitle;
+    }
+
+    public function auditTitle(): string
+    {
+        return $this->title;
     }
 
     public function isClosed(): bool

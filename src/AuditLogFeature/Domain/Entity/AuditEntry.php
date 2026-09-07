@@ -14,6 +14,7 @@ final class AuditEntry
     private array $changedData;
     private ?string $actorId;
     private \DateTimeImmutable $occurredAt;
+    private ?string $title;
 
     /**
      * @param array<string, array{0: mixed, 1: mixed}> $changedData
@@ -26,6 +27,7 @@ final class AuditEntry
         array $changedData,
         ?string $actorId,
         \DateTimeImmutable $occurredAt,
+        ?string $title,
     ) {
         $this->id = $id;
         $this->entityClass = $entityClass;
@@ -34,6 +36,7 @@ final class AuditEntry
         $this->changedData = $changedData;
         $this->actorId = $actorId;
         $this->occurredAt = $occurredAt;
+        $this->title = $title;
     }
 
     /**
@@ -47,8 +50,9 @@ final class AuditEntry
         array $changedData,
         ?string $actorId,
         \DateTimeImmutable $occurredAt,
+        ?string $title = null,
     ): self {
-        return new self($id, $entityClass, $entityId, $action, $changedData, $actorId, $occurredAt);
+        return new self($id, $entityClass, $entityId, $action, $changedData, $actorId, $occurredAt, $title);
     }
 
     public function id(): string
@@ -85,5 +89,10 @@ final class AuditEntry
     public function occurredAt(): \DateTimeImmutable
     {
         return $this->occurredAt;
+    }
+
+    public function title(): ?string
+    {
+        return $this->title;
     }
 }

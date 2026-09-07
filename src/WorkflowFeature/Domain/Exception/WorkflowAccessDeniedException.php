@@ -10,4 +10,9 @@ final class WorkflowAccessDeniedException extends \DomainException
     {
         return new self(sprintf('Only the workflow owner may modify workflow "%s"', $workflowId));
     }
+
+    public static function isDefaultWorkflow(string $workflowId): self
+    {
+        return new self(sprintf('Default workflow "%s" cannot be modified', $workflowId));
+    }
 }

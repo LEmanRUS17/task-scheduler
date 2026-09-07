@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\AnalyticsFeature\Infrastructure\Console;
 
-use App\AnalyticsFeature\Infrastructure\ClickHouse\ClickHouseClient;
+use App\Shared\ClickHouse\ClickHouseClient;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
@@ -33,6 +33,18 @@ final class ClickHouseMigrateCommand extends Command
             occurred_at DateTime
         ) ENGINE = MergeTree()
         ORDER BY (task_id, occurred_at)",
+
+        'audit_log' => "CREATE TABLE IF NOT EXISTS audit_log (
+            id           String,
+            entity_class String,
+            entity_id    String,
+            action       String,
+            changed_data String,
+            actor_id     String,
+            occurred_at  DateTime,
+            title        String
+        ) ENGINE = MergeTree()
+        ORDER BY (occurred_at)",
     ];
 
     public function __construct(private readonly ClickHouseClient $client)

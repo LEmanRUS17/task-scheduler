@@ -7,6 +7,7 @@ namespace App\Tests\Unit\TaskFeature\Domain\Interactor;
 use App\TaskFeature\Domain\Entity\Task;
 use App\TaskFeature\Domain\Interactor\UpdateTaskInteractor;
 use App\TaskFeature\Domain\Port\DomainEventDispatcherInterface;
+use App\TaskFeature\Domain\Port\TaskWorkflowInterface;
 use App\TaskFeature\Domain\Repository\TaskRepositoryInterface;
 use App\TaskFeature\Domain\ValueObject\TaskId;
 use App\TaskFeature\Domain\ValueObject\TaskPriority;
@@ -40,6 +41,7 @@ final class UpdateTaskInteractorTest extends TestCase
         $result = (new UpdateTaskInteractor(
             $tasks,
             $this->createStub(DomainEventDispatcherInterface::class),
+            $this->createStub(TaskWorkflowInterface::class),
         ))->update(
             $this->taskId->value(),
             TaskTitle::fromString('Updated'),
@@ -62,6 +64,7 @@ final class UpdateTaskInteractorTest extends TestCase
         (new UpdateTaskInteractor(
             $tasks,
             $this->createStub(DomainEventDispatcherInterface::class),
+            $this->createStub(TaskWorkflowInterface::class),
         ))->update(
             $this->taskId->value(),
             null,
@@ -82,6 +85,7 @@ final class UpdateTaskInteractorTest extends TestCase
         (new UpdateTaskInteractor(
             $tasks,
             $this->createStub(DomainEventDispatcherInterface::class),
+            $this->createStub(TaskWorkflowInterface::class),
         ))->update(
             $this->taskId->value(),
             null,
@@ -103,6 +107,7 @@ final class UpdateTaskInteractorTest extends TestCase
         $result = (new UpdateTaskInteractor(
             $tasks,
             $this->createStub(DomainEventDispatcherInterface::class),
+            $this->createStub(TaskWorkflowInterface::class),
         ))->update(
             $this->taskId->value(),
             null,
@@ -115,5 +120,98 @@ final class UpdateTaskInteractorTest extends TestCase
         $this->assertSame($start, $result->scheduledStart());
         $this->assertSame($end, $result->scheduledEnd());
         $this->assertSame(180, $result->estimatedTime());
+    }
+
+    public function testUpdateChangesTeamId(): void
+    {
+        $tasks = $this->createStub(TaskRepositoryInterface::class);
+        $tasks->method('findById')->willReturn($this->task);
+
+        $result = (new UpdateTaskInteractor(
+            $tasks,
+            $this->createStub(DomainEventDispatcherInterface::class),
+            $this->createStub(TaskWorkflowInterface::class),
+        ))->update(
+            $this->taskId->value(),
+            null,
+            null,
+            null,
+            null,
+            null,
+            'team-2',
+        );
+
+        $this->assertSame('team-2', $result->teamId());
+    }
+
+    public function testUpdateLeavesTeamIdUntouchedWhenNotProvided(): void
+    {
+        $tasks = $this->createStub(TaskRepositoryInterface::class);
+        $tasks->method('findById')->willReturn($this->task);
+
+        $result = (new UpdateTaskInteractor(
+            $tasks,
+            $this->createStub(DomainEventDispatcherInterface::class),
+            $this->createStub(TaskWorkflowInterface::class),
+        ))->update(
+            $this->taskId->value(),
+            null,
+            null,
+            null,
+            null,
+            null,
+        );
+
+        $this->assertNull($result->teamId());
+    }
+
+    public function testUpdateChangesWorkflowAndReinitializesStatus(): void
+    {
+        $tasks = $this->createStub(TaskRepositoryInterface::class);
+        $tasks->method('findById')->willReturn($this->task);
+
+        $workflow = $this->createMock(TaskWorkflowInterface::class);
+        $workflow->expects($this->once())->method('initialize')->with($this->task);
+
+        $result = (new UpdateTaskInteractor(
+            $tasks,
+            $this->createStub(DomainEventDispatcherInterface::class),
+            $workflow,
+        ))->update(
+            $this->taskId->value(),
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            'new-workflow',
+        );
+
+        $this->assertSame('new-workflow', $result->getWorkflowDefinitionTitle());
+    }
+
+    public function testUpdateDoesNotReinitializeWorkflowWhenUnchanged(): void
+    {
+        $tasks = $this->createStub(TaskRepositoryInterface::class);
+        $tasks->method('findById')->willReturn($this->task);
+
+        $workflow = $this->createMock(TaskWorkflowInterface::class);
+        $workflow->expects($this->never())->method('initialize');
+
+        (new UpdateTaskInteractor(
+            $tasks,
+            $this->createStub(DomainEventDispatcherInterface::class),
+            $workflow,
+        ))->update(
+            $this->taskId->value(),
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            'default',
+        );
     }
 }

@@ -14,4 +14,7 @@ interface TeamCreateRequestInterface
 
     /** @return string[] */
     public function getTagIds(): array;
+
+    /** Id of the workflow (must belong to the creator) to attach to the team, if any. */
+    public function getWorkflowId(): ?string;
 }
