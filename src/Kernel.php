@@ -8,6 +8,7 @@ use App\AuditLogFeature\Infrastructure\Persistence\Doctrine\AuditLogMappingCompi
 use App\CommentFeature\Infrastructure\Persistence\Doctrine\CommentMappingCompilerPass;
 use App\DescriptionFeature\Infrastructure\Persistence\Doctrine\DescriptionMappingCompilerPass;
 use App\FileFeature\Infrastructure\Persistence\Doctrine\FileMappingCompilerPass;
+use App\NotificationFeature\Infrastructure\Persistence\Doctrine\NotificationMappingCompilerPass;
 use App\ProfileFeature\Infrastructure\Persistence\Doctrine\ProfileMappingCompilerPass;
 use App\SubscriptionFeature\Infrastructure\Persistence\Doctrine\SubscriptionMappingCompilerPass;
 use App\TagFeature\Infrastructure\Persistence\Doctrine\TagMappingCompilerPass;
@@ -36,5 +37,6 @@ class Kernel extends BaseKernel
         $container->addCompilerPass(new FileMappingCompilerPass());
         $container->addCompilerPass(new TagMappingCompilerPass());
         $container->addCompilerPass(new CommentMappingCompilerPass());
+        $container->addCompilerPass(new NotificationMappingCompilerPass());
     }
 }
