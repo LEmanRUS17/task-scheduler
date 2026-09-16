@@ -66,3 +66,9 @@ audit_log_controllers:
         path: ../src/AuditLogFeature/Presentation/Controller/
         namespace: App\AuditLogFeature\Presentation\Controller
     type: attribute
+
+notification_controllers:
+    resource:
+        path: ../src/NotificationFeature/Presentation/Controller/
+        namespace: App\NotificationFeature\Presentation\Controller
+    type: attribute

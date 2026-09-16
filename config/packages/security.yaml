@@ -41,6 +41,8 @@ security:
         # TODO: analytics must not be public — require authentication and scope the
         #       data per user (own actions only) / per team for team members.
         - { path: ^/analytics, roles: PUBLIC_ACCESS }
+        # Called directly by Telegram, which sends no JWT.
+        - { path: ^/telegram/webhook, roles: PUBLIC_ACCESS }
         - { path: ^/, roles: IS_AUTHENTICATED_FULLY }
 
 when@test:

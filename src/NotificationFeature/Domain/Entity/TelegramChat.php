@@ -4,17 +4,24 @@ declare(strict_types=1);
 
 namespace App\NotificationFeature\Domain\Entity;
 
+use App\NotificationFeature\Domain\ValueObject\TelegramChatState;
+
 final class TelegramChat
 {
     private string $userId;
     private int $chatId;
     private int $state;
 
-    public function __construct(string $userId, int $chatId, int $state = 0)
+    private function __construct(string $userId, int $chatId, TelegramChatState $state)
     {
         $this->userId = $userId;
         $this->chatId = $chatId;
-        $this->state = $state;
+        $this->state = $state->value;
+    }
+
+    public static function create(string $userId, int $chatId, TelegramChatState $state): self
+    {
+        return new self($userId, $chatId, $state);
     }
 
     public function userId(): string
@@ -27,8 +34,13 @@ final class TelegramChat
         return $this->chatId;
     }
 
-    public function state(): int
+    public function state(): TelegramChatState
     {
-        return $this->state;
+        return TelegramChatState::from($this->state);
+    }
+
+    public function changeState(TelegramChatState $state): void
+    {
+        $this->state = $state->value;
     }
 }

@@ -19,4 +19,15 @@ final class DoctrineTelegramChatRepository implements TelegramChatRepositoryInte
     {
         return $this->entityManager->find(TelegramChat::class, $userId);
     }
+
+    public function findByChatId(int $chatId): ?TelegramChat
+    {
+        return $this->entityManager->getRepository(TelegramChat::class)->findOneBy(['chatId' => $chatId]);
+    }
+
+    public function save(TelegramChat $chat): void
+    {
+        $this->entityManager->persist($chat);
+        $this->entityManager->flush();
+    }
 }
