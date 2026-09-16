@@ -19,9 +19,6 @@ use App\WorkflowFeature\Domain\ValueObject\WorkflowStatusId;
 use App\WorkflowFeature\Domain\ValueObject\WorkflowTitle;
 use App\WorkflowFeature\Infrastructure\Workflow\DynamicWorkflowLoader;
 use PHPUnit\Framework\TestCase;
-use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\HttpKernel\Event\RequestEvent;
-use Symfony\Component\HttpKernel\HttpKernelInterface;
 use Symfony\Component\Workflow\Registry;
 
 final class DynamicWorkflowLoaderTest extends TestCase
@@ -72,12 +69,28 @@ final class DynamicWorkflowLoaderTest extends TestCase
         $task1 = $this->makeTask($workflow1->id()->value());
         $task2 = $this->makeTask($workflow2->id()->value());
 
-        $loader->load($this->makeMainRequestEvent());
+        $loader->ensureLoaded();
 
         $this->assertNotSame(
             $registry->get($task1, $workflow1->id()->value()),
             $registry->get($task2, $workflow2->id()->value()),
         );
+    }
+
+    public function testEnsureLoadedOnlyQueriesTheRepositoriesOnce(): void
+    {
+        $workflows = $this->createMock(WorkflowRepositoryInterface::class);
+        $workflows->expects($this->once())->method('findAll')->willReturn([]);
+
+        $loader = new DynamicWorkflowLoader(
+            new Registry(),
+            $workflows,
+            $this->createStub(WorkflowStatusRepositoryInterface::class),
+            $this->createStub(WorkflowTransitionRepositoryInterface::class),
+        );
+
+        $loader->ensureLoaded();
+        $loader->ensureLoaded();
     }
 
     private function makeTask(string $workflowId): Task
@@ -90,15 +103,6 @@ final class DynamicWorkflowLoaderTest extends TestCase
             null,
             'user-1',
             new \DateTimeImmutable(),
-        );
-    }
-
-    private function makeMainRequestEvent(): RequestEvent
-    {
-        return new RequestEvent(
-            $this->createStub(HttpKernelInterface::class),
-            Request::create('/'),
-            HttpKernelInterface::MAIN_REQUEST,
         );
     }
 }

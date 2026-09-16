@@ -9,7 +9,9 @@ use App\TaskFeature\Domain\Port\TaskWorkflowInterface;
 use App\WorkflowFeature\Domain\Repository\WorkflowRepositoryInterface;
 use App\WorkflowFeature\Domain\Repository\WorkflowStatusRepositoryInterface;
 use App\WorkflowFeature\Domain\ValueObject\WorkflowId;
+use App\WorkflowFeature\Infrastructure\Workflow\DynamicWorkflowLoader;
 use Symfony\Component\Workflow\Registry;
+use Symfony\Component\Workflow\WorkflowInterface;
 
 final class SymfonyTaskWorkflow implements TaskWorkflowInterface
 {
@@ -17,6 +19,7 @@ final class SymfonyTaskWorkflow implements TaskWorkflowInterface
         private readonly Registry $registry,
         private readonly WorkflowRepositoryInterface $workflows,
         private readonly WorkflowStatusRepositoryInterface $statuses,
+        private readonly DynamicWorkflowLoader $workflowLoader,
     ) {
     }
 
@@ -36,7 +39,7 @@ final class SymfonyTaskWorkflow implements TaskWorkflowInterface
 
     public function applyTransition(Task $task, string $transition): void
     {
-        $workflow = $this->registry->get($task, $this->resolveWorkflowName($task));
+        $workflow = $this->getWorkflow($task);
 
         if (!$workflow->can($task, $transition)) {
             throw new \DomainException(
@@ -49,15 +52,27 @@ final class SymfonyTaskWorkflow implements TaskWorkflowInterface
 
     public function canApply(Task $task, string $transition): bool
     {
-        return $this->registry->get($task, $this->resolveWorkflowName($task))->can($task, $transition);
+        return $this->getWorkflow($task)->can($task, $transition);
     }
 
     public function getEnabledTransitions(Task $task): array
     {
         return array_map(
             fn($t) => $t->getName(),
-            $this->registry->get($task, $this->resolveWorkflowName($task))->getEnabledTransitions($task),
+            $this->getWorkflow($task)->getEnabledTransitions($task),
         );
+    }
+
+    /**
+     * Ensures the DB-backed workflows are registered before every lookup: this is
+     * the only reliable trigger point, since it must work whether the call comes
+     * from an HTTP request or a console worker (see DynamicWorkflowLoader docblock).
+     */
+    private function getWorkflow(Task $task): WorkflowInterface
+    {
+        $this->workflowLoader->ensureLoaded();
+
+        return $this->registry->get($task, $this->resolveWorkflowName($task));
     }
 
     /**

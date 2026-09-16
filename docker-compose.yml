@@ -66,6 +66,8 @@ services:
     command: php bin/console messenger:consume async --time-limit=3600
     environment:
       UPLOAD_MAX_SIZE: ${UPLOAD_MAX_SIZE:-30M}
+      APP_ENV: prod
+      APP_DEBUG: '0'
     volumes:
       - .:/var/www/html
     depends_on:

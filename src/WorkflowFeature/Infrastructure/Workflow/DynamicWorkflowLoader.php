@@ -10,9 +10,6 @@ use App\WorkflowFeature\Domain\Repository\WorkflowRepositoryInterface;
 use App\WorkflowFeature\Domain\Repository\WorkflowStatusRepositoryInterface;
 use App\WorkflowFeature\Domain\Repository\WorkflowTransitionRepositoryInterface;
 use App\WorkflowFeatureApi\Contract\WorkflowSubjectInterface;
-use Symfony\Component\EventDispatcher\EventSubscriberInterface;
-use Symfony\Component\HttpKernel\Event\RequestEvent;
-use Symfony\Component\HttpKernel\KernelEvents;
 use Symfony\Component\Workflow\Definition;
 use Symfony\Component\Workflow\MarkingStore\MethodMarkingStore;
 use Symfony\Component\Workflow\Registry;
@@ -20,7 +17,7 @@ use Symfony\Component\Workflow\StateMachine;
 use Symfony\Component\Workflow\SupportStrategy\InstanceOfSupportStrategy;
 use Symfony\Component\Workflow\Transition;
 
-final class DynamicWorkflowLoader implements EventSubscriberInterface
+final class DynamicWorkflowLoader
 {
     private bool $loaded = false;
 
@@ -29,17 +26,11 @@ final class DynamicWorkflowLoader implements EventSubscriberInterface
         private readonly WorkflowRepositoryInterface $workflows,
         private readonly WorkflowStatusRepositoryInterface $statuses,
         private readonly WorkflowTransitionRepositoryInterface $transitions,
-    ) {
-    }
+    ) {}
 
-    public static function getSubscribedEvents(): array
+    public function ensureLoaded(): void
     {
-        return [KernelEvents::REQUEST => ['load', 255]];
-    }
-
-    public function load(RequestEvent $event): void
-    {
-        if (!$event->isMainRequest() || $this->loaded) {
+        if ($this->loaded) {
             return;
         }
 

@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace App\NotificationFeature\Infrastructure\Messenger\Handler;
 
 use App\NotificationFeature\Domain\Notification\MessageAction;
+use App\NotificationFeature\Domain\Notification\TelegramNotifierInterface;
+use App\NotificationFeature\Domain\Repository\TelegramChatRepositoryInterface;
 use App\NotificationFeature\Infrastructure\Messenger\Message\NotificationDispatchMessage;
 use App\SubscriptionFeatureApi\ValueObject\NotificationChannel;
 use App\SubscriptionFeatureApi\Service\SubscriptionServiceInterface;
@@ -23,10 +25,11 @@ final class TaskStatusChangedHandler
         private readonly TaskServiceInterface $taskService,
         private readonly UserServiceInterface $userService,
         private readonly SubscriptionServiceInterface $subscriptionService,
+        private readonly TelegramChatRepositoryInterface $telegramChats,
+        private readonly TelegramNotifierInterface $telegramNotifier,
         private readonly MailerInterface $mailer,
         private readonly MessageBusInterface $defaultBus,
-    ) {
-    }
+    ) {}
 
     public function __invoke(TaskStatusChangedMessage $message): void
     {
@@ -77,7 +80,32 @@ final class TaskStatusChangedHandler
                     ),
                 );
             }
+
+            $this->notifyTelegramIfLinked($subscription->getUserId(), $subject, $body);
         }
+    }
+
+    private function notifyTelegramIfLinked(string $userId, string $subject, string $body): void
+    {
+        $chat = $this->telegramChats->findByUserId($userId);
+
+        if ($chat === null) {
+            return;
+        }
+
+        $this->telegramNotifier->notify($chat->chatId(), $subject . "\n\n" . $body);
+
+        $this->defaultBus->dispatch(
+            NotificationDispatchMessage::create(
+                event: 'task.status_changed',
+                action: new MessageAction(
+                    channel: 'telegram',
+                    recipient: (string) $chat->chatId(),
+                    subject: $subject,
+                    body: $body,
+                ),
+            ),
+        );
     }
 
     private function sendEmail(string $to, string $subject, string $body): void

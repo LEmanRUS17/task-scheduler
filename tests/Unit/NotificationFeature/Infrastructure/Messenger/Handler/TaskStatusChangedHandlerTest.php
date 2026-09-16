@@ -4,7 +4,11 @@ declare(strict_types=1);
 
 namespace App\Tests\Unit\NotificationFeature\Infrastructure\Messenger\Handler;
 
+use App\NotificationFeature\Domain\Entity\TelegramChat;
 use App\NotificationFeature\Domain\Notification\MessageAction;
+use App\NotificationFeature\Domain\Notification\TelegramNotifierInterface;
+use App\NotificationFeature\Domain\Repository\TelegramChatRepositoryInterface;
+use App\NotificationFeature\Domain\ValueObject\TelegramChatState;
 use App\NotificationFeature\Infrastructure\Messenger\Handler\TaskStatusChangedHandler;
 use App\NotificationFeature\Infrastructure\Messenger\Message\NotificationDispatchMessage;
 use App\SubscriptionFeatureApi\DTOResponse\SubscriptionDataResponseInterface;
@@ -69,13 +73,22 @@ final class TaskStatusChangedHandlerTest extends TestCase
         ?TaskServiceInterface $taskService = null,
         ?UserServiceInterface $userService = null,
         ?SubscriptionServiceInterface $subscriptionService = null,
+        ?TelegramChatRepositoryInterface $telegramChats = null,
+        ?TelegramNotifierInterface $telegramNotifier = null,
         ?MailerInterface $mailer = null,
         ?MessageBusInterface $bus = null,
     ): TaskStatusChangedHandler {
+        if ($telegramChats === null) {
+            $telegramChats = $this->createStub(TelegramChatRepositoryInterface::class);
+            $telegramChats->method('findByUserId')->willReturn(null);
+        }
+
         return new TaskStatusChangedHandler(
             $taskService ?? $this->createStub(TaskServiceInterface::class),
             $userService ?? $this->createStub(UserServiceInterface::class),
             $subscriptionService ?? $this->createStub(SubscriptionServiceInterface::class),
+            $telegramChats,
+            $telegramNotifier ?? $this->createStub(TelegramNotifierInterface::class),
             $mailer ?? $this->createStub(MailerInterface::class),
             $bus ?? $this->makeBusStub(),
         );
@@ -205,6 +218,90 @@ final class TaskStatusChangedHandlerTest extends TestCase
             subscriptionService: $subscriptionService,
             mailer: $mailer,
             bus: $bus,
+        ))($this->makeMessage());
+    }
+
+    public function testSendsTelegramMessageWhenSubscriberHasALinkedChat(): void
+    {
+        $taskService = $this->createStub(TaskServiceInterface::class);
+        $taskService->method('getById')->willReturn($this->makeTask('Fix login bug'));
+
+        $userService = $this->createStub(UserServiceInterface::class);
+        $userService->method('findById')->willReturn($this->makeUser());
+
+        $subscriptionService = $this->createStub(SubscriptionServiceInterface::class);
+        $subscriptionService->method('getSubscriptionsForSubjectTransition')->willReturn([
+            $this->makeSubscription([(string) NotificationChannel::EMAIL->value]),
+        ]);
+
+        $chat = TelegramChat::create('user-uuid', 555, TelegramChatState::MainMenu);
+        $telegramChats = $this->createMock(TelegramChatRepositoryInterface::class);
+        $telegramChats->expects($this->once())->method('findByUserId')->with('user-uuid')->willReturn($chat);
+
+        $telegramNotifier = $this->createMock(TelegramNotifierInterface::class);
+        $telegramNotifier->expects($this->once())
+            ->method('notify')
+            ->with(555, $this->logicalAnd(
+                $this->stringContains('Fix login bug'),
+                $this->stringContains('In Progress'),
+                $this->stringContains('Done'),
+            ));
+
+        $bus = $this->createMock(MessageBusInterface::class);
+        $dispatched = [];
+        $bus->expects($this->exactly(2))
+            ->method('dispatch')
+            ->willReturnCallback(function ($message) use (&$dispatched) {
+                $dispatched[] = $message;
+                return new Envelope($message);
+            });
+
+        ($this->makeHandler(
+            taskService: $taskService,
+            userService: $userService,
+            subscriptionService: $subscriptionService,
+            telegramChats: $telegramChats,
+            telegramNotifier: $telegramNotifier,
+            bus: $bus,
+        ))($this->makeMessage());
+
+        $telegramDispatches = array_values(array_filter(
+            $dispatched,
+            static fn ($m) => $m instanceof NotificationDispatchMessage
+                && $m->action instanceof MessageAction
+                && $m->action->channel === 'telegram',
+        ));
+
+        $this->assertCount(1, $telegramDispatches);
+        $this->assertInstanceOf(MessageAction::class, $telegramDispatches[0]->action);
+        $this->assertSame('555', $telegramDispatches[0]->action->recipient);
+    }
+
+    public function testSkipsTelegramWhenSubscriberHasNoLinkedChat(): void
+    {
+        $taskService = $this->createStub(TaskServiceInterface::class);
+        $taskService->method('getById')->willReturn($this->makeTask());
+
+        $userService = $this->createStub(UserServiceInterface::class);
+        $userService->method('findById')->willReturn($this->makeUser());
+
+        $subscriptionService = $this->createStub(SubscriptionServiceInterface::class);
+        $subscriptionService->method('getSubscriptionsForSubjectTransition')->willReturn([
+            $this->makeSubscription([(string) NotificationChannel::EMAIL->value]),
+        ]);
+
+        $telegramChats = $this->createStub(TelegramChatRepositoryInterface::class);
+        $telegramChats->method('findByUserId')->willReturn(null);
+
+        $telegramNotifier = $this->createMock(TelegramNotifierInterface::class);
+        $telegramNotifier->expects($this->never())->method('notify');
+
+        ($this->makeHandler(
+            taskService: $taskService,
+            userService: $userService,
+            subscriptionService: $subscriptionService,
+            telegramChats: $telegramChats,
+            telegramNotifier: $telegramNotifier,
         ))($this->makeMessage());
     }
 
