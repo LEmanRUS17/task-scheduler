@@ -22,6 +22,7 @@ final class UnlinkedStateHandlerTest extends TestCase
         $tokens->expects($this->once())->method('delete')->with('abc123');
 
         $telegramChats = $this->createMock(TelegramChatRepositoryInterface::class);
+        $telegramChats->expects($this->once())->method('isLinkedForUserId')->with('user-1')->willReturn(false);
         $telegramChats->expects($this->once())
             ->method('save')
             ->with($this->callback(
@@ -32,6 +33,24 @@ final class UnlinkedStateHandlerTest extends TestCase
 
         $notifier = $this->createMock(TelegramNotifierInterface::class);
         $notifier->expects($this->once())->method('notify')->with(555, $this->stringContains('linked'));
+
+        $handler = new UnlinkedStateHandler($tokens, $telegramChats, $notifier);
+
+        $handler->handle(new TelegramUpdate(555, '/start abc123'), null);
+    }
+
+    public function testRefusesToLinkWhenTheUserAlreadyHasALinkedChat(): void
+    {
+        $tokens = $this->createMock(TelegramLinkTokenRepositoryInterface::class);
+        $tokens->expects($this->once())->method('findUserIdByToken')->with('abc123')->willReturn('user-1');
+        $tokens->expects($this->once())->method('delete')->with('abc123');
+
+        $telegramChats = $this->createMock(TelegramChatRepositoryInterface::class);
+        $telegramChats->expects($this->once())->method('isLinkedForUserId')->with('user-1')->willReturn(true);
+        $telegramChats->expects($this->never())->method('save');
+
+        $notifier = $this->createMock(TelegramNotifierInterface::class);
+        $notifier->expects($this->once())->method('notify')->with(555, $this->stringContains('already'));
 
         $handler = new UnlinkedStateHandler($tokens, $telegramChats, $notifier);
 

@@ -12,5 +12,7 @@ interface TelegramChatRepositoryInterface
 
     public function findByChatId(int $chatId): ?TelegramChat;
 
+    public function isLinkedForUserId(string $userId): bool;
+
     public function save(TelegramChat $chat): void;
 }

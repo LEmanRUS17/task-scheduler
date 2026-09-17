@@ -4,10 +4,12 @@ declare(strict_types=1);
 
 namespace App\NotificationFeature\Presentation\Controller;
 
+use App\NotificationFeature\Domain\Exception\TelegramChatAlreadyLinkedException;
 use App\NotificationFeature\Domain\Interactor\CreateTelegramLinkTokenInteractor;
 use App\UserFeature\Infrastructure\Security\SecurityUser;
 use Symfony\Bundle\SecurityBundle\Security;
 use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Attribute\AsController;
 use Symfony\Component\Routing\Attribute\Route;
 
@@ -31,7 +33,11 @@ final class CreateTelegramLinkTokenController
         $securityUser = $this->security->getUser();
         $userId = $securityUser->getDomainUser()->id()->value();
 
-        $token = $this->interactor->create($userId);
+        try {
+            $token = $this->interactor->create($userId);
+        } catch (TelegramChatAlreadyLinkedException $e) {
+            return new JsonResponse(['message' => $e->getMessage()], Response::HTTP_CONFLICT);
+        }
 
         return new JsonResponse([
             'success' => true,

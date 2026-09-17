@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\NotificationFeature\Domain\Interactor;
 
+use App\NotificationFeature\Domain\Exception\TelegramChatAlreadyLinkedException;
+use App\NotificationFeature\Domain\Repository\TelegramChatRepositoryInterface;
 use App\NotificationFeature\Domain\Repository\TelegramLinkTokenRepositoryInterface;
 
 final class CreateTelegramLinkTokenInteractor
@@ -16,11 +18,19 @@ final class CreateTelegramLinkTokenInteractor
 
     public function __construct(
         private readonly TelegramLinkTokenRepositoryInterface $tokens,
+        private readonly TelegramChatRepositoryInterface $telegramChats,
     ) {
     }
 
+    /**
+     * @throws TelegramChatAlreadyLinkedException when the user already has a linked chat
+     */
     public function create(string $userId): string
     {
+        if ($this->telegramChats->isLinkedForUserId($userId)) {
+            throw TelegramChatAlreadyLinkedException::forUserId($userId);
+        }
+
         $token = bin2hex(random_bytes(32));
 
         $this->tokens->save($token, $userId, self::TOKEN_TTL_SECONDS);

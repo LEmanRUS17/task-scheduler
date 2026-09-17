@@ -57,8 +57,18 @@ final class UnlinkedStateHandler implements TelegramStateHandlerInterface
             return;
         }
 
-        $this->telegramChats->save(TelegramChat::create($userId, $update->chatId, TelegramChatState::MainMenu));
         $this->tokens->delete($token);
+
+        if ($this->telegramChats->isLinkedForUserId($userId)) {
+            $this->telegramNotifier->notify(
+                $update->chatId,
+                'This account already has a linked Telegram chat.',
+            );
+
+            return;
+        }
+
+        $this->telegramChats->save(TelegramChat::create($userId, $update->chatId, TelegramChatState::MainMenu));
 
         $this->telegramNotifier->notify(
             $update->chatId,
