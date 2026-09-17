@@ -13,6 +13,7 @@ use App\SubscriptionFeatureApi\Service\SubscriptionServiceInterface;
 use App\TaskFeature\Infrastructure\Messenger\Message\TaskStatusChangedMessage;
 use App\TaskFeatureApi\Service\TaskServiceInterface;
 use App\UserFeatureApi\Service\UserServiceInterface;
+use App\WorkflowFeatureApi\Service\WorkflowServiceInterface;
 use Symfony\Component\Mailer\MailerInterface;
 use Symfony\Component\Messenger\Attribute\AsMessageHandler;
 use Symfony\Component\Messenger\MessageBusInterface;
@@ -25,11 +26,13 @@ final class TaskStatusChangedHandler
         private readonly TaskServiceInterface $taskService,
         private readonly UserServiceInterface $userService,
         private readonly SubscriptionServiceInterface $subscriptionService,
+        private readonly WorkflowServiceInterface $workflowService,
         private readonly TelegramChatRepositoryInterface $telegramChats,
         private readonly TelegramNotifierInterface $telegramNotifier,
         private readonly MailerInterface $mailer,
         private readonly MessageBusInterface $defaultBus,
-    ) {}
+    ) {
+    }
 
     public function __invoke(TaskStatusChangedMessage $message): void
     {
@@ -45,13 +48,22 @@ final class TaskStatusChangedHandler
             transitionId: $message->transitionId,
         );
 
-        $subject = sprintf('Task "%s" status changed', $task->getTitle());
-        $body = sprintf(
-            'Task "%s" has been moved from "%s" to "%s".',
-            $task->getTitle(),
-            $message->fromStatus,
-            $message->toStatus,
-        );
+        $isFinal = $this->isFinalStatus($message->workflowDefinitionTitle, $message->toStatus);
+
+        $event = $isFinal ? 'task.completed' : 'task.status_changed';
+
+        if ($isFinal) {
+            $subject = sprintf('Task "%s" completed', $task->getTitle());
+            $body = sprintf('Task "%s" has been completed.', $task->getTitle());
+        } else {
+            $subject = sprintf('Task "%s" status changed', $task->getTitle());
+            $body = sprintf(
+                'Task "%s" has been moved from "%s" to "%s".',
+                $task->getTitle(),
+                $message->fromStatus,
+                $message->toStatus,
+            );
+        }
 
         foreach ($subscriptions as $subscription) {
             $user = $this->userService->findById($subscription->getUserId());
@@ -70,7 +82,7 @@ final class TaskStatusChangedHandler
 
                 $this->defaultBus->dispatch(
                     NotificationDispatchMessage::create(
-                        event: 'task.status_changed',
+                        event: $event,
                         action: new MessageAction(
                             channel: strtolower($channelEnum->name),
                             recipient: $user->getEmail(),
@@ -81,11 +93,20 @@ final class TaskStatusChangedHandler
                 );
             }
 
-            $this->notifyTelegramIfLinked($subscription->getUserId(), $subject, $body);
+            $this->notifyTelegramIfLinked($subscription->getUserId(), $event, $subject, $body);
         }
     }
 
-    private function notifyTelegramIfLinked(string $userId, string $subject, string $body): void
+    private function isFinalStatus(string $workflowId, string $statusId): bool
+    {
+        try {
+            return $this->workflowService->getStatusById($workflowId, $statusId)?->isFinal() ?? false;
+        } catch (\InvalidArgumentException) {
+            return false;
+        }
+    }
+
+    private function notifyTelegramIfLinked(string $userId, string $event, string $subject, string $body): void
     {
         $chat = $this->telegramChats->findByUserId($userId);
 
@@ -97,7 +118,7 @@ final class TaskStatusChangedHandler
 
         $this->defaultBus->dispatch(
             NotificationDispatchMessage::create(
-                event: 'task.status_changed',
+                event: $event,
                 action: new MessageAction(
                     channel: 'telegram',
                     recipient: (string) $chat->chatId(),

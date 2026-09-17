@@ -19,6 +19,8 @@ use App\TaskFeatureApi\DTOResponse\TaskDataResponseInterface;
 use App\TaskFeatureApi\Service\TaskServiceInterface;
 use App\UserFeatureApi\DTOResponse\UserDataResponseInterface;
 use App\UserFeatureApi\Service\UserServiceInterface;
+use App\WorkflowFeatureApi\DTOResponse\WorkflowStatusResponseInterface;
+use App\WorkflowFeatureApi\Service\WorkflowServiceInterface;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Mailer\MailerInterface;
 use Symfony\Component\Messenger\Envelope;
@@ -53,6 +55,13 @@ final class TaskStatusChangedHandlerTest extends TestCase
         return $user;
     }
 
+    private function makeWorkflowStatus(bool $isFinal): WorkflowStatusResponseInterface
+    {
+        $status = $this->createStub(WorkflowStatusResponseInterface::class);
+        $status->method('isFinal')->willReturn($isFinal);
+        return $status;
+    }
+
     /** @param list<string> $channels */
     private function makeSubscription(array $channels, string $userId = 'user-uuid'): SubscriptionDataResponseInterface
     {
@@ -73,6 +82,7 @@ final class TaskStatusChangedHandlerTest extends TestCase
         ?TaskServiceInterface $taskService = null,
         ?UserServiceInterface $userService = null,
         ?SubscriptionServiceInterface $subscriptionService = null,
+        ?WorkflowServiceInterface $workflowService = null,
         ?TelegramChatRepositoryInterface $telegramChats = null,
         ?TelegramNotifierInterface $telegramNotifier = null,
         ?MailerInterface $mailer = null,
@@ -87,6 +97,7 @@ final class TaskStatusChangedHandlerTest extends TestCase
             $taskService ?? $this->createStub(TaskServiceInterface::class),
             $userService ?? $this->createStub(UserServiceInterface::class),
             $subscriptionService ?? $this->createStub(SubscriptionServiceInterface::class),
+            $workflowService ?? $this->createStub(WorkflowServiceInterface::class),
             $telegramChats,
             $telegramNotifier ?? $this->createStub(TelegramNotifierInterface::class),
             $mailer ?? $this->createStub(MailerInterface::class),
@@ -303,6 +314,89 @@ final class TaskStatusChangedHandlerTest extends TestCase
             telegramChats: $telegramChats,
             telegramNotifier: $telegramNotifier,
         ))($this->makeMessage());
+    }
+
+    public function testSendsATaskCompletedNotificationWhenTheNewStatusIsFinal(): void
+    {
+        $taskService = $this->createStub(TaskServiceInterface::class);
+        $taskService->method('getById')->willReturn($this->makeTask('Fix login bug'));
+
+        $userService = $this->createStub(UserServiceInterface::class);
+        $userService->method('findById')->willReturn($this->makeUser('sub@example.com'));
+
+        $subscriptionService = $this->createStub(SubscriptionServiceInterface::class);
+        $subscriptionService->method('getSubscriptionsForSubjectTransition')->willReturn([
+            $this->makeSubscription([(string) NotificationChannel::EMAIL->value]),
+        ]);
+
+        $workflowService = $this->createStub(WorkflowServiceInterface::class);
+        $workflowService->method('getStatusById')->willReturn($this->makeWorkflowStatus(true));
+
+        $bus = $this->createMock(MessageBusInterface::class);
+        $dispatched = null;
+        $bus->expects($this->once())
+            ->method('dispatch')
+            ->willReturnCallback(function ($message) use (&$dispatched) {
+                $dispatched = $message;
+                return new Envelope($message);
+            });
+
+        ($this->makeHandler(
+            taskService: $taskService,
+            userService: $userService,
+            subscriptionService: $subscriptionService,
+            workflowService: $workflowService,
+            bus: $bus,
+        ))($this->makeMessage());
+
+        $this->assertInstanceOf(NotificationDispatchMessage::class, $dispatched);
+        $this->assertSame('task.completed', $dispatched->event);
+        $this->assertInstanceOf(MessageAction::class, $dispatched->action);
+        $this->assertStringContainsString('Fix login bug', $dispatched->action->subject);
+        $this->assertStringContainsString('completed', $dispatched->action->subject);
+        $this->assertStringContainsString('completed', $dispatched->action->body);
+        $this->assertStringNotContainsString('status changed', $dispatched->action->subject);
+    }
+
+    public function testStillSendsAStatusChangedNotificationWhenStatusLookupThrows(): void
+    {
+        $taskService = $this->createStub(TaskServiceInterface::class);
+        $taskService->method('getById')->willReturn($this->makeTask('Fix login bug'));
+
+        $userService = $this->createStub(UserServiceInterface::class);
+        $userService->method('findById')->willReturn($this->makeUser('sub@example.com'));
+
+        $subscriptionService = $this->createStub(SubscriptionServiceInterface::class);
+        $subscriptionService->method('getSubscriptionsForSubjectTransition')->willReturn([
+            $this->makeSubscription([(string) NotificationChannel::EMAIL->value]),
+        ]);
+
+        $workflowService = $this->createStub(WorkflowServiceInterface::class);
+        $workflowService->method('getStatusById')->willThrowException(new \InvalidArgumentException('not a uuid'));
+
+        $mailer = $this->createMock(MailerInterface::class);
+        $mailer->expects($this->once())->method('send');
+
+        $bus = $this->createMock(MessageBusInterface::class);
+        $dispatched = null;
+        $bus->expects($this->once())
+            ->method('dispatch')
+            ->willReturnCallback(function ($message) use (&$dispatched) {
+                $dispatched = $message;
+                return new Envelope($message);
+            });
+
+        ($this->makeHandler(
+            taskService: $taskService,
+            userService: $userService,
+            subscriptionService: $subscriptionService,
+            workflowService: $workflowService,
+            mailer: $mailer,
+            bus: $bus,
+        ))($this->makeMessage());
+
+        $this->assertInstanceOf(NotificationDispatchMessage::class, $dispatched);
+        $this->assertSame('task.status_changed', $dispatched->event);
     }
 
     public function testDoesNothingWhenNoSubscriptions(): void
