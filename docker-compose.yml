@@ -63,7 +63,7 @@ services:
       - "6379:6379"
   consumer:
     build: ./docker/php
-    command: php bin/console messenger:consume async --time-limit=3600
+    command: php bin/console messenger:consume async telegram_updates --time-limit=3600
     environment:
       UPLOAD_MAX_SIZE: ${UPLOAD_MAX_SIZE:-30M}
       APP_ENV: prod

@@ -29,6 +29,15 @@ framework:
                     queues:
                         telegram_notification_queue: ~
                 serializer: App\NotificationFeature\Infrastructure\Messenger\Serializer\TelegramNotificationMessageSerializer
+            telegram_updates:
+                dsn: '%env(MESSENGER_TRANSPORT_DSN)%'
+                options:
+                    exchange:
+                        name: ''
+                        default_publish_routing_key: telegram_updates_queue
+                    queues:
+                        telegram_updates_queue: ~
+                serializer: App\NotificationFeature\Infrastructure\Messenger\Serializer\TelegramUpdateMessageSerializer
 
         routing:
             App\TaskFeature\Infrastructure\Messenger\Message\TaskStatusChangedMessage: async
@@ -38,6 +47,7 @@ framework:
             App\NotificationFeature\Infrastructure\Messenger\Message\TeamMemberInvitedMessage: async
             App\NotificationFeature\Infrastructure\Messenger\Message\NotificationDispatchMessage: notifications
             App\NotificationFeature\Infrastructure\Messenger\Message\TelegramNotificationMessage: telegram_notifications
+            App\NotificationFeature\Infrastructure\Messenger\Message\TelegramUpdateMessage: telegram_updates
             App\SearchFeature\Infrastructure\Messenger\Message\IndexTaskMessage: async
             App\SearchFeature\Infrastructure\Messenger\Message\IndexTeamMessage: async
             App\SearchFeature\Infrastructure\Messenger\Message\IndexWorkflowMessage: async
@@ -54,3 +64,4 @@ when@test:
                 async: 'in-memory://'
                 notifications: 'in-memory://'
                 telegram_notifications: 'in-memory://'
+                telegram_updates: 'in-memory://'
