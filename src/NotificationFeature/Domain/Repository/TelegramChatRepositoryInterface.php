@@ -15,4 +15,6 @@ interface TelegramChatRepositoryInterface
     public function isLinkedForUserId(string $userId): bool;
 
     public function save(TelegramChat $chat): void;
+
+    public function delete(TelegramChat $chat): void;
 }

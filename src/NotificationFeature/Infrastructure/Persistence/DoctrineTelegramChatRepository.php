@@ -42,4 +42,10 @@ final class DoctrineTelegramChatRepository implements TelegramChatRepositoryInte
         $this->entityManager->persist($chat);
         $this->entityManager->flush();
     }
+
+    public function delete(TelegramChat $chat): void
+    {
+        $this->entityManager->remove($chat);
+        $this->entityManager->flush();
+    }
 }
