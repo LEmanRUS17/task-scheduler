@@ -5,6 +5,10 @@ declare(strict_types=1);
 namespace App\NotificationFeature\Infrastructure\Messenger\Handler;
 
 use App\NotificationFeature\Domain\Notification\MessageAction;
+use App\NotificationFeature\Domain\Template\NotificationScenario;
+use App\NotificationFeature\Domain\Template\NotificationTemplateRenderer;
+use App\NotificationFeature\Domain\Template\NotificationType;
+use App\NotificationFeature\Domain\Template\NotificationVariable;
 use App\NotificationFeature\Infrastructure\Messenger\Message\NotificationDispatchMessage;
 use App\NotificationFeature\Infrastructure\Messenger\Message\TeamMemberInvitedMessage;
 use Symfony\Component\Mailer\MailerInterface;
@@ -16,6 +20,7 @@ use Symfony\Component\Mime\Email;
 final class TeamMemberInvitedHandler
 {
     public function __construct(
+        private readonly NotificationTemplateRenderer $renderer,
         private readonly MailerInterface $mailer,
         private readonly MessageBusInterface $defaultBus,
         private readonly string $frontendUrl,
@@ -24,32 +29,29 @@ final class TeamMemberInvitedHandler
 
     public function __invoke(TeamMemberInvitedMessage $message): void
     {
-        $link = sprintf('%s/invitations/accept?token=%s', $this->frontendUrl, $message->token);
-
-        $subject = sprintf('You have been invited to join "%s"', $message->teamTitle);
-        $body = sprintf(
-            "You have been invited to join the team \"%s\" on Task Scheduler.\n\n"
-                . "Accept the invitation: %s\n\n"
-                . "Or use this invitation code manually: %s\n\n"
-                . "The invitation is valid for 7 days.\n\n"
-                . 'If you did not expect this invitation, you can safely ignore this email.',
-            $message->teamTitle,
-            $link,
-            $message->token,
-        );
+        $scenario = NotificationScenario::TeamMemberInvited;
+        $notification = $this->renderer->render($scenario, NotificationType::Email, [
+            NotificationVariable::TeamTitle->value => $message->teamTitle,
+            NotificationVariable::InvitationLink->value => sprintf(
+                '%s/invitations/accept?token=%s',
+                $this->frontendUrl,
+                $message->token,
+            ),
+            NotificationVariable::InvitationCode->value => $message->token,
+        ]);
 
         $this->mailer->send(
-            (new Email())->to($message->invitedEmail)->subject($subject)->text($body),
+            (new Email())->to($message->invitedEmail)->subject($notification->subject)->text($notification->body),
         );
 
         $this->defaultBus->dispatch(
             NotificationDispatchMessage::create(
-                event: 'team.member_invited',
+                event: $scenario->value,
                 action: new MessageAction(
                     channel: 'email',
                     recipient: $message->invitedEmail,
-                    subject: $subject,
-                    body: $body,
+                    subject: $notification->subject,
+                    body: $notification->body,
                 ),
             ),
         );

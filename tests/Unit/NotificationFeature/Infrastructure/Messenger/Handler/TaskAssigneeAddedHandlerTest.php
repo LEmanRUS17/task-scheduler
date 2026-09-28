@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Tests\Unit\NotificationFeature\Infrastructure\Messenger\Handler;
 
+use App\NotificationFeature\Domain\Template\NotificationTemplateRenderer;
+use App\NotificationFeature\Domain\Template\StandardNotificationTemplates;
 use App\NotificationFeature\Domain\Notification\MessageAction;
 use App\NotificationFeature\Infrastructure\Messenger\Handler\TaskAssigneeAddedHandler;
 use App\NotificationFeature\Infrastructure\Messenger\Message\NotificationDispatchMessage;
@@ -54,6 +56,7 @@ final class TaskAssigneeAddedHandlerTest extends TestCase
         return new TaskAssigneeAddedHandler(
             $taskService ?? $this->createStub(TaskServiceInterface::class),
             $userService ?? $this->createStub(UserServiceInterface::class),
+            new NotificationTemplateRenderer(new StandardNotificationTemplates()),
             $mailer ?? $this->createStub(MailerInterface::class),
             $bus ?? $this->makeBusStub(),
         );

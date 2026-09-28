@@ -7,6 +7,11 @@ namespace App\NotificationFeature\Infrastructure\Messenger\Handler;
 use App\NotificationFeature\Domain\Notification\MessageAction;
 use App\NotificationFeature\Domain\Notification\TelegramNotifierInterface;
 use App\NotificationFeature\Domain\Repository\TelegramChatRepositoryInterface;
+use App\NotificationFeature\Domain\Template\NotificationScenario;
+use App\NotificationFeature\Domain\Template\NotificationTemplateRenderer;
+use App\NotificationFeature\Domain\Template\NotificationType;
+use App\NotificationFeature\Domain\Template\NotificationVariable;
+use App\NotificationFeature\Domain\Template\RenderedNotification;
 use App\NotificationFeature\Infrastructure\Messenger\Message\NotificationDispatchMessage;
 use App\SubscriptionFeatureApi\ValueObject\NotificationChannel;
 use App\SubscriptionFeatureApi\Service\SubscriptionServiceInterface;
@@ -29,6 +34,7 @@ final class TaskStatusChangedHandler
         private readonly WorkflowServiceInterface $workflowService,
         private readonly TelegramChatRepositoryInterface $telegramChats,
         private readonly TelegramNotifierInterface $telegramNotifier,
+        private readonly NotificationTemplateRenderer $renderer,
         private readonly MailerInterface $mailer,
         private readonly MessageBusInterface $defaultBus,
     ) {
@@ -48,21 +54,16 @@ final class TaskStatusChangedHandler
             transitionId: $message->transitionId,
         );
 
-        $isFinal = $this->isFinalStatus($message->workflowDefinitionTitle, $message->toStatus);
-
-        $event = $isFinal ? 'task.completed' : 'task.status_changed';
-
-        if ($isFinal) {
-            $subject = sprintf('Task "%s" completed', $task->getTitle());
-            $body = sprintf('Task "%s" has been completed.', $task->getTitle());
+        if ($this->isFinalStatus($message->workflowDefinitionTitle, $message->toStatus)) {
+            $scenario = NotificationScenario::TaskCompleted;
+            $values = [NotificationVariable::TaskTitle->value => $task->getTitle()];
         } else {
-            $subject = sprintf('Task "%s" status changed', $task->getTitle());
-            $body = sprintf(
-                'Task "%s" has been moved from "%s" to "%s".',
-                $task->getTitle(),
-                $message->fromStatus,
-                $message->toStatus,
-            );
+            $scenario = NotificationScenario::TaskStatusChanged;
+            $values = [
+                NotificationVariable::TaskTitle->value => $task->getTitle(),
+                NotificationVariable::FromStatus->value => $message->fromStatus,
+                NotificationVariable::ToStatus->value => $message->toStatus,
+            ];
         }
 
         foreach ($subscriptions as $subscription) {
@@ -75,25 +76,30 @@ final class TaskStatusChangedHandler
             foreach ($subscription->getChannels() as $channel) {
                 $channelEnum = NotificationChannel::from((int) $channel);
 
+                $notification = $this->renderer->render($scenario, match ($channelEnum) {
+                    NotificationChannel::EMAIL => NotificationType::Email,
+                    NotificationChannel::IN_APP => NotificationType::Push,
+                }, $values);
+
                 match ($channelEnum) {
-                    NotificationChannel::EMAIL => $this->sendEmail($user->getEmail(), $subject, $body),
+                    NotificationChannel::EMAIL => $this->sendEmail($user->getEmail(), $notification),
                     default => null,
                 };
 
                 $this->defaultBus->dispatch(
                     NotificationDispatchMessage::create(
-                        event: $event,
+                        event: $scenario->value,
                         action: new MessageAction(
                             channel: strtolower($channelEnum->name),
                             recipient: $user->getEmail(),
-                            subject: $subject,
-                            body: $body,
+                            subject: $notification->subject,
+                            body: $notification->body,
                         ),
                     ),
                 );
             }
 
-            $this->notifyTelegramIfLinked($subscription->getUserId(), $event, $subject, $body);
+            $this->notifyTelegramIfLinked($subscription->getUserId(), $scenario, $values);
         }
     }
 
@@ -106,7 +112,10 @@ final class TaskStatusChangedHandler
         }
     }
 
-    private function notifyTelegramIfLinked(string $userId, string $event, string $subject, string $body): void
+    /**
+     * @param array<value-of<NotificationVariable>, string> $values
+     */
+    private function notifyTelegramIfLinked(string $userId, NotificationScenario $scenario, array $values): void
     {
         $chat = $this->telegramChats->findByUserId($userId);
 
@@ -114,25 +123,27 @@ final class TaskStatusChangedHandler
             return;
         }
 
-        $this->telegramNotifier->notify($chat->chatId(), $subject . "\n\n" . $body);
+        $notification = $this->renderer->render($scenario, NotificationType::Messenger, $values);
+
+        $this->telegramNotifier->notify($chat->chatId(), $notification->body);
 
         $this->defaultBus->dispatch(
             NotificationDispatchMessage::create(
-                event: $event,
+                event: $scenario->value,
                 action: new MessageAction(
                     channel: 'telegram',
                     recipient: (string) $chat->chatId(),
-                    subject: $subject,
-                    body: $body,
+                    subject: $notification->subject,
+                    body: $notification->body,
                 ),
             ),
         );
     }
 
-    private function sendEmail(string $to, string $subject, string $body): void
+    private function sendEmail(string $to, RenderedNotification $notification): void
     {
         $this->mailer->send(
-            (new Email())->to($to)->subject($subject)->text($body),
+            (new Email())->to($to)->subject($notification->subject)->text($notification->body),
         );
     }
 }

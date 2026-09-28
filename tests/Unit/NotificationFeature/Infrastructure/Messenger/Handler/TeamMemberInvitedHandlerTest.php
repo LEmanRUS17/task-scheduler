@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Tests\Unit\NotificationFeature\Infrastructure\Messenger\Handler;
 
+use App\NotificationFeature\Domain\Template\NotificationTemplateRenderer;
+use App\NotificationFeature\Domain\Template\StandardNotificationTemplates;
 use App\NotificationFeature\Domain\Notification\MessageAction;
 use App\NotificationFeature\Infrastructure\Messenger\Handler\TeamMemberInvitedHandler;
 use App\NotificationFeature\Infrastructure\Messenger\Message\NotificationDispatchMessage;
@@ -15,6 +17,11 @@ use Symfony\Component\Messenger\MessageBusInterface;
 
 final class TeamMemberInvitedHandlerTest extends TestCase
 {
+    private function makeRenderer(): NotificationTemplateRenderer
+    {
+        return new NotificationTemplateRenderer(new StandardNotificationTemplates());
+    }
+
     private const FRONTEND_URL = 'https://app.example.com';
 
     private function makeMessage(): TeamMemberInvitedMessage
@@ -32,7 +39,12 @@ final class TeamMemberInvitedHandlerTest extends TestCase
         $mailer = $this->createMock(MailerInterface::class);
         $mailer->expects($this->once())->method('send');
 
-        $handler = new TeamMemberInvitedHandler($mailer, $this->makeBusStub(), self::FRONTEND_URL);
+        $handler = new TeamMemberInvitedHandler(
+            $this->makeRenderer(),
+            $mailer,
+            $this->makeBusStub(),
+            self::FRONTEND_URL,
+        );
         $handler($this->makeMessage());
     }
 
@@ -47,7 +59,12 @@ final class TeamMemberInvitedHandlerTest extends TestCase
                 return new Envelope($message);
             });
 
-        $handler = new TeamMemberInvitedHandler($this->createStub(MailerInterface::class), $bus, self::FRONTEND_URL);
+        $handler = new TeamMemberInvitedHandler(
+            $this->makeRenderer(),
+            $this->createStub(MailerInterface::class),
+            $bus,
+            self::FRONTEND_URL,
+        );
         $handler($this->makeMessage());
 
         $this->assertInstanceOf(NotificationDispatchMessage::class, $dispatched);

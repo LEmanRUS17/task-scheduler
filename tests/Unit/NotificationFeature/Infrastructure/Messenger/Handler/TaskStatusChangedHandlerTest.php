@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Tests\Unit\NotificationFeature\Infrastructure\Messenger\Handler;
 
+use App\NotificationFeature\Domain\Template\NotificationTemplateRenderer;
+use App\NotificationFeature\Domain\Template\StandardNotificationTemplates;
 use App\NotificationFeature\Domain\Entity\TelegramChat;
 use App\NotificationFeature\Domain\Notification\MessageAction;
 use App\NotificationFeature\Domain\Notification\TelegramNotifierInterface;
@@ -100,6 +102,7 @@ final class TaskStatusChangedHandlerTest extends TestCase
             $workflowService ?? $this->createStub(WorkflowServiceInterface::class),
             $telegramChats,
             $telegramNotifier ?? $this->createStub(TelegramNotifierInterface::class),
+            new NotificationTemplateRenderer(new StandardNotificationTemplates()),
             $mailer ?? $this->createStub(MailerInterface::class),
             $bus ?? $this->makeBusStub(),
         );

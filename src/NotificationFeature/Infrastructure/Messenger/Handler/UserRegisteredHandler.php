@@ -5,6 +5,10 @@ declare(strict_types=1);
 namespace App\NotificationFeature\Infrastructure\Messenger\Handler;
 
 use App\NotificationFeature\Domain\Notification\MessageAction;
+use App\NotificationFeature\Domain\Template\NotificationScenario;
+use App\NotificationFeature\Domain\Template\NotificationTemplateRenderer;
+use App\NotificationFeature\Domain\Template\NotificationType;
+use App\NotificationFeature\Domain\Template\NotificationVariable;
 use App\NotificationFeature\Infrastructure\Messenger\Message\NotificationDispatchMessage;
 use App\NotificationFeature\Infrastructure\Messenger\Message\UserRegisteredMessage;
 use Symfony\Component\Mailer\MailerInterface;
@@ -16,6 +20,7 @@ use Symfony\Component\Mime\Email;
 final class UserRegisteredHandler
 {
     public function __construct(
+        private readonly NotificationTemplateRenderer $renderer,
         private readonly MailerInterface $mailer,
         private readonly MessageBusInterface $defaultBus,
     ) {
@@ -23,26 +28,23 @@ final class UserRegisteredHandler
 
     public function __invoke(UserRegisteredMessage $message): void
     {
-        $subject = 'Confirm your registration';
-        $body = sprintf(
-            "Welcome to Task Scheduler!\n\n"
-                . "Use the following code to complete your registration: %s\n\n"
-                . 'The code is valid for 24 hours.',
-            $message->confirmationCode,
-        );
+        $scenario = NotificationScenario::UserRegistered;
+        $notification = $this->renderer->render($scenario, NotificationType::Email, [
+            NotificationVariable::ConfirmationCode->value => $message->confirmationCode,
+        ]);
 
         $this->mailer->send(
-            (new Email())->to($message->email)->subject($subject)->text($body),
+            (new Email())->to($message->email)->subject($notification->subject)->text($notification->body),
         );
 
         $this->defaultBus->dispatch(
             NotificationDispatchMessage::create(
-                event: 'user.registered',
+                event: $scenario->value,
                 action: new MessageAction(
                     channel: 'email',
                     recipient: $message->email,
-                    subject: $subject,
-                    body: $body,
+                    subject: $notification->subject,
+                    body: $notification->body,
                 ),
             ),
         );

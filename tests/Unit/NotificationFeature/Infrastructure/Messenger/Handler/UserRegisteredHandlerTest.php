@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Tests\Unit\NotificationFeature\Infrastructure\Messenger\Handler;
 
+use App\NotificationFeature\Domain\Template\NotificationTemplateRenderer;
+use App\NotificationFeature\Domain\Template\StandardNotificationTemplates;
 use App\NotificationFeature\Domain\Notification\MessageAction;
 use App\NotificationFeature\Infrastructure\Messenger\Handler\UserRegisteredHandler;
 use App\NotificationFeature\Infrastructure\Messenger\Message\NotificationDispatchMessage;
@@ -15,6 +17,11 @@ use Symfony\Component\Messenger\MessageBusInterface;
 
 final class UserRegisteredHandlerTest extends TestCase
 {
+    private function makeRenderer(): NotificationTemplateRenderer
+    {
+        return new NotificationTemplateRenderer(new StandardNotificationTemplates());
+    }
+
     private function makeMessage(): UserRegisteredMessage
     {
         return new UserRegisteredMessage(
@@ -29,7 +36,7 @@ final class UserRegisteredHandlerTest extends TestCase
         $mailer = $this->createMock(MailerInterface::class);
         $mailer->expects($this->once())->method('send');
 
-        $handler = new UserRegisteredHandler($mailer, $this->makeBusStub());
+        $handler = new UserRegisteredHandler($this->makeRenderer(), $mailer, $this->makeBusStub());
         $handler($this->makeMessage());
     }
 
@@ -44,7 +51,7 @@ final class UserRegisteredHandlerTest extends TestCase
                 return new Envelope($message);
             });
 
-        $handler = new UserRegisteredHandler($this->createStub(MailerInterface::class), $bus);
+        $handler = new UserRegisteredHandler($this->makeRenderer(), $this->createStub(MailerInterface::class), $bus);
         $handler($this->makeMessage());
 
         $this->assertInstanceOf(NotificationDispatchMessage::class, $dispatched);
